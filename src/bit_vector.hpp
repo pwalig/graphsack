@@ -8,8 +8,11 @@ namespace gs {
 		std::vector<bool> _data;
 
 	public:
-		bit_vector(size_t n) : _data(n, false) {}
+		inline bit_vector(size_t n) : _data(n, false) {}
 		inline void add(size_t i) { _data[i] = true; }
+
+		inline typename std::vector<bool>::reference operator[] (size_t i) { return _data[i]; }
+		inline typename std::vector<bool>::const_reference operator[] (size_t i) const { return _data[i]; }
 
 		inline friend std::ostream& operator<< (std::ostream& stream, const bit_vector& bv) {
 			for (bool b : bv._data) {
