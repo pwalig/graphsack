@@ -6,18 +6,16 @@
 #include <utility>
 #include <fstream>
 
-#include "iterator.hpp"
-
 namespace gs {
 	template <typename WeightValueT, typename graphT>
 	class composite_instance {
 	public:
-		using weight_value = WeightValueT;
-		using graph_type = graphT;
+		using weight_value_t = WeightValueT;
+		using graph_t = graphT;
 
 	public:
-		weight_value wv;
-		graph_type g;
+		weight_value_t wv;
+		graph_t g;
 
 		inline composite_instance() {}
 

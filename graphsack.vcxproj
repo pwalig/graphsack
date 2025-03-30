@@ -130,8 +130,12 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bit_vector.hpp" />
+    <ClInclude Include="src\graphs\arch_list.hpp" />
+    <ClInclude Include="src\requirements.hpp" />
+    <ClInclude Include="src\solvers\Greedy.hpp" />
     <ClInclude Include="src\weight_value_vector.hpp" />
-    <ClInclude Include="src\instance.hpp" />
+    <ClInclude Include="src\composite_instance.hpp" />
     <ClInclude Include="src\iterator.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

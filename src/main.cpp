@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "weight_value_vector.hpp"
+#include "bit_vector.hpp"
+#include "solvers/Greedy.hpp"
 
 void main(int argc, char** argv) {
 	const const int a = 5;
@@ -11,7 +13,10 @@ void main(int argc, char** argv) {
 		{ { 21, { 1, 2, 3}}, {22, { 4, 5, 6 }} }
 	);
 
-	std::cout << inst;
+	std::cout << inst << "\n";
 
-	std::cout << gs::weight_value_vector<>("instances/test.txt");
+	gs::weight_value_vector<> inst2("instances/test.txt");
+	std::cout << inst2 << "\n";
+
+	std::cout << gs::solver::Greedy<gs::weight_value_vector<>, gs::bit_vector, unsigned int>::solve(inst2);
 }
