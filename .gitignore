@@ -398,3 +398,16 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Instance files
+instances/
+
+# Build output
+build/
+
+# Zig build system
+.zig-cache/
+zig-out/
+
+# clangd intelisence
+compile_flags.txt
