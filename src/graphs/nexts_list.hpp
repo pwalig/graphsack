@@ -50,6 +50,12 @@ namespace gs {
 				fill_data(init);
 			}
 
+			inline nexts_list(const std::string filename) : _data(), _n(0) {
+				std::ifstream fin(filename);
+				fin >> (*this);
+				fin.close();
+			}
+
 			inline proxy_t operator[] (size_type i) {
 				assert(i < _n);
 				return proxy_t(
@@ -68,7 +74,26 @@ namespace gs {
 
 			inline size_type size() const { return _n; }
 
+			inline friend std::istream& operator>> (std::istream& stream, nexts_list& x) {
+				x._data.clear();
+				stream >> x._n;
+				value_type acc = static_cast<value_type>(x._n);
+				x._data.resize(acc);
+				for (size_type i = 0; i < x._n; ++i) {
+					x._data[i] = acc;
+					value_type val;
+					stream >> val;
+					acc += val;
+					x._data.resize(x._data.size() + val);
+					for (size_type j = x._data[i]; j < acc; ++j) {
+						stream >> x._data[j];
+					}
+				}
+				return stream;
+			}
+
 			inline friend std::ostream& operator<< (std::ostream& stream, const nexts_list& x) {
+				stream << x._n << "\n";
 				for (size_type i = 0; i < x.size(); ++i) {
 					for (value_type ind : x[i])
 						stream << ind << " ";

@@ -31,4 +31,7 @@ int main(int argc, char** argv) {
 		});
 
 	std::cout << nlist;
+
+	gs::grahps::nexts_list<std::vector<unsigned int>> nlist2("instances/nexts_list_test.txt");
+	std::cout << nlist2;
 }
