@@ -6,8 +6,8 @@
 #include "structure_check.hpp"
 #include "graphs/nexts_list.hpp"
 
-void main(int argc, char** argv) {
-	const const int a = 5;
+int main(int argc, char** argv) {
+	const int a = 5;
 	std::cout << a << " A\n";
 
 	gs::weight_value_vector<> inst(
@@ -22,12 +22,13 @@ void main(int argc, char** argv) {
 
 	std::cout << gs::solver::Greedy<gs::weight_value_vector<>, gs::bit_vector, unsigned int>::solve(inst2) << "\n";
 
-	gs::grahps::nexts_list<unsigned int> nlist({
+	std::vector<unsigned int> storage(13);
+	gs::grahps::nexts_list<slice<unsigned int>> nlist(slice<unsigned int>(storage.data(), storage.size()), {
 		{ 1, 2, 3},
 		{ 0, 3 },
 		{ 1 },
 		{ 0, 1, 2 }
 		});
 
-	std::cout << nlist.view;
+	std::cout << nlist;
 }
