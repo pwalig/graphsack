@@ -30,11 +30,16 @@ namespace gs {
 
 				// solve
 				for (const auto& item : sorted) {
+					bool fits = true;
 					for (size_t i = 0; i < instance.dim(); ++i) {
-						if (weights[i] + instance.weight(item.id, i) > instance.limit(i)) return res;
-						weights[i] += instance.weight(item.id, i);
+						if (weights[i] + instance.weight(item.id, i) > instance.limit(i)) { fits = false; break; }
 					}
-					res.add(item.id);
+					if (fits) {
+						for (size_t i = 0; i < instance.dim(); ++i) {
+							weights[i] += instance.weight(item.id, i);
+						}
+						res.add(item.id);
+					}
 				}
 
 				// return

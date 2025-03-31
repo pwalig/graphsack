@@ -54,7 +54,7 @@ namespace gs {
 				assert(i < _n);
 				return proxy_t(
 					&(_data[_data[i]]), 
-					(i + 1 == _n ? _data.size : _data[i + 1]) - _data[i]
+					(i + 1 == _n ? _data.size() : _data[i + 1]) - _data[i]
 				);
 			}
 
@@ -62,7 +62,7 @@ namespace gs {
 				assert(i < _n);
 				return const_proxy_t(
 					&(_data[_data[i]]), 
-					(i + 1 == _n ? _data.size : _data[i + 1]) - _data[i]
+					(i + 1 == _n ? _data.size() : _data[i + 1]) - _data[i]
 				);
 			}
 
