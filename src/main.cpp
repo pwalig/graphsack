@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 	std::cout << gs::solver::Greedy<gs::weight_value_vector<>, gs::bit_vector, unsigned int>::solve(inst2) << "\n";
 
 	std::vector<unsigned int> storage(13);
-	gs::grahps::nexts_list<slice<unsigned int>> nlist(slice<unsigned int>(storage.data(), storage.size()), {
+	gs::grahps::nexts_list_view<unsigned int> nlist(slice<unsigned int>(storage.data(), storage.size()), {
 		{ 1, 2, 3},
 		{ 0, 3 },
 		{ 1 },
