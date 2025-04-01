@@ -13,7 +13,7 @@ namespace gs {
 			inline static solution_t solve(const instance_t& instance) {
 				// prepare storage
 				solution_t res(instance.size());
-				std::vector<typename instance_t::weight_t> weights(instance.dim(), 0);
+				std::vector<typename instance_t::weight_type> weights(instance.dim(), 0);
 
 				// get sorted elements
 				struct elem {
@@ -23,7 +23,7 @@ namespace gs {
 				std::vector<elem> sorted(instance.size());
 				for (indexT i = 0; i < instance.size(); ++i) {
 					sorted[i] = elem{ i, 
-						static_cast<float>(instance.value(i)) / static_cast<float>(instance[i].weights.total())
+						static_cast<float>(instance.value(i)) / static_cast<float>(instance.item(i).total_weight())
 					};
 				}
 				std::sort(sorted.begin(), sorted.end(), [](elem a, elem b) { return a.score > b.score; });

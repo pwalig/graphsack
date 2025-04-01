@@ -13,18 +13,18 @@ namespace gs {
 	class weight_value_vector {
 	public:
 		using value_t = T;
-		using weight_t = T;
+		using weight_type = T;
 
 		// proxy class for accessing single items
 		template <typename T = value_t>
 		class Item;
 
-		template <typename T = weight_t>
+		template <typename T = weight_type>
 		class Weights {
 		public:
-			using weight_t = T;
-			using reference = weight_t&;
-			using pointer = weight_t*;
+			using weight_type = T;
+			using reference = weight_type&;
+			using pointer = weight_type*;
 			using const_reference = const reference;
 			using const_pointer = const pointer;
 		private:
@@ -45,13 +45,13 @@ namespace gs {
 			}
 			inline size_t size() const { return siz; }
 			inline pointer data() const { return ptr; }
-			inline weight_t total() const {
-				typename std::remove_const<weight_t>::type sum = 0;
+			inline weight_type total() const {
+				typename std::remove_const<weight_type>::type sum = 0;
 				for (size_t i = 0; i < siz; ++i) sum += ptr[i];
 				return sum;
 			}
 
-			trivial_iterator_defs(weight_t, ptr, siz)
+			trivial_iterator_defs(weight_type, ptr, siz)
 
 			friend inline std::ostream& operator<< (std::ostream& stream, const Weights& iw) {
 				for (const auto& elem : iw) {
@@ -77,6 +77,8 @@ namespace gs {
 			inline reference value() { return weights.ptr[weights.siz]; }
 			inline const_reference value() const { return weights.ptr[weights.siz]; }
 
+			inline T total_weight() const { return weights.total(); }
+
 			friend inline std::ostream& operator<< (std::ostream& stream, const Item& it) {
 				for (const auto& elem : it.weights) {
 					stream << elem << " ";
@@ -87,8 +89,8 @@ namespace gs {
 		};
 
 
-		using weights_t = Weights<weight_t>;
-		using const_weights_t = const Weights<const weight_t>;
+		using weights_t = Weights<weight_type>;
+		using const_weights_t = const Weights<const weight_type>;
 		using item_t = Item<value_t>;
 		using const_item_t = const Item<const value_t>;
 
@@ -150,7 +152,7 @@ namespace gs {
 		inline size_t dim() const { return _m; }
 
 		inline item_t item(size_t i) { return (*this)[i]; }
-		inline const_item_t item(size_t i) const { (*this)[i]; }
+		inline const_item_t item(size_t i) const { return (*this)[i]; }
 
 		inline value_t value(size_t i) { return _data[_m + _m + (i * its())]; }
 		inline const value_t& value(size_t i) const { return _data[_m + _m + (i * its())]; }
