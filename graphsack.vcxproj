@@ -133,11 +133,12 @@
     <ClInclude Include="src\bit_vector.hpp" />
     <ClInclude Include="src\graphs\arch_list.hpp" />
     <ClInclude Include="src\graphs\nexts_list.hpp" />
+    <ClInclude Include="src\inst\itemlocal_nlist.hpp" />
     <ClInclude Include="src\requirements.hpp" />
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\solvers\Greedy.hpp" />
     <ClInclude Include="src\structure_check.hpp" />
-    <ClInclude Include="src\weight_value_vector.hpp" />
+    <ClInclude Include="src\inst\weight_value_vector.hpp" />
     <ClInclude Include="src\composite_instance.hpp" />
     <ClInclude Include="src\iterator.hpp" />
   </ItemGroup>

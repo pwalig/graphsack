@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "weight_value_vector.hpp"
+#include "inst/weight_value_vector.hpp"
 #include "bit_vector.hpp"
 #include "solvers/Greedy.hpp"
 #include "structure_check.hpp"

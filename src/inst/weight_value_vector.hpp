@@ -6,7 +6,7 @@
 #include <utility>
 #include <fstream>
 
-#include "iterator.hpp"
+#include "../iterator.hpp"
 
 namespace gs {
 	template <typename T = unsigned int>
