@@ -18,6 +18,11 @@ namespace gs {
 			using index_type = indexT;
 			using size_type = size_t;
 
+			using weights_type = slice<weight_type, size_type>;
+			using const_weights_type = slice<const weight_type, size_type>;
+			using nexts_type = slice<index_type, size_type>;
+			using const_nexts_type = slice<const index_type, size_type>;
+
 			template <typename valueT, typename weightT, typename indexT>
 			class ItemView {
 			public:
@@ -53,8 +58,8 @@ namespace gs {
 				}
 			};
 
-			using item_view = ItemView<value_type, weight_type, index_type>;
-			using const_item_view = ItemView<const value_type, const weight_type, const index_type>;
+			using item_type = ItemView<value_type, weight_type, index_type>;
+			using const_item_type = ItemView<const value_type, const weight_type, const index_type>;
 		private:
 			std::vector<uint8_t> storage;
 			size_type n;
@@ -167,16 +172,16 @@ namespace gs {
 				return slice<const index_type, size_type>((index_type*)(&storage[item_data_slice()[i] + sizeof(value_type) + (m * sizeof(weight_type))]), nextsCount);
 			}
 
-			inline item_view item(size_type i) {
-				return item_view(value(i), weights(i), nexts(i));
+			inline item_type item(size_type i) {
+				return item_type(value(i), weights(i), nexts(i));
 			}
 
-			inline const_item_view item(size_type i) const {
-				return const_item_view(value(i), weights(i), nexts(i));
+			inline const_item_type item(size_type i) const {
+				return const_item_type(value(i), weights(i), nexts(i));
 			}
 
-			inline item_view operator[] (size_type i) { return item(i); }
-			inline const_item_view operator[] (size_type i) const { return item(i); }
+			inline item_type operator[] (size_type i) { return item(i); }
+			inline const_item_type operator[] (size_type i) const { return item(i); }
 
 			inline size_type size() const { return n; }
 			inline size_type dim() const { return m; }

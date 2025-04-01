@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "../structure_check.hpp"
+
 namespace gs {
 	namespace solver {
 		template <typename InstanceT, typename SolutionT, typename indexT = size_t>
@@ -39,6 +41,7 @@ namespace gs {
 							weights[i] += instance.weight(item.id, i);
 						}
 						res.add(item.id);
+						if (!is_path_possible(instance, res)) res.remove(item.id);
 					}
 				}
 

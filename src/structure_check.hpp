@@ -43,7 +43,7 @@ namespace gs {
 
     template <typename instance_t, typename solution_t, typename indexT = size_t>
     bool is_cycle_possible(const instance_t& instance, const solution_t& selected) {
-        assert(selected.size() != instance.items.size());
+        assert(selected.size() == instance.items.size());
         std::vector<bool> visited(selected.size(), false);
         for (int i = 0; i < selected.size(); ++i) {
 
@@ -79,16 +79,15 @@ namespace gs {
         const instance_t& instance,
         const solution_t& selected, 
         std::vector<bool>& visited,
-        const std::vector<typename instance_t::weight_type>& _remaining_space,
+        std::vector<typename instance_t::weight_type> _remaining_space,
         const indexT& current
     ) {
         for (int next : instance.nexts(current)) {
             if (visited[next]) continue; // next item has to be new (not visited yet)
 
             bool fit = true;
-            std::vector<typename instance_t::weight_type> new_remaining_space(_remaining_space);
-            for (indexT j = 0; j < new_remaining_space.size(); ++j) {
-                if (new_remaining_space[j] >= instance.items[next].weights[j]) new_remaining_space[j] -= instance.items[next].weights[j];
+            for (indexT j = 0; j < _remaining_space.size(); ++j) {
+                if (_remaining_space[j] >= instance.weight(next, j)) _remaining_space[j] -= instance.weight(next, j);
                 else { fit = false; break; }
             }
             if (!fit) { continue; }
@@ -104,7 +103,7 @@ namespace gs {
             }
             if (_found) { return true; } // it has - path found
             if (is_path_possible_DFS<instance_t, solution_t, indexT>(
-                instance, selected, visited, new_remaining_space, next)
+                instance, selected, visited, _remaining_space, next)
 			) return true; // path found later
             visited[next] = false;
         }
@@ -113,13 +112,14 @@ namespace gs {
 
     template <typename instance_t, typename solution_t, typename indexT = size_t>
     bool is_path_possible(const instance_t& instance, const solution_t& selected) {
-        assert(selected.size() != instance.size());
+        assert(selected.size() == instance.size());
         std::vector<bool> visited(selected.size(), false);
 
         for (indexT i = 0; i < instance.size(); ++i) {
 
             bool fit = true;
-            std::vector<typename instance_t::weight_type> _remaining_space = instance.limits();
+            std::vector<typename instance_t::weight_type> _remaining_space(instance.dim());
+            memcpy(_remaining_space.data(), instance.limits().data(), instance.dim() * sizeof(typename instance_t::weight_type));
             for (int j = 0; j < _remaining_space.size(); ++j) {
                 if (_remaining_space[j] >= instance.weight(i, j)) _remaining_space[j] -= instance.weight(i, j);
                 else { fit = false; break; }
