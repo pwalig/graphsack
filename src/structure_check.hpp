@@ -82,7 +82,7 @@ namespace gs {
         std::vector<typename instance_t::weight_type> _remaining_space,
         const indexT& current
     ) {
-        for (int next : instance.nexts(current)) {
+        for (indexT next : instance.nexts(current)) {
             if (visited[next]) continue; // next item has to be new (not visited yet)
 
             bool fit = true;
@@ -96,7 +96,7 @@ namespace gs {
             // found some path lets check if it has all selected vertices
             bool _found = true;
             for (indexT i = 0; i < selected.size(); ++i) {
-                if (selected[i] && !visited[i]) {
+                if (selected.has(i) && !visited[i]) {
                     _found = false;
                     break;
                 }
@@ -120,7 +120,7 @@ namespace gs {
             bool fit = true;
             std::vector<typename instance_t::weight_type> _remaining_space(instance.dim());
             memcpy(_remaining_space.data(), instance.limits().data(), instance.dim() * sizeof(typename instance_t::weight_type));
-            for (int j = 0; j < _remaining_space.size(); ++j) {
+            for (indexT j = 0; j < _remaining_space.size(); ++j) {
                 if (_remaining_space[j] >= instance.weight(i, j)) _remaining_space[j] -= instance.weight(i, j);
                 else { fit = false; break; }
             }
@@ -130,7 +130,7 @@ namespace gs {
             // found some path lets check if it has all selected vertices
             bool _found = true;
             for (indexT j = 0; j < selected.size(); ++j) {
-                if (selected[j] && j != i) {
+                if (selected.has(j) && j != i) {
                     _found = false;
                     break;
                 }

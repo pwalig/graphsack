@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "../structure_check.hpp"
+#include "../weight_vector_operations.hpp"
 
 namespace gs {
 	namespace solver {
@@ -32,16 +33,10 @@ namespace gs {
 
 				// solve
 				for (const auto& item : sorted) {
-					bool fits = true;
-					for (size_t i = 0; i < instance.dim(); ++i) {
-						if (weights[i] + instance.weight(item.id, i) > instance.limit(i)) { fits = false; break; }
-					}
-					if (fits) {
-						for (size_t i = 0; i < instance.dim(); ++i) {
-							weights[i] += instance.weight(item.id, i);
-						}
+					if (would_fit(weights, instance.weights(item.id), instance.limits())) {
 						res.add(item.id);
 						if (!is_path_possible(instance, res)) res.remove(item.id);
+						else add_weights(weights, instance.weights(item.id));
 					}
 				}
 

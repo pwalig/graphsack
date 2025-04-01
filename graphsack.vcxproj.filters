@@ -53,5 +53,8 @@
     <ClInclude Include="src\inst\itemlocal_nlist.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\weight_vector_operations.hpp">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

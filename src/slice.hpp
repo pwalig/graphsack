@@ -21,6 +21,7 @@ public:
 		for (value_type val : contents) {
 			ptr[i++] = val;
 		}
+		return (*this);
 	}
 	inline reference operator[] (sizeT i) { assert(i < siz); return ptr[i]; }
 	inline const_reference operator[] (sizeT i) const { assert(i < siz); return ptr[i]; }
