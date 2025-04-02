@@ -10,13 +10,13 @@
 
 namespace gs {
 	namespace inst {
-		template <typename valueT, typename weightT = valueT, typename indexT = size_t>
+		template <typename valueT, typename weightT = valueT, typename indexT = size_t, template<class ...> class Container = std::vector>
 		class itemlocal_nlist {
 		public:
 			using value_type = valueT;
 			using weight_type = weightT;
 			using index_type = indexT;
-			using size_type = size_t;
+			using size_type = typename Container<uint8_t>::size_type;
 
 			using weights_type = slice<weight_type, size_type>;
 			using const_weights_type = slice<const weight_type, size_type>;
@@ -61,14 +61,14 @@ namespace gs {
 			using item_type = ItemView<value_type, weight_type, index_type>;
 			using const_item_type = ItemView<const value_type, const weight_type, const index_type>;
 		private:
-			std::vector<uint8_t> storage;
+			Container<uint8_t> storage;
 			size_type n;
 			size_type m;
 
-			inline static std::vector<uint8_t>::size_type get_storage_size(size_type M,
+			inline static size_type get_storage_size(size_type M,
 				std::initializer_list<std::initializer_list<index_type>> nexts
 			) {
-				std::vector<uint8_t>::size_type res = (M * sizeof(weight_type)) +
+				size_type res = (M * sizeof(weight_type)) +
 				(nexts.size() * ((M * sizeof(weight_type)) + sizeof(value_type) + sizeof(size_type)));
 				for (const auto& next : nexts) {
 					res += next.size() * sizeof(index_type);
@@ -106,20 +106,20 @@ namespace gs {
 				}
 			}
 
-			inline slice<size_type> item_data_slice() {
-				return slice<size_type>((size_type*)(storage.data()), n);
+			inline slice<size_type, size_type> item_data_slice() {
+				return slice<size_type, size_type>((size_type*)(storage.data()), n);
 			}
 
-			inline slice<const size_type> item_data_slice() const {
-				return slice<const size_type>((size_type*)(storage.data()), n);
+			inline slice<const size_type, size_type> item_data_slice() const {
+				return slice<const size_type, size_type>((size_type*)(storage.data()), n);
 			}
 
-			inline slice<weight_type, size_type> limits() {
-				return slice<weight_type, size_type>((weight_type*)(&storage[n * sizeof(size_type)]), m);
+			inline weights_type limits() {
+				return weights_type((weight_type*)(&storage[n * sizeof(size_type)]), m);
 			}
 
-			inline slice<const weight_type, size_type> limits() const {
-				return slice<const weight_type, size_type>((weight_type*)(&storage[n * sizeof(size_type)]), m);
+			inline const_weights_type limits() const {
+				return const_weights_type((weight_type*)(&storage[n * sizeof(size_type)]), m);
 			}
 
 			inline weight_type& limit(size_type i) {
@@ -138,12 +138,12 @@ namespace gs {
 				return *((value_type*)(&storage[item_data_slice()[i]]));
 			}
 
-			inline slice<weight_type, size_type> weights(size_type i) {
-				return slice<weight_type, size_type>((weight_type*)(&storage[item_data_slice()[i] + sizeof(value_type)]), m);
+			inline weights_type weights(size_type i) {
+				return weights_type((weight_type*)(&storage[item_data_slice()[i] + sizeof(value_type)]), m);
 			}
 
-			inline slice<const weight_type, size_type> weights(size_type i) const {
-				return slice<const weight_type, size_type>((const weight_type*)(&storage[item_data_slice()[i] + sizeof(value_type)]), m);
+			inline const_weights_type weights(size_type i) const {
+				return const_weights_type((const weight_type*)(&storage[item_data_slice()[i] + sizeof(value_type)]), m);
 			}
 
 			inline weight_type& weight(size_type i, size_type j) {
@@ -154,22 +154,22 @@ namespace gs {
 				return weights(i)[j];
 			}
 
-			inline slice<index_type, size_type> nexts(size_type i) {
+			inline nexts_type nexts(size_type i) {
 				assert(i < n);
 				auto ids = item_data_slice();
 				uint8_t* ptr = &storage[ids[i]];
 				uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
 				size_type nextsCount = (nextPtr - ptr - sizeof(value_type) - (m * sizeof(weight_type))) / sizeof(index_type);
-				return slice<index_type, size_type>((index_type*)(&storage[item_data_slice()[i] + sizeof(value_type) + (m * sizeof(weight_type))]), nextsCount);
+				return nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeof(value_type) + (m * sizeof(weight_type))]), nextsCount);
 			}
 			
-			inline slice<const index_type, size_type> nexts(size_type i) const {
+			inline const_nexts_type nexts(size_type i) const {
 				assert(i < n);
 				auto ids = item_data_slice();
 				const uint8_t* ptr = &storage[ids[i]];
 				const uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
 				size_type nextsCount = (nextPtr - ptr - sizeof(value_type) - (m * sizeof(weight_type))) / sizeof(index_type);
-				return slice<const index_type, size_type>((index_type*)(&storage[item_data_slice()[i] + sizeof(value_type) + (m * sizeof(weight_type))]), nextsCount);
+				return const_nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeof(value_type) + (m * sizeof(weight_type))]), nextsCount);
 			}
 
 			inline item_type item(size_type i) {
