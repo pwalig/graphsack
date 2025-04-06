@@ -7,7 +7,7 @@
 
 namespace gs {
 	namespace solver {
-		template <typename InstanceT, typename SolutionT, typename indexT = size_t>
+		template <typename InstanceT, typename SolutionT, typename indexT = typename InstanceT::size_type>
 		class Greedy {
 		public:
 			using instance_t = InstanceT;
@@ -16,7 +16,8 @@ namespace gs {
 			inline static solution_t solve(const instance_t& instance) {
 				// prepare storage
 				solution_t res(instance.size());
-				std::vector<typename instance_t::weight_type> weights(instance.dim(), 0);
+				std::vector<typename instance_t::weight_type> remaining(instance.dim());
+				element_wise::operate(remaining, instance.limits(), element_wise::copy);
 
 				// get sorted elements
 				struct elem {
@@ -33,10 +34,10 @@ namespace gs {
 
 				// solve
 				for (const auto& item : sorted) {
-					if (would_fit(weights, instance.weights(item.id), instance.limits())) {
+					if (fits(instance.weights(item.id), remaining)) {
 						res.add(item.id);
 						if (!is_path_possible(instance, res)) res.remove(item.id);
-						else add_weights(weights, instance.weights(item.id));
+						else sub_from_weights(remaining, instance.weights(item.id));
 					}
 				}
 
