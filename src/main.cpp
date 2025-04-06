@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 	std::cout << nlist2 << "\n";
 
 
-	gs::inst::itemlocal_nlist<unsigned int> ilnl(3,
+	gs::inst::itemlocal_nlist<unsigned int> ilnl(
 		{ 11, 12, 13 },
 		{ 21, 22, 23 },
 		{ {1, 2, 3}, {4, 5, 6}, {7, 8, 9} },

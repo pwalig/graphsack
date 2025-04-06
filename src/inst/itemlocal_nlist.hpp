@@ -76,14 +76,14 @@ namespace gs {
 				return res;
 			}
 
-		public:
-
-			inline itemlocal_nlist(size_type N,
+			inline void fill_data(
 				std::initializer_list<weight_type> Limits,
 				std::initializer_list<value_type> values,
-				std::initializer_list<std::initializer_list<weight_type>> weights,
+				std::initializer_list<std::initializer_list<weight_type>> Weights,
 				std::initializer_list<std::initializer_list<index_type>> Nexts
-			) : n(N), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)) {
+			) {
+				assert(values.size() == Weights.size());
+				assert(values.size() == Nexts.size());
 				size_type acc = (n * sizeof(size_type)) + (m * sizeof(weight_type));
 				size_type i = 0;
 				auto ids = item_data_slice();
@@ -99,11 +99,32 @@ namespace gs {
 				i = 0;
 				for (const auto& val : values) { value(i++) = val; }
 				i = 0;
-				for (const auto& ws : weights) {
-					size_type j = 0;
-					for (weight_type w : ws) { weight(i, j++) = w; }
-					++i;
+				for (const auto& ws : Weights) {
+					assert(ws.size() == Limits.size());
+					weights(i++) = ws;
 				}
+			}
+
+		public:
+
+			inline itemlocal_nlist(
+				const Container<uint8_t>& data,
+				std::initializer_list<weight_type> Limits,
+				std::initializer_list<value_type> values,
+				std::initializer_list<std::initializer_list<weight_type>> Weights,
+				std::initializer_list<std::initializer_list<index_type>> Nexts
+			) : n(values.size()), m(Limits.size()), storage(data) {
+				assert(data.size() == get_storage_size(Limits.size(), Nexts));
+				fill_data(Limits, values, Weights, Nexts);
+			}
+
+			inline itemlocal_nlist(
+				std::initializer_list<weight_type> Limits,
+				std::initializer_list<value_type> values,
+				std::initializer_list<std::initializer_list<weight_type>> Weights,
+				std::initializer_list<std::initializer_list<index_type>> Nexts
+			) : n(values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)) {
+				fill_data(Limits, values, Weights, Nexts);
 			}
 
 			inline slice<size_type, size_type> item_data_slice() {
