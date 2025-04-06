@@ -49,6 +49,6 @@ int main(int argc, char** argv) {
 	}
 
 	std::cout << "\n" << ilnl << "\n";
-	std::cout << gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>::solve(ilnl) << "\n";
+	std::cout << gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>::solve<gs::metric::ValueWeightRatio<float>>(ilnl) << "\n";
 
 }

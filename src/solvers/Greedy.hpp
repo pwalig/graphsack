@@ -4,6 +4,7 @@
 
 #include "../structure_check.hpp"
 #include "../weight_vector_operations.hpp"
+#include "metric.hpp"
 
 namespace gs {
 	namespace solver {
@@ -13,31 +14,40 @@ namespace gs {
 			using instance_t = InstanceT;
 			using solution_t = SolutionT;
 
-			inline static solution_t solve(const instance_t& instance) {
+			template <typename metricT>
+			using metric_function = metric::function<metricT, instance_t>;
+
+			template <typename metricT>
+			inline static std::vector<indexT> getSortedByMetric(
+				const instance_t& instance
+			) {
+				std::vector<indexT> res(instance.size());
+				for (indexT i = 0; i < instance.size(); ++i) {
+					res[i] = i;
+				}
+				std::vector<typename metricT::value_type> metric = metric::calculate<metricT, instance_t>(instance);
+				std::sort(res.begin(), res.end(), [&metric](indexT a, indexT b) { return metric[a] > metric[b]; });
+				return res;
+			}
+
+			template <typename metricT>
+			inline static solution_t solve(
+				const instance_t& instance
+			) {
 				// prepare storage
 				solution_t res(instance.size());
 				std::vector<typename instance_t::weight_type> remaining(instance.dim());
 				element_wise::operate(remaining, instance.limits(), element_wise::copy);
 
 				// get sorted elements
-				struct elem {
-					indexT id;
-					float score;
-				};
-				std::vector<elem> sorted(instance.size());
-				for (indexT i = 0; i < instance.size(); ++i) {
-					sorted[i] = elem{ i, 
-						static_cast<float>(instance.value(i)) / static_cast<float>(instance.item(i).total_weight())
-					};
-				}
-				std::sort(sorted.begin(), sorted.end(), [](elem a, elem b) { return a.score > b.score; });
+				std::vector<indexT> sorted = getSortedByMetric<metricT>(instance);
 
 				// solve
-				for (const auto& item : sorted) {
-					if (fits(instance.weights(item.id), remaining)) {
-						res.add(item.id);
-						if (!is_path_possible(instance, res)) res.remove(item.id);
-						else sub_from_weights(remaining, instance.weights(item.id));
+				for (indexT itemId : sorted) {
+					if (fits(instance.weights(itemId), remaining)) {
+						res.add(itemId);
+						if (!is_path_possible(instance, res)) res.remove(itemId);
+						else sub_from_weights(remaining, instance.weights(itemId));
 					}
 				}
 
