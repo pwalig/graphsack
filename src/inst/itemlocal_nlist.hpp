@@ -61,6 +61,11 @@ namespace gs {
 			using item_type = ItemView<value_type, weight_type, index_type>;
 			using const_item_type = ItemView<const value_type, const weight_type, const index_type>;
 		private:
+			/* storage scheme
+			item indexes | limits | items
+			where each item:
+			value | weights | nexts
+			*/
 			Container<uint8_t> storage;
 			size_type n;
 			size_type m;
@@ -107,6 +112,8 @@ namespace gs {
 
 		public:
 
+			itemlocal_nlist() = default;
+
 			inline itemlocal_nlist(
 				const Container<uint8_t>& data,
 				std::initializer_list<weight_type> Limits,
@@ -125,6 +132,13 @@ namespace gs {
 				std::initializer_list<std::initializer_list<index_type>> Nexts
 			) : n(values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)) {
 				fill_data(Limits, values, Weights, Nexts);
+			}
+
+			inline itemlocal_nlist(const std::string filename) : itemlocal_nlist() {
+				std::ifstream fin(filename);
+				if (!fin.is_open()) throw std::runtime_error("could not open file: " + filename);
+				fin >> (*this);
+				fin.close();
 			}
 
 			inline slice<size_type, size_type> item_data_slice() {
@@ -216,6 +230,65 @@ namespace gs {
 				for (size_type i = 0; i < itnl.size(); ++i) {
 					stream << "\n" << itnl.item(i);
 				}
+				return stream;
+			}
+
+			friend inline std::istream& operator>> (std::istream& stream, itemlocal_nlist& itnl) {
+				// read n and m
+				stream >> itnl.n;
+				stream >> itnl.m;
+
+				// get storage parameters
+				using sizt = std::vector<uint8_t>::size_type;
+				sizt size = (sizeof(weight_type) * (itnl.n + 1) * itnl.m) + ((sizeof(value_type) + sizeof(size_type)) * itnl.n);
+				sizt stride = (sizeof(weight_type) * itnl.m) + sizeof(value_type);
+				sizt limitsOff = sizeof(size_type) * itnl.n;
+				sizt itemsOff = limitsOff + sizeof(weight_type) * itnl.m;
+
+				// read limitsOff, weights and values
+				std::vector<uint8_t> weight_value(size);
+				for (sizt i = limitsOff; i < itemsOff; i += sizeof(weight_type)) {
+					stream >> (*((weight_type*)(&weight_value[i])));
+				}
+				for (sizt i = itemsOff; i < weight_value.size(); i += stride) {
+					stream >> (*((value_type*)(&weight_value[i])));
+				}
+				for (sizt i = itemsOff; i < weight_value.size(); i += stride) {
+					for (sizt j = i + sizeof(value_type); j < i + stride; j += sizeof(weight_type)) {
+						stream >> (*((weight_type*)(&weight_value[j])));
+					}
+				}
+
+				// read nexts lists
+				std::vector<index_type> nlist;
+				for (sizt i = 0; i < limitsOff; i += sizeof(size_type)) {
+					size_type count;
+					stream >> count;
+					(*((size_type*)(&weight_value[i]))) = count;
+					for (size_type j = 0; j < count; ++j) {
+						index_type ind;
+						stream >> ind;
+						nlist.push_back(ind);
+					}
+				}
+
+				// copy data
+				itnl.storage.resize(weight_value.size() + nlist.size() * sizeof(index_type));
+				size_type nlistInd = 0;
+				size_type storageInd = itemsOff;
+				sizt j = 0;
+				for (sizt i = itemsOff; i < weight_value.size(); i += stride) {
+					memcpy(itnl.storage.data() + storageInd, weight_value.data() + i, stride);
+					size_type nextsCount = (*(size_type*)(&weight_value[j]));
+					memcpy(itnl.storage.data() + storageInd + stride, nlist.data() + nlistInd, nextsCount * sizeof(size_type));
+					(*(size_type*)(&weight_value[j])) = storageInd;
+					storageInd += stride + nextsCount * sizeof(size_type);
+					nlistInd += nextsCount;
+					j += sizeof(size_type);
+				}
+				memcpy(itnl.storage.data(), weight_value.data(), itemsOff);
+
+				// return
 				return stream;
 			}
 		};

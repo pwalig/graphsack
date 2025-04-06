@@ -13,6 +13,7 @@ namespace gs {
 		public:
 			using instance_t = InstanceT;
 			using solution_t = SolutionT;
+			inline static const std::string name = "Greedy";
 
 			template <typename metricT>
 			using metric_function = metric::function<metricT, instance_t>;

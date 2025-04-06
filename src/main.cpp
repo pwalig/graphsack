@@ -43,12 +43,14 @@ int main(int argc, char** argv) {
 		{ {1, 2, 3}, {4, 5, 6}, {7, 8, 9} },
 		{ {1}, {2}, {0, 1}}
 	);
+	gs::inst::itemlocal_nlist<unsigned int> ilnl2("instances/itemlocal_nlist_test.txt");
 
 	for (auto val : ilnl.item_data_slice()) {
 		std::cout << val / sizeof(unsigned int) << " ";
 	}
 
 	std::cout << "\n" << ilnl << "\n";
+	std::cout << "\n" << ilnl2 << "\n";
 	std::cout << gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>::solve<gs::metric::ValueWeightRatio<float>>(ilnl) << "\n";
 
 }

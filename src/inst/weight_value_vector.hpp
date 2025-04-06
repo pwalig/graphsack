@@ -122,6 +122,7 @@ namespace gs {
 		inline weight_value_vector(size_t M, size_t N, const std::vector<value_type>& data) : _data(data), _m(M), _n(N) {}
 		inline weight_value_vector(const std::string filename) : weight_value_vector() {
 			std::ifstream fin(filename);
+			if (!fin.is_open()) throw std::runtime_error("could not open file: " + filename);
 			fin >> (*this);
 			fin.close();
 		}

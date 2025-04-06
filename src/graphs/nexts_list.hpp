@@ -52,6 +52,7 @@ namespace gs {
 
 			inline nexts_list(const std::string filename) : _data(), _n(0) {
 				std::ifstream fin(filename);
+				if (!fin.is_open()) throw std::runtime_error("could not open file: " + filename);
 				fin >> (*this);
 				fin.close();
 			}
