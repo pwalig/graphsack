@@ -112,7 +112,7 @@ namespace gs {
 
 		public:
 
-			itemlocal_nlist() = default;
+			itemlocal_nlist() : n(0), m(0) {}
 
 			inline itemlocal_nlist(
 				const Container<uint8_t>& data,
