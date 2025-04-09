@@ -68,10 +68,10 @@ namespace gs {
 					else if (keyval == "instance") output.second << instance;
 					else if (keyval == "result") output.second << res;
 					else if (keyval == "instance size") output.second << instance.size();
-					else if (keyval == "result size") output.second << stats.S;
-					//else if (keyval == "instance N") output.second << instance.limits();
-					else if (keyval == "result N") output.second << stats.N[0];
-					else if (keyval == "structure") output.second << (stats.structure ? "true" : "false");
+					else if (keyval == "result value") output.second << stats.S;
+					else if (keyval == "limits") for (auto elem : instance.limits()) output.second << elem << " ";
+					else if (keyval == "result weights") for (auto elem : stats.N) output.second << elem << " ";
+					else if (keyval == "structure valid") output.second << (stats.structure ? "true" : "false");
 					else if (keyval == "fitting") output.second << (stats.fitting ? "true" : "false");
 					output.first = output.first.substr(pos2 + 1);
 					pos = output.first.find_first_of('{');

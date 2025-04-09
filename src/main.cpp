@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
 	std::cout << "\n" << ilnl2 << "\n";
 	std::cout << gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>::solve(ilnl) << "\n";
 
-	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>>::run(ilnl2, "time: {time}s\nresult: {result}\n", std::cout);
+	std::string format = "result: {result}\ntime: {time}s\nvalue: {result value}\nweights: {result weights}/ {limits}\n";
+	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>>::run(ilnl2, format, std::cout);
 
 }

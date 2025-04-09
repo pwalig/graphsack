@@ -22,11 +22,14 @@ namespace gs {
 	}
 
 	namespace element_wise {
+		template <typename T, typename... Args>
+		using op = T(*)(Args...);
+
 		template <typename T, typename U>
 		using in_place_op = void(*)(T&, const U&);
 
 		template <typename V, typename T, typename U>
-		using ret_op = V(*)(T, U);
+		using ret_op = op<V, T, U>;
 
 		template <typename T, typename U>
 		inline void in_place_add(T& lhs, const U& rhs) {
@@ -68,16 +71,29 @@ namespace gs {
 			}
 		}
 
+		template <typename T, typename... Args>
+		inline T operate_variadic(
+			Args... args,
+			op<typename T::value_type, typename Args::value_type...> op
+		) {
+			T res(args.size());
+			for (size_t i = 0; i < args.size(); ++i) {
+				res[i] = op(args[i]);
+			}
+			return res;
+		}
+
 		template <typename V, typename T, typename U>
 		inline V operate(
 			const T& lhs, const U& rhs, ret_op<typename V::value_type, typename T::value_type, typename U::value_type> op
 		) {
 			assert(lhs.size() == rhs.size());
-			V res(lhs.size());
-			for (size_t i = 0; i < lhs.size(); ++i) {
-				res[i] = op(lhs[i], rhs[i]);
-			}
-			return res;
+			return operate_variadic<V, const T&, const U&>(lhs, rhs, op);
+			//V res(lhs.size());
+			//for (size_t i = 0; i < lhs.size(); ++i) {
+			//	res[i] = op(lhs[i], rhs[i]);
+			//}
+			//return res;
 		}
 	}
 

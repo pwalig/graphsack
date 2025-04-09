@@ -18,7 +18,7 @@ namespace gs {
 		) {
 			typename instance_t::value_type res = 0;
 			for (size_t i = 0; i < instance.size(); ++i) {
-				res += instance.value(i);
+				if (solution.has(i)) res += instance.value(i);
 			}
 			return res;
 		}
