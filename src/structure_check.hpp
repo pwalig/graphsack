@@ -217,7 +217,7 @@ namespace gs {
     template <typename instance_t, typename solution_t, typename indexT = size_t>
 	bool is_cycle(
         const instance_t& instance,
-        const instance_t& selected
+        const solution_t& selected
     ) {
 		assert(selected.size() == instance.size());
 
@@ -234,7 +234,7 @@ namespace gs {
 			if (selected.has(i)){
                 if (length == 1) return has_connection_to(instance, i, i);
 				visited[i] = true;
-				if (is_cycle_DFS(instance, selected, visited, i, i, length, 2)) return true; // cycle found somewhere
+				if (is_cycle_DFS<instance_t, solution_t, indexT>(instance, selected, visited, i, i, length, 2)) return true; // cycle found somewhere
 				visited[i] = false;
 			}
 		}

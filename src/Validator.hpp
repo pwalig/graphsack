@@ -3,6 +3,7 @@
 
 #include "weight_vector_operations.hpp"
 #include "structure_check.hpp"
+#include "requirements.hpp"
 
 namespace gs {
 	template <typename instanceT, typename solutionT>
@@ -60,7 +61,21 @@ namespace gs {
 			const instance_t& instance,
 			const solution_t& result
 		) {
-			return is_path(instance, result);
+			switch (instance.structure_to_find())
+			{
+			case structure::none:
+				return true;
+				break;
+			case structure::path:
+				return is_path(instance, result);
+				break;
+			case structure::cycle:
+				return is_cycle(instance, result);
+				break;
+			default:
+				throw std::logic_error("not implemented");
+				break;
+			}
 		}
 	};
 }

@@ -7,6 +7,7 @@
 
 #include "../slice.hpp"
 #include "../iterator.hpp"
+#include "../requirements.hpp"
 
 namespace gs {
 	namespace inst {
@@ -69,6 +70,9 @@ namespace gs {
 			Container<uint8_t> storage;
 			size_type n;
 			size_type m;
+			structure structureToFind;
+			weight_treatment weightTreatment;
+			
 
 			inline static size_type get_storage_size(size_type M,
 				std::initializer_list<std::initializer_list<index_type>> nexts
@@ -112,15 +116,22 @@ namespace gs {
 
 		public:
 
-			itemlocal_nlist() : n(0), m(0) {}
+			itemlocal_nlist(
+				structure Structure = structure::path,
+				weight_treatment WeightTreatment = weight_treatment::full
+			) : n(0), m(0), structureToFind(Structure), weightTreatment(WeightTreatment) {}
 
 			inline itemlocal_nlist(
 				const Container<uint8_t>& data,
 				std::initializer_list<weight_type> Limits,
 				std::initializer_list<value_type> values,
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
-				std::initializer_list<std::initializer_list<index_type>> Nexts
-			) : n(values.size()), m(Limits.size()), storage(data) {
+				std::initializer_list<std::initializer_list<index_type>> Nexts,
+				structure Structure = structure::path,
+				weight_treatment WeightTreatment = weight_treatment::full
+			) : n(values.size()), m(Limits.size()), storage(data),
+				structureToFind(Structure), weightTreatment(WeightTreatment)
+			{
 				assert(data.size() == get_storage_size(Limits.size(), Nexts));
 				fill_data(Limits, values, Weights, Nexts);
 			}
@@ -129,8 +140,12 @@ namespace gs {
 				std::initializer_list<weight_type> Limits,
 				std::initializer_list<value_type> values,
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
-				std::initializer_list<std::initializer_list<index_type>> Nexts
-			) : n(values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)) {
+				std::initializer_list<std::initializer_list<index_type>> Nexts,
+				structure Structure = structure::path,
+				weight_treatment WeightTreatment = weight_treatment::full
+			) : n(values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)),
+				structureToFind(Structure), weightTreatment(WeightTreatment)
+			{
 				fill_data(Limits, values, Weights, Nexts);
 			}
 
@@ -220,6 +235,8 @@ namespace gs {
 
 			inline size_type size() const { return n; }
 			inline size_type dim() const { return m; }
+			inline structure structure_to_find() const { return structureToFind; }
+			inline weight_treatment weight_treatment() const { return weightTreatment; }
 
 			friend inline std::ostream& operator<< (std::ostream& stream, const itemlocal_nlist & itnl) {
 				size_type i = 0;
