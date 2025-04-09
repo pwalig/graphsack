@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "weight_vector_operations.hpp"
+#include "structure_check.hpp"
 
 namespace gs {
 	template <typename instanceT, typename solutionT>
@@ -29,7 +30,7 @@ namespace gs {
 		) {
 			std::vector<typename instance_t::weight_type> res(instance.dim());
 			for (size_t i = 0; i < instance.size(); ++i) {
-				add_to_weights(res, instance.weights(i));
+				if (solution.has(i)) add_to_weights(res, instance.weights(i));
 			}
 			return res;
 		}
@@ -53,6 +54,13 @@ namespace gs {
 			const solution_t& result
 		) {
 			return validateFit(instance.limits(), getResultN(instance, result));
+		}
+
+		inline static bool validateStructure(
+			const instance_t& instance,
+			const solution_t& result
+		) {
+			return is_path(instance, result);
 		}
 	};
 }

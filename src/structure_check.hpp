@@ -143,4 +143,101 @@ namespace gs {
         }
         return false;
     }
+
+    template <typename instance_t, typename solution_t, typename indexT = size_t>
+	bool is_path_DFS(
+        const instance_t& problem,
+        const solution_t& selected,
+        std::vector<bool>& visited,
+        indexT current, indexT length, indexT depth
+    ) {
+		for (auto next : problem.nexts(current)) {
+			if (selected.has(next) && !visited[next]){ // next item has to be selected and new
+				visited[next] = true;
+				if (depth == length) return true; // path found
+				if (depth > length) return false; // path would have to be to long
+				if (is_path_DFS(problem, selected, visited, next, length, depth + 1)) return true; // path found later
+				visited[next] = false;
+			}
+		}
+		return false; // path not found
+	}
+
+    template <typename instance_t, typename solution_t, typename indexT = size_t>
+	bool is_path(const instance_t& instance, const solution_t& selected) {
+        assert(selected.size() == instance.size());
+
+		// calculate whats the length of the path
+		indexT length = 0;
+		for (indexT i = 0; i < selected.size(); ++i)
+			if (selected.has(i)) ++length;
+		
+		if (length <= 1) return true;
+		
+		// check from each starting point
+		std::vector<bool> visited(selected.size(), false);
+		for (indexT i = 0; i < selected.size(); ++i) {
+			if (selected.has(i)){
+				visited[i] = true;
+				if (is_path_DFS<instance_t, solution_t, indexT>(instance, selected, visited, i, length, 2)) return true; // path found somewhere
+				visited[i] = false;
+			}
+		}
+		return false;
+	}
+
+    template<typename instance_t>
+    bool has_connection_to(
+        const instance_t& instance,
+        const typename instance_t::index_type& from,
+        const typename instance_t::index_type& to
+    ) {
+		return std::find(instance.nexts(from).begin(), instance.nexts(from).end(), to) != instance.nexts(from).end();
+    }
+
+    template <typename instance_t, typename solution_t, typename indexT = size_t>
+	bool is_cycle_DFS(
+        const instance_t& instance,
+        const solution_t& selected,
+        std::vector<bool>& visited,
+        indexT current, indexT start, indexT length, indexT depth
+    ) {
+		for (indexT next : instance.nexts(current)) {
+			if (selected.has(next) && !visited[next]){ // next item has to be selected and new
+				visited[next] = true;
+				if (depth == length && has_connection_to(instance, next, start)) return true; // cycle found
+				if (depth > length) return false; // cycle would have to be to long
+				if (is_cycle_DFS(instance, selected, visited, next, start, length, depth + 1)) return true; // cycle found later
+				visited[next] = false;
+			}
+		}
+		return false; // cycle not found
+	}
+
+    template <typename instance_t, typename solution_t, typename indexT = size_t>
+	bool is_cycle(
+        const instance_t& instance,
+        const instance_t& selected
+    ) {
+		assert(selected.size() == instance.size());
+
+		// calculate whats the length of the cycle
+		indexT length = 0;
+		for (indexT i = 0; i < selected.size(); ++i)
+			if (selected.has(i)) ++length;
+		
+		if (length == 0) return true;
+		
+		// check from each starting point
+		std::vector<bool> visited(selected.size(), false);
+		for (indexT i = 0; i < selected.size(); ++i) {
+			if (selected.has(i)){
+                if (length == 1) return has_connection_to(instance, i, i);
+				visited[i] = true;
+				if (is_cycle_DFS(instance, selected, visited, i, i, length, 2)) return true; // cycle found somewhere
+				visited[i] = false;
+			}
+		}
+		return false;
+	}
 }
