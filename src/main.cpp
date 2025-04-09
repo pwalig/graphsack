@@ -6,6 +6,7 @@
 #include "structure_check.hpp"
 #include "graphs/nexts_list.hpp"
 #include "inst/itemlocal_nlist.hpp"
+#include "SolverRunner.hpp"
 
 int main(int argc, char** argv) {
 	const int a = 5;
@@ -51,6 +52,8 @@ int main(int argc, char** argv) {
 
 	std::cout << "\n" << ilnl << "\n";
 	std::cout << "\n" << ilnl2 << "\n";
-	std::cout << gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>::solve<gs::metric::ValueWeightRatio<float>>(ilnl) << "\n";
+	std::cout << gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>::solve(ilnl) << "\n";
+
+	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>>::run(ilnl2, "time: {time}s\nresult: {result}\n", std::cout);
 
 }

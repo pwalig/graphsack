@@ -147,6 +147,7 @@
     <ClInclude Include="src\SolverRunner.hpp" />
     <ClInclude Include="src\solvers\Greedy.hpp" />
     <ClInclude Include="src\solvers\metric.hpp" />
+    <ClInclude Include="src\stats.hpp" />
     <ClInclude Include="src\structure_check.hpp" />
     <ClInclude Include="src\inst\weight_value_vector.hpp" />
     <ClInclude Include="src\composite_instance.hpp" />

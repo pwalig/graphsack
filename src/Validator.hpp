@@ -35,7 +35,7 @@ namespace gs {
 		}
 
 		inline static bool validateFit(
-			const typename instance_t::weights_type& instanceN,
+			const typename instance_t::const_weights_type& instanceN,
 			const std::vector<typename instance_t::weight_type>& resultN
 		) {
 			return fits(resultN, instanceN);

@@ -8,17 +8,15 @@
 
 namespace gs {
 	namespace solver {
-		template <typename InstanceT, typename SolutionT, typename indexT = typename InstanceT::size_type>
+		template <typename InstanceT, typename SolutionT, typename metricT = gs::metric::ValueWeightRatio<float>, typename indexT = typename InstanceT::size_type>
 		class Greedy {
 		public:
 			using instance_t = InstanceT;
 			using solution_t = SolutionT;
 			inline static const std::string name = "Greedy";
 
-			template <typename metricT>
 			using metric_function = metric::function<metricT, instance_t>;
 
-			template <typename metricT>
 			inline static std::vector<indexT> getSortedByMetric(
 				const instance_t& instance
 			) {
@@ -31,17 +29,16 @@ namespace gs {
 				return res;
 			}
 
-			template <typename metricT>
 			inline static solution_t solve(
 				const instance_t& instance
 			) {
 				// prepare storage
 				solution_t res(instance.size());
 				std::vector<typename instance_t::weight_type> remaining(instance.dim());
-				element_wise::operate(remaining, instance.limits(), element_wise::copy);
+				element_wise::in_place_operate(remaining, instance.limits(), element_wise::copy);
 
 				// get sorted elements
-				std::vector<indexT> sorted = getSortedByMetric<metricT>(instance);
+				std::vector<indexT> sorted = getSortedByMetric(instance);
 
 				// solve
 				for (indexT itemId : sorted) {

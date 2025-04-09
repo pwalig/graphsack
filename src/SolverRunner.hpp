@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Validator.hpp"
+#include "stats.hpp"
 
 namespace gs {
 
@@ -19,121 +20,6 @@ namespace gs {
 		using instance_t = typename Solver::instance_t;
 		using solution_t = typename Solver::solution_t;
 
-		class avg_stats {
-		public:
-			double time = 0.0;
-			double S = 0.0;
-			double N = 0.0;
-			double unique = 0.0;
-			double fitting = 0.0;
-		};
-
-		class statistics;
-
-		class sum_stats {
-		public:
-			double time = 0.0;
-			size_t S = 0;
-			size_t N = 0;
-			size_t unique = 0;
-			size_t fitting = 0;
-
-			inline sum_stats& operator+=(const sum_stats& other) {
-				time += other.time;
-				unique += other.unique;
-				fitting += other.fitting;
-				S += other.S;
-				N += other.N;
-				return (*this);
-			}
-
-			inline sum_stats& operator+=(const statistics& other) {
-				time += other.time;
-				if (other.unique) unique += 1;
-				if (other.fitting) fitting += 1;
-				S += other.S;
-				N += other.N;
-				return (*this);
-			}
-
-			inline sum_stats& operator-=(const sum_stats& other) {
-				time -= other.time;
-				unique -= other.unique;
-				fitting -= other.fitting;
-				S -= other.S;
-				N -= other.N;
-				return (*this);
-			}
-
-			inline sum_stats& operator-=(const statistics& other) {
-				time -= other.time;
-				if (other.unique) unique -= 1;
-				if (other.fitting) fitting -= 1;
-				S -= other.S;
-				N -= other.N;
-				return (*this);
-			}
-
-			inline sum_stats operator+(const sum_stats& other) {
-				sum_stats res = (*this);
-				res += other;
-				return res;
-			}
-
-			inline sum_stats operator+(const statistics& other) {
-				sum_stats res = (*this);
-				res += other;
-				return res;
-			}
-
-
-			inline sum_stats operator-(const sum_stats& other) {
-				sum_stats res = (*this);
-				res -= other;
-				return res;
-			}
-
-			inline sum_stats operator-(const statistics& other) {
-				sum_stats res = (*this);
-				res -= other;
-				return res;
-			}
-
-			inline avg_stats operator/(size_t n) {
-				avg_stats res;
-				res.time = time / (double)n;
-				res.S = (double)S / (double)n;
-				res.N = (double)N / (double)n;
-				res.unique = (double)unique / (double)n;
-				res.fitting = (double)fitting / (double)n;
-				return res;
-			}
-		};
-
-		class statistics {
-		public:
-			double time = 0.0;
-			size_t S = 0;
-			size_t N = 0;
-			bool unique = false;
-			bool fitting = false;
-
-			inline sum_stats operator+(const statistics& other) {
-				sum_stats res;
-				res.time = time + other.time;
-				res.S = S + other.S;
-				res.N = N + other.N;
-				res.unique = 0;
-				if (unique) res.unique += 1;
-				if (other.unique) res.unique += 1;
-				res.fitting = 0;
-				if (fitting) res.fitting += 1;
-				if (other.fitting) res.fitting += 1;
-				return res;
-			}
-
-		};
-		
 		// solve the istance, mesure time and validate the solution
 		// @param instance - problem instance (see `Instance.hpp`)
 		// @param format - format string
@@ -147,11 +33,11 @@ namespace gs {
 		// {result size} - size of the result
 		// {instance N} - limit N of the instance
 		// {result N} - cost N of the result
-		// {unique} - unique validation result
+		// {structure} - structure validation result
 		// {fitting} - fitting validation result
 		// @param stream - stream where to output
 		template <typename... Args>
-		inline static statistics run(
+		inline static typename stats<instance_t>::single run(
 			const instance_t& instance,
 			std::vector<std::pair<std::string, std::ostream&>> outputs,
 			Args... args
@@ -161,13 +47,13 @@ namespace gs {
 			solution_t res = Solver::solve(instance, args...);
 			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-			statistics stats;
+			typename stats<instance_t>::single stats;
 
 			stats.time = std::chrono::duration<double>(end - begin).count();
 
 			stats.S = Validator<instance_t, solution_t>::getResultValue(instance, res);
 			stats.N = Validator<instance_t, solution_t>::getResultWeights(instance, res);
-			stats.unique = Validator<instance_t, solution_t>::validateUnique(instance, res);
+			//stats.structure = Validator<instance_t, solution_t>::validateUnique(instance, res);
 			stats.fitting = Validator<instance_t, solution_t>::validateFit(instance.limits(), stats.N);
 
 			for (std::pair<std::string, std::ostream&>& output : outputs) {
@@ -177,19 +63,15 @@ namespace gs {
 					size_t pos2 = output.first.find_first_of('}');
 					std::string keyval = output.first.substr(pos + 1, pos2 - pos - 1);
 					if (keyval == "solver name") output.second << Solver::name;
-					else if (keyval == "instance name") output.second << instance.name;
+					//else if (keyval == "instance name") output.second << instance.name;
 					else if (keyval == "time") output.second << stats.time;
-					else if (keyval == "instance") output.second << instance.wordSet;
-					else if (keyval == "result") {
-						for (size_t i : res) {
-							output.second << i << ": " << instance.wordSet[i] << "\n";
-						}
-					}
-					else if (keyval == "instance size") output.second << instance.wordSet.size();
+					else if (keyval == "instance") output.second << instance;
+					else if (keyval == "result") output.second << res;
+					else if (keyval == "instance size") output.second << instance.size();
 					else if (keyval == "result size") output.second << stats.S;
-					else if (keyval == "instance N") output.second << instance.n;
-					else if (keyval == "result N") output.second << stats.N;
-					else if (keyval == "unique") output.second << (stats.unique ? "true" : "false");
+					//else if (keyval == "instance N") output.second << instance.limits();
+					else if (keyval == "result N") output.second << stats.N[0];
+					else if (keyval == "structure") output.second << (stats.structure ? "true" : "false");
 					else if (keyval == "fitting") output.second << (stats.fitting ? "true" : "false");
 					output.first = output.first.substr(pos2 + 1);
 					pos = output.first.find_first_of('{');
@@ -201,7 +83,7 @@ namespace gs {
 		}
 
 		template <typename... Args>
-		inline static statistics run(
+		inline static typename stats<instance_t>::single run(
 			const instance_t& instance,
 			std::string format,
 			std::ostream& stream = std::cout,
@@ -211,14 +93,14 @@ namespace gs {
 		}
 
 		template <typename... Args>
-		inline static avg_stats run(
+		inline static typename stats<instance_t>::avg run(
 			const std::vector<instance_t>& instances,
 			std::vector<std::pair<std::string, std::ostream&>> outputs,
 			std::vector<std::pair<std::string, std::ostream&>> avgOutputs,
 			Args... args
 		) {
-			sum_stats resultSumStats;
-			sum_stats instanceSumStats;
+			typename stats<instance_t>::sum resultSumStats;
+			typename stats<instance_t>::sum  instanceSumStats;
 
 			// solve all instances
 			for (const instance_t& instance : instances) {
@@ -228,8 +110,8 @@ namespace gs {
 			}
 
 			// average results
-			avg_stats avgResultStats = resultSumStats / instances.size();
-			avg_stats avgInstanceStats = instanceSumStats / instances.size();
+			typename stats<instance_t>::avg avgResultStats = resultSumStats / instances.size();
+			typename stats<instance_t>::avg avgInstanceStats = instanceSumStats / instances.size();
 
 			// output
 			for (std::pair<std::string, std::ostream&> avgOutput : avgOutputs) {
@@ -244,7 +126,7 @@ namespace gs {
 					else if (keyval == "result size") avgOutput.second << avgResultStats.S;
 					else if (keyval == "instance N") avgOutput.second << avgInstanceStats.N;
 					else if (keyval == "result N") avgOutput.second << avgResultStats.N;
-					else if (keyval == "unique") avgOutput.second << avgResultStats.unique;
+					else if (keyval == "structure") avgOutput.second << avgResultStats.structure;
 					else if (keyval == "fitting") avgOutput.second << avgResultStats.fitting;
 					avgOutput.first = avgOutput.first.substr(pos2 + 1);
 					pos = avgOutput.first.find_first_of('{');
@@ -255,7 +137,7 @@ namespace gs {
 			return avgResultStats;
 		}
 
-		inline static avg_stats run(
+		inline static typename stats<instance_t>::avg run(
 			const std::vector<instance_t>& instances,
 			std::string format,
 			std::ostream& stream = std::cout

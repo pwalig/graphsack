@@ -8,6 +8,7 @@ namespace gs {
 		std::vector<bool> _data;
 
 	public:
+		bit_vector() = default;
 		inline bit_vector(size_t n) : _data(n, false) {}
 		inline void add(size_t i) { _data[i] = true; }
 		inline void remove(size_t i) { _data[i] = false; }
