@@ -4,6 +4,7 @@
 
 #include "../structure_check.hpp"
 #include "../weight_vector_operations.hpp"
+#include "../requirements.hpp"
 #include "metric.hpp"
 
 namespace gs {
@@ -30,7 +31,8 @@ namespace gs {
 			}
 
 			inline static solution_t solve(
-				const instance_t& instance
+				const instance_t& instance,
+				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
 				// prepare storage
 				solution_t res(instance.size());
@@ -44,13 +46,31 @@ namespace gs {
 				for (indexT itemId : sorted) {
 					if (fits(instance.weights(itemId), remaining)) {
 						res.add(itemId);
-						if (!is_path_possible(instance, res)) res.remove(itemId);
+						if (!structure_check(instance, res)) res.remove(itemId);
 						else sub_from_weights(remaining, instance.weights(itemId));
 					}
 				}
 
 				// return
 				return res;
+			}
+			inline static solution_t solve(
+				const instance_t& instance
+			) {
+				switch (instance.structure_to_find())
+				{
+				case structure::none:
+					return solve(instance, [](const instance_t&, const solution_t&) {return true; });
+					break;
+				case structure::path:
+					return solve(instance, is_path_possible);
+					break;
+				case structure::cycle:
+					return solve(instance, is_cycle_possible);
+					break;
+				default:
+					break;
+				}
 			}
 		};
 	}

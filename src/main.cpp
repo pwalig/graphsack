@@ -42,7 +42,8 @@ int main(int argc, char** argv) {
 		{ 11, 12, 13 },
 		{ 21, 22, 23 },
 		{ {1, 2, 3}, {4, 5, 6}, {7, 8, 9} },
-		{ {1}, {2}, {0, 1}}
+		{ {1}, {2}, {0, 1}},
+		gs::structure::cycle
 	);
 	gs::inst::itemlocal_nlist<unsigned int> ilnl2("instances/itemlocal_nlist_test.txt");
 
