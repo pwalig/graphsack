@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\bit_vector.hpp" />
+    <ClInclude Include="src\graphs\adjacency_matrix.hpp" />
     <ClInclude Include="src\graphs\arch_list.hpp" />
     <ClInclude Include="src\graphs\nexts_list.hpp" />
     <ClInclude Include="src\inst\itemlocal_nlist.hpp" />
