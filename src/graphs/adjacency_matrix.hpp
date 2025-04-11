@@ -83,6 +83,23 @@ namespace gs {
 				return res;
 			}
 
+			template <typename T>
+			inline std::vector<T> flatten() {
+				adjacency_matrix tmp = (*this);
+				std::vector<T> out(tmp.size());
+				size_type poz;
+				for (size_type i = 0; i < tmp.size(); i++) tmp.at(i, i) = false;
+				out[0] = 0.0;
+				poz = 1; 
+				for (size_type i = 0; i < tmp.size(); i++)
+				{
+					for (size_type j = 0; j <= i; j++) {
+						if (tmp.at(i, j)) out[poz++] = 1.0;
+						else out[poz++] = 0.0;
+					}
+				}
+			}
+
 			friend inline std::ostream& operator<< (std::ostream& stream, const adjacency_matrix& matr) {
 				for (size_type i = 0; i < matr.size(); ++i) {
 					for (size_type j = 0; j < matr.size(); ++j) {
