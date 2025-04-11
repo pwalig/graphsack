@@ -68,8 +68,14 @@ int main(int argc, char** argv) {
 		});
 	std::cout << am;
 
-	am = gs::graphs::adjacency_matrix::from_g6("Cx");
-	std::cout << am;
+	am = gs::graphs::adjacency_matrix::from_graph6("SeaLsGRWR{TjcoJYK`hqCYRz@FfnMuhSG");
+	std::cout << am << am.graph6() << "\n";
+
+	std::ifstream fin("instances/1.g6");
+	std::string graph6_string;
+	fin >> graph6_string;
+	am = gs::graphs::adjacency_matrix::from_graph6(graph6_string);
+	std::cout << am << am.graph6() << "\n";
 
 	std::knuth_b gen;
 	am = gs::graphs::adjacency_matrix::from_gnp(8, 0.5, gen);

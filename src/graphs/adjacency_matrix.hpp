@@ -42,7 +42,7 @@ namespace gs {
 			}
 
 			inline size_type size() const {
-				return sqrt(storage.size());
+				return static_cast<size_type>(sqrt(storage.size()));
 			}
 
 			inline reference at(size_type x, size_type y) {
@@ -64,10 +64,28 @@ namespace gs {
 				return res;
 			}
 
-			inline static adjacency_matrix from_g6(const std::string& buff) {
-				int bit = 32;
-				typename std::string::size_type poz = 1;
-				size_type n = buff[0] - 63;
+			inline static adjacency_matrix from_graph6(const std::string& buff) {
+				char bit = 32;
+				typename std::string::size_type poz = 0;
+				size_type n = 0;
+				if (buff[0] == 126) {
+					if (buff[1] == 126) {
+						poz = 2;
+						while (poz < 8) {
+							n <<= 6;
+							n += buff[poz++] - 63;
+						}
+					} else {
+						poz = 1;
+						while (poz < 4) {
+							n <<= 6;
+							n += buff[poz++] - 63;
+						}
+					}
+				}
+				else {
+					n = buff[poz++] - 63;
+				}
 				adjacency_matrix res(n);
 				for (size_type i = 1; i < n; i++) {
 					for (size_type j = 0; j < i; j++)
@@ -83,19 +101,63 @@ namespace gs {
 				return res;
 			}
 
+			inline std::string graph6() {
+				size_type n = size();
+				std::string result;
+
+				if (n <= 62) {
+					result += (char)(n + 63);
+				}
+				else if (n <= 258047) {
+					result += '~';
+					for (size_type i = 1 << 12; i > 0; i >>= 6) {
+						result += (char)(((n / i) % 64) + 63);
+					}
+				}
+				else if (n <= 68719476735) {
+					result += "~~";
+					for (size_type i = 1 << 12; i > 0; i >>= 6) {
+						result += (char)(((n / i) % 64) + 63);
+					}
+				}
+				else throw std::logic_error("graph size is to large for graph6 representation");
+
+				std::vector<bool> bitVector;
+				for (size_type j = 1; j < n; ++j) {
+					for (size_type i = 0; i < j; ++i) {
+						bitVector.push_back(at(i, j));
+					}
+				}
+
+				// Make the length a multiple of 6 by padding with 0s
+				size_type len = bitVector.size();
+				while (len % 6 != 0) {
+					bitVector.push_back(false);
+					len++;
+				}
+
+				// Convert every 6 bits to a base64 character
+				for (size_type i = 0; i < len; i += 6) {
+					unsigned char val = 0;
+					for (size_type j = 0; j < 6; ++j) {
+						val = val * 2 + (bitVector[i + j] ? 1 : 0);
+					}
+					result += (char)(val + 63);
+				}
+
+				return result;
+			}
+
 			template <typename T>
-			inline std::vector<T> flatten() {
-				adjacency_matrix tmp = (*this);
-				std::vector<T> out(tmp.size());
+			inline std::vector<T> flatten() const {
+				std::vector<T> out(size() + 1);
 				size_type poz;
-				for (size_type i = 0; i < tmp.size(); i++) tmp.at(i, i) = false;
-				out[0] = 0.0;
+				out[0] = T(0);
 				poz = 1; 
-				for (size_type i = 0; i < tmp.size(); i++)
-				{
-					for (size_type j = 0; j <= i; j++) {
-						if (tmp.at(i, j)) out[poz++] = 1.0;
-						else out[poz++] = 0.0;
+				for (size_type i = 0; i < size(); ++i) {
+					for (size_type j = 0; j <= i; ++j) {
+						if (i == j) out[poz++] = T(0);
+						else out[poz++] = at(i, j) ? T(1) : T(0);
 					}
 				}
 			}

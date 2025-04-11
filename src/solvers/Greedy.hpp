@@ -69,6 +69,7 @@ namespace gs {
 					return solve(instance, is_cycle_possible);
 					break;
 				default:
+					throw std::logic_error("invalid structure");
 					break;
 				}
 			}
