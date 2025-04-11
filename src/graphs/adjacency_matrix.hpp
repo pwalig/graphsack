@@ -54,11 +54,19 @@ namespace gs {
 			}
 
 			template <typename Engine>
-			inline static adjacency_matrix from_gnp(size_type n, double p, Engine& eng) {
+			inline static adjacency_matrix from_gnp(
+				size_type n, double p, Engine& randomEngine,
+				bool unidirectional = false, bool selfArches = true
+			) {
 				adjacency_matrix res(n);
 				for (size_type i = 0; i < n; ++i) {
-					for (size_type j = 0; j < i; ++j) {
-						res.at(i, j) = res.at(j, i) = std::bernoulli_distribution(p)(eng);
+					for (size_type j = 0; j < n; ++j) {
+						if (!selfArches && i == j) res.at(i, j) = false;
+						else res.at(i, j) = std::bernoulli_distribution(p)(randomEngine);
+						if (unidirectional) {
+							if (i == j) break;
+							res.at(j, i) = res.at(i, j);
+						}
 					}
 				}
 				return res;
@@ -68,8 +76,8 @@ namespace gs {
 				char bit = 32;
 				typename std::string::size_type poz = 0;
 				size_type n = 0;
-				if (buff[0] == 126) {
-					if (buff[1] == 126) {
+				if (buff[0] == '~') {
+					if (buff[1] == '~') {
 						poz = 2;
 						while (poz < 8) {
 							n <<= 6;

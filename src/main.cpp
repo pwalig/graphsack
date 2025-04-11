@@ -78,6 +78,6 @@ int main(int argc, char** argv) {
 	std::cout << am << am.graph6() << "\n";
 
 	std::knuth_b gen;
-	am = gs::graphs::adjacency_matrix::from_gnp(8, 0.5, gen);
+	am = gs::graphs::adjacency_matrix::from_gnp(8, 0.5, gen, true, true);
 	std::cout << am;
 }
