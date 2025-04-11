@@ -7,6 +7,7 @@
 #include "graphs/nexts_list.hpp"
 #include "inst/itemlocal_nlist.hpp"
 #include "SolverRunner.hpp"
+#include "graphs/adjacency_matrix.hpp"
 
 int main(int argc, char** argv) {
 	const int a = 5;
@@ -57,4 +58,19 @@ int main(int argc, char** argv) {
 	std::string format = "result: {result}\ntime: {time}s\nvalue: {result value}\nweights: {result weights}/ {limits}\nstructure: {structure valid}\nfitting: {fitting}\n";
 	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<unsigned int>, gs::bit_vector>>::run(ilnl2, format, std::cout);
 
+
+
+	gs::graphs::adjacency_matrix am({
+		{true, true, false},
+		{true, true, false},
+		{true, true, false}
+		});
+	std::cout << am;
+
+	am = gs::graphs::adjacency_matrix::from_g6("Cx");
+	std::cout << am;
+
+	std::knuth_b gen;
+	am = gs::graphs::adjacency_matrix::from_gnp(8, 0.5, gen);
+	std::cout << am;
 }
