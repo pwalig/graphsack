@@ -110,7 +110,7 @@ namespace gs {
 				for (auto it = ValuesBegin; it != ValuesEnd; ++it) { value(i++) = *it; }
 				i = 0;
 				for (auto it = WeightsBegin; it != WeightsEnd; ++it) {
-					assert((*it).size() == std::distance(LimitsBegin, LimitsEnd));
+					assert(std::distance((*it).begin(), (*it).end()) == std::distance(LimitsBegin, LimitsEnd));
 					std::copy((*it).begin(), (*it).end(), weights(i++).begin());
 				}
 			}

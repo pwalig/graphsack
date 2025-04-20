@@ -5,7 +5,7 @@
 #include "../slice.hpp"
 
 namespace gs {
-	namespace grahps {
+	namespace graphs {
 		template <class Container>
 		class nexts_list {
 		public:

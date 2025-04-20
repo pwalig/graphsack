@@ -8,6 +8,7 @@
 #include "inst/itemlocal_nlist.hpp"
 #include "SolverRunner.hpp"
 #include "graphs/adjacency_matrix.hpp"
+#include "inst/gs_random.hpp"
 
 int main(int argc, char** argv) {
 	const int a = 5;
@@ -26,7 +27,7 @@ int main(int argc, char** argv) {
 	//std::cout << gs::solver::Greedy<gs::weight_value_vector<>, gs::bit_vector, unsigned int>::solve(inst2) << "\n";
 
 	std::vector<unsigned int> storage(13);
-	gs::grahps::nexts_list_view<unsigned int> nlist(slice<unsigned int>(storage.data(), storage.size()), {
+	gs::graphs::nexts_list_view<unsigned int> nlist(slice<unsigned int>(storage.data(), storage.size()), {
 		{ 1, 2, 3},
 		{ 0, 3 },
 		{ 1 },
@@ -35,7 +36,7 @@ int main(int argc, char** argv) {
 
 	std::cout << nlist;
 
-	gs::grahps::nexts_list<std::vector<unsigned int>> nlist2("instances/nexts_list_test.txt");
+	gs::graphs::nexts_list<std::vector<unsigned int>> nlist2("instances/nexts_list_test.txt");
 	std::cout << nlist2 << "\n";
 
 
@@ -82,4 +83,15 @@ int main(int argc, char** argv) {
 	std::knuth_b gen;
 	am = gs::graphs::adjacency_matrix::from_gnp(8, 0.5, gen, true, true);
 	std::cout << am;
+
+	std::vector<unsigned int> randomWeights(3 * 11);
+	std::vector<unsigned int> randomValues(10);
+	std::uniform_int_distribution<unsigned int> distrib(1, 10);
+	gs::random::into(randomWeights.begin(), randomWeights.end(), rand);
+	gs::random::into<unsigned int>(randomValues.begin(), randomValues.end(), std::bind(distrib, std::ref(gen)));
+	for (auto i : randomWeights) std::cout << i << " ";
+	std::cout << "\n";
+	for (auto i : randomValues) std::cout << i << " ";
+	std::cout << "\n";
+
 }

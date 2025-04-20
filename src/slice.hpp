@@ -18,10 +18,7 @@ public:
 	inline slice(pointer Ptr, size_type Size) : ptr(Ptr), siz(Size) {}
 	inline slice& operator= (std::initializer_list<value_type> contents) {
 		if (contents.size() > siz) throw std::length_error("contents size exeeds slice allocated memory segment");
-		size_type i = 0;
-		for (value_type val : contents) {
-			ptr[i++] = val;
-		}
+		std::copy(contents.begin(), contents.end(), begin());
 		return (*this);
 	}
 	inline reference operator[] (sizeT i) const { assert(i < siz); return ptr[i]; }
