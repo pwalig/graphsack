@@ -155,24 +155,17 @@ namespace gs {
 			}
 
 			template <typename Iter>
-			inline void fill_limits(
-				Iter Begin, Iter End
-			) {
-				std::copy(Begin, End, limits().begin());
-			}
+			inline void fill_limits( Iter Begin, Iter End )
+			{ std::copy(Begin, End, limits().begin()); }
 
 			template <typename Iter>
-			inline void fill_values(
-				Iter Begin, Iter End
-			) {
+			inline void fill_values(Iter Begin, Iter End) {
 				size_type i = 0;
 				for (auto it = Begin; it != End; ++it) value(i++) = *it;
 			}
 
 			template <typename Iter>
-			inline void fill_weights(
-				Iter Begin, Iter End
-			) {
+			inline void fill_weights(Iter Begin, Iter End) {
 				assert(std::distance(Begin, End) == n);
 				size_type i = 0;
 				for (auto it = Begin; it != End; ++it) {
@@ -182,9 +175,7 @@ namespace gs {
 			}
 
 			template <typename Iter>
-			inline void fill_contigous_weights(
-				Iter Begin, Iter End
-			) {
+			inline void fill_contigous_weights(Iter Begin, Iter End) {
 				assert(std::distance(Begin, End) == n * m);
 				auto it = Begin;
 				for (size_type i = 0; i < n; ++i) {
@@ -214,12 +205,17 @@ namespace gs {
 			{
 				static_assert(std::is_same<typename LIter::value_type, weight_type>::value);
 				static_assert(std::is_same<typename VIter::value_type, value_type>::value);
-				static_assert(std::is_same<typename WIter::value_type, weight_type>::value);
 				fill_data_slice(graph);
 				fill_nexts(graph);
 				fill_limits(LimitsBegin, LimitsEnd);
 				fill_values(ValuesBegin, ValuesEnd);
-				fill_contigous_weights(WeightsBegin, WeightsEnd);
+				if constexpr (std::is_same<typename WIter::value_type, weight_type>::value) {
+					fill_contigous_weights(WeightsBegin, WeightsEnd);
+				}
+				else {
+					static_assert(std::is_same<typename WIter::value_type::value_type, weight_type>::value);
+					fill_weights(WeightsBegin, WeightsEnd);
+				}
 			}
 
 			inline itemlocal_nlist(

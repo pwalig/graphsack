@@ -166,7 +166,7 @@ namespace gs {
 				visited[next] = true;
 				if (depth == length) return true; // path found
 				if (depth > length) return false; // path would have to be to long
-				if (is_path_DFS(problem, selected, visited, next, length, depth + 1)) return true; // path found later
+				if (is_path_DFS<instance_t, solution_t, indexT>(problem, selected, visited, next, length, depth + 1)) return true; // path found later
 				visited[next] = false;
 			}
 		}
@@ -208,7 +208,7 @@ namespace gs {
 				visited[next] = true;
 				if (depth == length && has_connection_to(instance, next, start)) return true; // cycle found
 				if (depth > length) return false; // cycle would have to be to long
-				if (is_cycle_DFS(instance, selected, visited, next, start, length, depth + 1)) return true; // cycle found later
+				if (is_cycle_DFS<instance_t, solution_t, indexT>(instance, selected, visited, next, start, length, depth + 1)) return true; // cycle found later
 				visited[next] = false;
 			}
 		}

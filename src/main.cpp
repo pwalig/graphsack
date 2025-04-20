@@ -86,8 +86,10 @@ int main(int argc, char** argv) {
 	std::cout << am;
 
 	std::vector<unsigned int> randomValues(3 + 10 + (3 * 10));
-	std::uniform_int_distribution<unsigned int> distrib(1, 10);
-	gs::random::into<unsigned int>(randomValues.begin(), randomValues.end(), std::bind(distrib, std::ref(gen)));
+	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(1, 10), std::ref(gen));
+	auto randomLimitGen = std::bind(std::uniform_int_distribution<unsigned int>(40, 50), std::ref(gen));
+	gs::random::into<unsigned int>(randomValues.begin(), randomValues.begin() + 3, randomLimitGen);
+	gs::random::into<unsigned int>(randomValues.begin() + 3, randomValues.end(), randomValueGen);
 	for (auto i : randomValues) std::cout << i << " ";
 	std::cout << "\n";
 	gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t> randomItemlocalNlist(
@@ -96,5 +98,6 @@ int main(int argc, char** argv) {
 		randomValues.begin() + 13, randomValues.end(),
 		gs::graphs::adjacency_matrix::from_gnp(10, 0.5, gen)
 	);
-	std::cout << randomItemlocalNlist;
+	std::cout << randomItemlocalNlist << "\n";
+	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 }
