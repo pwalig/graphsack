@@ -21,6 +21,54 @@ namespace gs {
 		private:
 			std::vector<bool> storage;
 		public:
+
+			template<typename T>
+			class Row {
+			private:
+				T& storage;
+				const size_type x;
+
+			public:
+				inline Row(T& Storage, size_type& X) : storage(Storage), x(X) {}
+
+				inline size_type size() const {
+					return static_cast<size_type>(sqrt(storage.size()));
+				}
+				inline typename std::vector<bool>::iterator begin() {
+					return storage.begin() + (x * size());
+				}
+				inline typename std::vector<bool>::const_iterator begin() const {
+					return storage.begin() + (x * size());
+				}
+				inline typename std::vector<bool>::const_iterator cbegin() const {
+					return storage.cbegin() + (x * size());
+				}
+				inline typename std::vector<bool>::iterator end() {
+					return storage.begin() + ((x + 1) * size());
+				}
+				inline typename std::vector<bool>::const_iterator end() const {
+					return storage.begin() + ((x + 1) * size());
+				}
+				inline typename std::vector<bool>::const_iterator cend() const {
+					return storage.cbegin() + ((x + 1) * size());
+				}
+				inline reference at(size_type y) {
+					return storage[x * size() + y];
+				}
+				inline const_reference at(size_type y) const {
+					return storage[x * size() + y];
+				}
+				inline reference operator[](size_type y) {
+					return storage[x * size() + y];
+				}
+				inline const_reference operator[](size_type y) const {
+					return storage[x * size() + y];
+				}
+			};
+
+			using row = Row<std::vector<bool>>;
+			using const_row = const Row<const std::vector<bool>>;
+
 			adjacency_matrix() = default;
 			adjacency_matrix(std::initializer_list<std::initializer_list<bool>> init);
 
@@ -41,6 +89,19 @@ namespace gs {
 
 			inline const_reference at(size_type x, size_type y) const {
 				return storage[x * size() + y];
+			}
+
+			inline row at(size_type x) {
+				return row(storage, x);
+			}
+			inline const_row at(size_type x) const {
+				return const_row(storage, x);
+			}
+			inline row operator[](size_type x) {
+				return row(storage, x);
+			}
+			inline const_row operator[](size_type x) const {
+				return const_row(storage, x);
 			}
 
 			template <typename Engine>

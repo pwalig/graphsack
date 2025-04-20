@@ -8,6 +8,7 @@
 #include "../slice.hpp"
 #include "../iterator.hpp"
 #include "../requirements.hpp"
+#include "../graphs/adjacency_matrix.hpp"
 
 namespace gs {
 	namespace inst {
@@ -63,7 +64,7 @@ namespace gs {
 			using const_item_type = ItemView<const value_type, const weight_type, const index_type>;
 		private:
 			/* storage scheme
-			item indexes | limits | items
+			item in memory indexes | limits | items
 			where each item:
 			value | weights | nexts
 			*/
@@ -74,59 +75,122 @@ namespace gs {
 			weight_treatment weightTreatment;
 			
 
-			inline static size_type get_storage_size(size_type M,
-				std::initializer_list<std::initializer_list<index_type>> nexts
+			template<typename Iterable>
+			inline static size_type get_storage_size(
+				size_type M, Iterable Nexts
 			) {
 				size_type res = (M * sizeof(weight_type)) +
-				(nexts.size() * ((M * sizeof(weight_type)) + sizeof(value_type) + sizeof(size_type)));
-				for (const auto& next : nexts) {
+				(Nexts.size() * ((M * sizeof(weight_type)) + sizeof(value_type) + sizeof(size_type)));
+				for (const auto& next : Nexts) {
 					res += next.size() * sizeof(index_type);
 				}
 				return res;
 			}
 
-			template<typename T, typename U, typename V, typename W>
-			inline void fill_data(
-				T LimitsBegin, T LimitsEnd,
-				U ValuesBegin, U ValuesEnd,
-				V WeightsBegin, V WeightsEnd,
-				W NextsBegin, W NextsEnd
+			inline static size_type get_storage_size(
+				size_type M, const graphs::adjacency_matrix& graph
 			) {
-				assert(std::distance(ValuesBegin, ValuesEnd) == std::distance(WeightsBegin, WeightsEnd));
-				assert(std::distance(ValuesBegin, ValuesEnd) == std::distance(NextsBegin, NextsEnd));
+				using g_size_t = typename graphs::adjacency_matrix::size_type;
+
+				size_type n = graph.size();
+				size_type res = (M * sizeof(weight_type)) +
+				(n * ((M * sizeof(weight_type)) + sizeof(value_type) + sizeof(size_type)));
+				for (g_size_t i = 0; i < n; ++i) {
+					size_type nextsCount = std::count_if(graph[i].begin(), graph[i].end(), [](bool set) { return set; });
+					res += nextsCount * sizeof(index_type);
+				}
+				return res;
+			}
+
+			template <typename Iter>
+			inline void fill_data_slice(
+				Iter NextsBegin, Iter NextsEnd
+			) {
 				size_type acc = (n * sizeof(size_type)) + (m * sizeof(weight_type));
 				size_type i = 0;
 				auto ids = item_data_slice();
-				for (auto it = NextsBegin; it != NextsEnd; ++it) {
+				for (Iter it = NextsBegin; it != NextsEnd; ++it) {
 					ids[i] = acc;
 					acc += sizeof(value_type) + (m * sizeof(weight_type)) + ((*it).size() * sizeof(index_type));
 					++i;
 				}
-				i = 0;
-				for (auto it = LimitsBegin; it != LimitsEnd; ++it) { limit(i++) = *it; }
-				i = 0;
-				for (auto it = NextsBegin; it != NextsEnd; ++it) { std::copy((*it).begin(), (*it).end(), nexts(i++).begin()); }
-				i = 0;
-				for (auto it = ValuesBegin; it != ValuesEnd; ++it) { value(i++) = *it; }
-				i = 0;
-				for (auto it = WeightsBegin; it != WeightsEnd; ++it) {
-					assert(std::distance((*it).begin(), (*it).end()) == std::distance(LimitsBegin, LimitsEnd));
+			}
+
+			inline void fill_data_slice(
+				const graphs::adjacency_matrix& graph
+			) {
+				assert(graph.size() == n);
+				using g_size_t = typename graphs::adjacency_matrix::size_type;
+
+				size_type acc = (n * sizeof(size_type)) + (m * sizeof(weight_type));
+				auto ids = item_data_slice();
+				for (g_size_t i = 0; i < graph.size(); ++i) {
+					ids[static_cast<size_type>(i)] = acc;
+					size_type nextsCount = std::count_if(graph[i].begin(), graph[i].end(), [](bool set) { return set; });
+					acc += sizeof(value_type) + (m * sizeof(weight_type)) + (nextsCount * sizeof(index_type));
+				}
+			}
+
+			template <typename Iter>
+			inline void fill_nexts(
+				Iter NextsBegin, Iter NextsEnd
+			) {
+				size_type i = 0;
+				for (auto it = NextsBegin; it != NextsEnd; ++it) 
+					std::copy((*it).begin(), (*it).end(), nexts(i++).begin());
+			}
+
+			inline void fill_nexts(
+				const graphs::adjacency_matrix& graph
+			) {
+				assert(graph.size() == n);
+				using g_size_t = typename graphs::adjacency_matrix::size_type;
+
+				for (g_size_t i = 0; i < n; ++i) {
+					size_type k = 0;
+					for (g_size_t j = 0; j < n; ++j) {
+						if (graph.at(i, j)) nexts(i)[k++] = static_cast<index_type>(j);
+					}
+				}
+			}
+
+			template <typename Iter>
+			inline void fill_limits(
+				Iter Begin, Iter End
+			) {
+				std::copy(Begin, End, limits().begin());
+			}
+
+			template <typename Iter>
+			inline void fill_values(
+				Iter Begin, Iter End
+			) {
+				size_type i = 0;
+				for (auto it = Begin; it != End; ++it) value(i++) = *it;
+			}
+
+			template <typename Iter>
+			inline void fill_weights(
+				Iter Begin, Iter End
+			) {
+				assert(std::distance(Begin, End) == n);
+				size_type i = 0;
+				for (auto it = Begin; it != End; ++it) {
+					assert(std::distance((*it).begin(), (*it).end()) == m);
 					std::copy((*it).begin(), (*it).end(), weights(i++).begin());
 				}
 			}
 
-			template<typename T, typename U, typename V, typename W>
-			inline void fill_data(T Limits, U Values, V Weights, W Nexts) {
-				static_assert(std::is_same<typename T::value_type, weight_type>::value);
-				static_assert(std::is_same<typename U::value_type, value_type>::value);
-				static_assert(std::is_same<typename V::value_type::value_type, weight_type>::value);
-				static_assert(std::is_same<typename W::value_type::value_type, size_type>::value);
-				fill_data(
-					Limits.begin(), Limits.end(),
-					Values.begin(), Values.end(),
-					Weights.begin(), Weights.end(),
-					Nexts.begin(), Nexts.end()
-				);
+			template <typename Iter>
+			inline void fill_contigous_weights(
+				Iter Begin, Iter End
+			) {
+				assert(std::distance(Begin, End) == n * m);
+				auto it = Begin;
+				for (size_type i = 0; i < n; ++i) {
+					std::copy(it, it + m, weights(i).begin());
+					it += m;
+				}
 			}
 
 		public:
@@ -136,32 +200,79 @@ namespace gs {
 				weight_treatment WeightTreatment = weight_treatment::full
 			) : n(0), m(0), structureToFind(Structure), weightTreatment(WeightTreatment) {}
 
+			template <typename LIter, typename VIter, typename WIter>
+			inline itemlocal_nlist(
+				LIter LimitsBegin, LIter LimitsEnd,
+				VIter ValuesBegin, VIter ValuesEnd,
+				WIter WeightsBegin, WIter WeightsEnd,
+				const graphs::adjacency_matrix& graph,
+				structure Structure = structure::path,
+				weight_treatment WeightTreatment = weight_treatment::full
+			) : n(std::distance(ValuesBegin, ValuesEnd)), m(std::distance(LimitsBegin, LimitsEnd)),
+				storage(get_storage_size(std::distance(LimitsBegin, LimitsEnd), graph)),
+				structureToFind(Structure), weightTreatment(WeightTreatment)
+			{
+				static_assert(std::is_same<typename LIter::value_type, weight_type>::value);
+				static_assert(std::is_same<typename VIter::value_type, value_type>::value);
+				static_assert(std::is_same<typename WIter::value_type, weight_type>::value);
+				fill_data_slice(graph);
+				fill_nexts(graph);
+				fill_limits(LimitsBegin, LimitsEnd);
+				fill_values(ValuesBegin, ValuesEnd);
+				fill_contigous_weights(WeightsBegin, WeightsEnd);
+			}
+
 			inline itemlocal_nlist(
 				const Container<uint8_t>& data,
 				std::initializer_list<weight_type> Limits,
-				std::initializer_list<value_type> values,
+				std::initializer_list<value_type> Values,
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
 				std::initializer_list<std::initializer_list<index_type>> Nexts,
 				structure Structure = structure::path,
 				weight_treatment WeightTreatment = weight_treatment::full
-			) : n(values.size()), m(Limits.size()), storage(data),
+			) : n(Values.size()), m(Limits.size()), storage(data),
 				structureToFind(Structure), weightTreatment(WeightTreatment)
 			{
 				assert(data.size() == get_storage_size(Limits.size(), Nexts));
-				fill_data(Limits, values, Weights, Nexts);
+				fill_data_slice(Nexts.begin(), Nexts.end());
+				fill_nexts(Nexts.begin(), Nexts.end());
+				fill_limits(Limits.begin(), Limits.end());
+				fill_values(Values.begin(), Values.end());
+				fill_weights(Weights.begin(), Weights.end());
 			}
 
 			inline itemlocal_nlist(
 				std::initializer_list<weight_type> Limits,
-				std::initializer_list<value_type> values,
+				std::initializer_list<value_type> Values,
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
 				std::initializer_list<std::initializer_list<index_type>> Nexts,
 				structure Structure = structure::path,
 				weight_treatment WeightTreatment = weight_treatment::full
-			) : n(values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)),
+			) : n(Values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)),
 				structureToFind(Structure), weightTreatment(WeightTreatment)
 			{
-				fill_data(Limits, values, Weights, Nexts);
+				fill_data_slice(Nexts.begin(), Nexts.end());
+				fill_nexts(Nexts.begin(), Nexts.end());
+				fill_limits(Limits.begin(), Limits.end());
+				fill_values(Values.begin(), Values.end());
+				fill_weights(Weights.begin(), Weights.end());
+			}
+
+			inline itemlocal_nlist(
+				std::initializer_list<weight_type> Limits,
+				std::initializer_list<value_type> Values,
+				std::initializer_list<std::initializer_list<weight_type>> Weights,
+				const graphs::adjacency_matrix& graph,
+				structure Structure = structure::path,
+				weight_treatment WeightTreatment = weight_treatment::full
+			) : n(Values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), graph)),
+				structureToFind(Structure), weightTreatment(WeightTreatment)
+			{
+				fill_data_slice(graph);
+				fill_nexts(graph);
+				fill_limits(Limits.begin(), Limits.end());
+				fill_values(Values.begin(), Values.end());
+				fill_weights(Weights.begin(), Weights.end());
 			}
 
 			inline itemlocal_nlist(const std::string filename) : itemlocal_nlist() {

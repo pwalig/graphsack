@@ -80,18 +80,21 @@ int main(int argc, char** argv) {
 		std::cout << am << am.graph6() << "\n";
 	}
 
-	std::knuth_b gen;
+	std::random_device randomDevice;
+	std::knuth_b gen(randomDevice());
 	am = gs::graphs::adjacency_matrix::from_gnp(8, 0.5, gen, true, true);
 	std::cout << am;
 
-	std::vector<unsigned int> randomWeights(3 * 11);
-	std::vector<unsigned int> randomValues(10);
+	std::vector<unsigned int> randomValues(3 + 10 + (3 * 10));
 	std::uniform_int_distribution<unsigned int> distrib(1, 10);
-	gs::random::into(randomWeights.begin(), randomWeights.end(), rand);
 	gs::random::into<unsigned int>(randomValues.begin(), randomValues.end(), std::bind(distrib, std::ref(gen)));
-	for (auto i : randomWeights) std::cout << i << " ";
-	std::cout << "\n";
 	for (auto i : randomValues) std::cout << i << " ";
 	std::cout << "\n";
-
+	gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t> randomItemlocalNlist(
+		randomValues.begin(), randomValues.begin() + 3,
+		randomValues.begin() + 3, randomValues.begin() + 13,
+		randomValues.begin() + 13, randomValues.end(),
+		gs::graphs::adjacency_matrix::from_gnp(10, 0.5, gen)
+	);
+	std::cout << randomItemlocalNlist;
 }
