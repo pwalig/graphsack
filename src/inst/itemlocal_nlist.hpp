@@ -85,33 +85,48 @@ namespace gs {
 				return res;
 			}
 
+			template<typename T, typename U, typename V, typename W>
 			inline void fill_data(
-				std::initializer_list<weight_type> Limits,
-				std::initializer_list<value_type> values,
-				std::initializer_list<std::initializer_list<weight_type>> Weights,
-				std::initializer_list<std::initializer_list<index_type>> Nexts
+				T LimitsBegin, T LimitsEnd,
+				U ValuesBegin, U ValuesEnd,
+				V WeightsBegin, V WeightsEnd,
+				W NextsBegin, W NextsEnd
 			) {
-				assert(values.size() == Weights.size());
-				assert(values.size() == Nexts.size());
+				assert(std::distance(ValuesBegin, ValuesEnd) == std::distance(WeightsBegin, WeightsEnd));
+				assert(std::distance(ValuesBegin, ValuesEnd) == std::distance(NextsBegin, NextsEnd));
 				size_type acc = (n * sizeof(size_type)) + (m * sizeof(weight_type));
 				size_type i = 0;
 				auto ids = item_data_slice();
-				for (const auto& next : Nexts) {
+				for (auto it = NextsBegin; it != NextsEnd; ++it) {
 					ids[i] = acc;
-					acc += sizeof(value_type) + (m * sizeof(weight_type)) + (next.size() * sizeof(index_type));
+					acc += sizeof(value_type) + (m * sizeof(weight_type)) + ((*it).size() * sizeof(index_type));
 					++i;
 				}
 				i = 0;
-				for (weight_type w : Limits) { limit(i++) = w; }
+				for (auto it = LimitsBegin; it != LimitsEnd; ++it) { limit(i++) = *it; }
 				i = 0;
-				for (const auto& next : Nexts) { nexts(i++) = next; }
+				for (auto it = NextsBegin; it != NextsEnd; ++it) { std::copy((*it).begin(), (*it).end(), nexts(i++).begin()); }
 				i = 0;
-				for (const auto& val : values) { value(i++) = val; }
+				for (auto it = ValuesBegin; it != ValuesEnd; ++it) { value(i++) = *it; }
 				i = 0;
-				for (const auto& ws : Weights) {
-					assert(ws.size() == Limits.size());
-					weights(i++) = ws;
+				for (auto it = WeightsBegin; it != WeightsEnd; ++it) {
+					assert((*it).size() == std::distance(LimitsBegin, LimitsEnd));
+					std::copy((*it).begin(), (*it).end(), weights(i++).begin());
 				}
+			}
+
+			template<typename T, typename U, typename V, typename W>
+			inline void fill_data(T Limits, U Values, V Weights, W Nexts) {
+				static_assert(std::is_same<typename T::value_type, weight_type>::value);
+				static_assert(std::is_same<typename U::value_type, value_type>::value);
+				static_assert(std::is_same<typename V::value_type::value_type, weight_type>::value);
+				static_assert(std::is_same<typename W::value_type::value_type, size_type>::value);
+				fill_data(
+					Limits.begin(), Limits.end(),
+					Values.begin(), Values.end(),
+					Weights.begin(), Weights.end(),
+					Nexts.begin(), Nexts.end()
+				);
 			}
 
 		public:
