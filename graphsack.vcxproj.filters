@@ -89,5 +89,11 @@
     <ClInclude Include="src\solvers\structure_to_find_dispatch.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\cuda_test.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\cuda_test.cu" />
   </ItemGroup>
 </Project>

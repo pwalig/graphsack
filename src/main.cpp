@@ -12,6 +12,8 @@
 #include "graphs/adjacency_matrix.hpp"
 #include "inst/gs_random.hpp"
 
+#include "cuda_test.h"
+
 int main(int argc, char** argv) {
 	const int a = 5;
 	std::cout << a << " A\n";
@@ -106,4 +108,6 @@ int main(int argc, char** argv) {
 	randomItemlocalNlist.weight_treatment() = gs::weight_treatment::first_only;
 	randomItemlocalNlist.structure_to_find() = gs::structure::none;
 	gs::SolverRunner<gs::solver::Dynamic<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+
+	cudaMain();
 }
