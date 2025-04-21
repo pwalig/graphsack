@@ -54,7 +54,7 @@ namespace gs {
 			stats.S = Validator<instance_t, solution_t>::getResultValue(instance, res);
 			stats.N = Validator<instance_t, solution_t>::getResultWeights(instance, res);
 			stats.structure = Validator<instance_t, solution_t>::validateStructure(instance, res);
-			stats.fitting = Validator<instance_t, solution_t>::validateFit(instance.limits(), stats.N);
+			stats.fitting = Validator<instance_t, solution_t>::validateFit(instance, stats.N);
 
 			for (std::pair<std::string, std::ostream&>& output : outputs) {
 				size_t pos = output.first.find_first_of('{');

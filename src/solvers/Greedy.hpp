@@ -37,7 +37,7 @@ namespace gs {
 				// prepare storage
 				solution_t res(instance.size());
 				std::vector<typename instance_t::weight_type> remaining(instance.dim());
-				element_wise::in_place_operate(remaining, instance.limits(), element_wise::copy);
+				std::copy(instance.limits().begin(), instance.limits().end(), remaining.begin());
 
 				// get sorted elements
 				std::vector<indexT> sorted = getSortedByMetric(instance);

@@ -3,6 +3,7 @@
 #include "inst/weight_value_vector.hpp"
 #include "bit_vector.hpp"
 #include "solvers/Greedy.hpp"
+#include "solvers/Dynamic.hpp"
 #include "structure_check.hpp"
 #include "graphs/nexts_list.hpp"
 #include "inst/itemlocal_nlist.hpp"
@@ -87,7 +88,7 @@ int main(int argc, char** argv) {
 
 	std::vector<unsigned int> randomValues(3 + 10 + (3 * 10));
 	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(1, 10), std::ref(gen));
-	auto randomLimitGen = std::bind(std::uniform_int_distribution<unsigned int>(40, 50), std::ref(gen));
+	auto randomLimitGen = std::bind(std::uniform_int_distribution<unsigned int>(30, 50), std::ref(gen));
 	gs::random::into<unsigned int>(randomValues.begin(), randomValues.begin() + 3, randomLimitGen);
 	gs::random::into<unsigned int>(randomValues.begin() + 3, randomValues.end(), randomValueGen);
 	for (auto i : randomValues) std::cout << i << " ";
@@ -100,4 +101,7 @@ int main(int argc, char** argv) {
 	);
 	std::cout << randomItemlocalNlist << "\n";
 	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+	randomItemlocalNlist.weight_treatment() = gs::weight_treatment::first_only;
+	randomItemlocalNlist.structure_to_find() = gs::structure::none;
+	gs::SolverRunner<gs::solver::Dynamic<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 }

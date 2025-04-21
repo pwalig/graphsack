@@ -37,24 +37,52 @@ namespace gs {
 		}
 
 		inline static bool validateFit(
-			const typename instance_t::const_weights_type& instanceN,
-			const std::vector<typename instance_t::weight_type>& resultN
-		) {
-			return fits(resultN, instanceN);
-		}
-
-		inline static bool validateFit(
 			const instance_t& instance,
 			const std::vector<typename instance_t::weight_type>& resultN
 		) {
-			return validateFit(instance.limits(), resultN);
+			switch (instance.weight_treatment())
+			{
+			case weight_treatment::ignore:
+				return true;
+				break;
+			case weight_treatment::first_only:
+				return instance.limit(0) >= resultN[0];
+				break;
+			case weight_treatment::as_ones:
+				for (typename instance_t::size_type i = 0; i < instance.dim(); ++i) if (resultN.size() > instance.limit(i)) return false;
+				return true;
+				break;
+			case weight_treatment::full:
+				return fits(resultN, instance.limits());
+				break;
+			}
 		}
 
 		inline static bool validateFit(
 			const instance_t& instance,
 			const solution_t& result
 		) {
-			return validateFit(instance.limits(), getResultN(instance, result));
+			switch (instance.weight_treatment())
+			{
+			case weight_treatment::ignore:
+				return true;
+				break;
+			case weight_treatment::first_only:
+				typename instance_t::weight_type w = 0;
+				for (typename instance_t::size_type i = 0; i < instance.dim(); ++i) if (result.has(i)) w += instance.weight(i, 0);
+				return instance.limit(0) >= w;
+				break;
+			case weight_treatment::as_ones:
+				typename instance_t::weight_type w = 0;
+				for (typename instance_t::size_type i = 0; i < instance.dim(); ++i) if (result.has(i)) ++w;
+				return instance.limit(0) >= w;
+				break;
+			case weight_treatment::full:
+				return fits(getResultWeights(instance, result), instance.limits());
+				break;
+			default:
+				break;
+			}
 		}
 
 		inline static bool validateStructure(

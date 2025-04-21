@@ -149,6 +149,7 @@
     <ClInclude Include="src\requirements.hpp" />
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\SolverRunner.hpp" />
+    <ClInclude Include="src\solvers\Dynamic.hpp" />
     <ClInclude Include="src\solvers\Greedy.hpp" />
     <ClInclude Include="src\solvers\metric.hpp" />
     <ClInclude Include="src\stats.hpp" />

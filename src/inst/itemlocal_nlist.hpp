@@ -367,8 +367,10 @@ namespace gs {
 
 			inline size_type size() const { return n; }
 			inline size_type dim() const { return m; }
-			inline structure structure_to_find() const { return structureToFind; }
-			inline weight_treatment weight_treatment() const { return weightTreatment; }
+			inline gs::structure& structure_to_find() { return structureToFind; }
+			inline gs::weight_treatment& weight_treatment() { return weightTreatment; }
+			inline const gs::structure& structure_to_find() const { return structureToFind; }
+			inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
 
 			friend inline std::ostream& operator<< (std::ostream& stream, const itemlocal_nlist & itnl) {
 				size_type i = 0;
