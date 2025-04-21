@@ -362,7 +362,7 @@ namespace gs {
 				uint8_t* ptr = &storage[ids[i]];
 				uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
 				size_type nextsCount = (nextPtr - ptr - sizeofValue - (m * sizeofWeight)) / sizeofIndex;
-				return nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeofValue + (m * sizeofWeight)]), nextsCount);
+				return nexts_type((index_type*)(storage.data() + item_data_slice()[i] + sizeofValue + (m * sizeofWeight)), nextsCount);
 			}
 			
 			inline const_nexts_type nexts(size_type i) const {
@@ -371,7 +371,7 @@ namespace gs {
 				const uint8_t* ptr = &storage[ids[i]];
 				const uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
 				size_type nextsCount = (nextPtr - ptr - sizeofValue - (m * sizeofWeight)) / sizeofIndex;
-				return const_nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeofValue + (m * sizeofWeight)]), nextsCount);
+				return const_nexts_type((index_type*)(storage.data() + item_data_slice()[i] + sizeofValue + (m * sizeofWeight)), nextsCount);
 			}
 
 			inline item_type item(size_type i) {

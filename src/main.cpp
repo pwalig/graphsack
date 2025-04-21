@@ -96,11 +96,12 @@ int main(int argc, char** argv) {
 	gs::random::into<unsigned int>(randomValues.begin() + 3, randomValues.end(), randomValueGen);
 	for (auto i : randomValues) std::cout << i << " ";
 	std::cout << "\n";
+	gs::graphs::adjacency_matrix randomGraph = gs::graphs::adjacency_matrix::from_gnp(10, 0.2, gen);
 	gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t> randomItemlocalNlist(
 		randomValues.begin(), randomValues.begin() + 3,
 		randomValues.begin() + 3, randomValues.begin() + 13,
 		randomValues.begin() + 13, randomValues.end(),
-		gs::graphs::adjacency_matrix::from_gnp(10, 0.2, gen)
+		randomGraph
 	);
 	std::cout << randomItemlocalNlist << "\n";
 	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
@@ -109,5 +110,6 @@ int main(int argc, char** argv) {
 	randomItemlocalNlist.structure_to_find() = gs::structure::none;
 	gs::SolverRunner<gs::solver::Dynamic<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 
-	cudaMain();
+	//gs::cuda::info::print();
+	//cudaMain();
 }
