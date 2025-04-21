@@ -312,6 +312,18 @@ namespace gs {
 				return limits()[i];
 			}
 
+			inline weight_type& limit() {
+				assert(weightTreatment == gs::weight_treatment::first_only,
+					"access first limite only is possible only in first only weight treatment");
+				return limits()[0];
+			}
+
+			inline const weight_type& limit() const {
+				assert(weightTreatment == gs::weight_treatment::first_only,
+					"access first limit only is possible only in first only weight treatment");
+				return limits()[0];
+			}
+
 			inline value_type& value(size_type i) {
 				return *((value_type*)(&storage[item_data_slice()[i]]));
 			}
@@ -334,6 +346,18 @@ namespace gs {
 
 			inline const weight_type& weight(size_type i, size_type j) const {
 				return weights(i)[j];
+			}
+
+			inline weight_type& weight(size_type i) {
+				assert(weightTreatment == gs::weight_treatment::first_only,
+					"access first weight only is possible only in first only weight treatment");
+				return weight(i, 0);
+			}
+
+			inline const weight_type& weight(size_type i) const {
+				assert(weightTreatment == gs::weight_treatment::first_only,
+					"access first weight only is possible only in first only weight treatment");
+				return weight(i, 0);
 			}
 
 			inline nexts_type nexts(size_type i) {
