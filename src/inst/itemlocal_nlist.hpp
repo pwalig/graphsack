@@ -12,13 +12,23 @@
 
 namespace gs {
 	namespace inst {
-		template <typename valueT, typename weightT = valueT, typename indexT = size_t, template<class ...> class Container = std::vector>
+		template <typename valueT, typename weightT = valueT, typename indexT = size_t, class Container = std::vector<uint8_t>>
 		class itemlocal_nlist {
 		public:
 			using value_type = valueT;
 			using weight_type = weightT;
 			using index_type = indexT;
-			using size_type = typename Container<uint8_t>::size_type;
+			using size_type = typename Container::size_type;
+
+			static_assert(sizeof(value_type) % sizeof(typename Container::value_type) == 0);
+			static_assert(sizeof(weight_type) % sizeof(typename Container::value_type) == 0);
+			static_assert(sizeof(index_type) % sizeof(typename Container::value_type) == 0);
+			static_assert(sizeof(size_type) % sizeof(typename Container::value_type) == 0);
+
+			inline const static size_type sizeofValue = sizeof(value_type) / sizeof(typename Container::value_type);
+			inline const static size_type sizeofWeight = sizeof(weight_type) / sizeof(typename Container::value_type);
+			inline const static size_type sizeofIndex = sizeof(index_type) / sizeof(typename Container::value_type);
+			inline const static size_type sizeofSize = sizeof(size_type) / sizeof(typename Container::value_type);
 
 			using weights_type = slice<weight_type, size_type>;
 			using const_weights_type = slice<const weight_type, size_type>;
@@ -43,9 +53,9 @@ namespace gs {
 				inline ItemView(T* Ptr, size_type M, size_type Nexts)
 					: ItemView(
 						*((value_type*)(Ptr)),
-						slice<weight_type, size_type>((weight_type*)(Ptr + sizeof(value_type)), M),
-						slice<index_type, size_type>((index_type*)(Ptr + sizeof(value_type) + (M * sizeof(weight_type))), Nexts)
-					) { static_assert(sizeof(T) == 1); }
+						slice<weight_type, size_type>((weight_type*)(Ptr + sizeofValue), M),
+						slice<index_type, size_type>((index_type*)(Ptr + sizeofValue + (M * sizeofWeight)), Nexts)
+					) { }
 
 				inline itemlocal_nlist::weight_type total_weight() const {
 					return std::accumulate(weights.begin(), weights.end(), 0);
@@ -68,7 +78,7 @@ namespace gs {
 			where each item:
 			value | weights | nexts
 			*/
-			Container<uint8_t> storage;
+			Container storage;
 			size_type n;
 			size_type m;
 			structure structureToFind;
@@ -79,10 +89,10 @@ namespace gs {
 			inline static size_type get_storage_size(
 				size_type M, Iterable Nexts
 			) {
-				size_type res = (M * sizeof(weight_type)) +
-				(Nexts.size() * ((M * sizeof(weight_type)) + sizeof(value_type) + sizeof(size_type)));
+				size_type res = (M * sizeofWeight) +
+				(Nexts.size() * ((M * sizeofWeight) + sizeofValue + sizeofSize));
 				for (const auto& next : Nexts) {
-					res += next.size() * sizeof(index_type);
+					res += next.size() * sizeofIndex;
 				}
 				return res;
 			}
@@ -93,11 +103,11 @@ namespace gs {
 				using g_size_t = typename graphs::adjacency_matrix::size_type;
 
 				size_type n = graph.size();
-				size_type res = (M * sizeof(weight_type)) +
-				(n * ((M * sizeof(weight_type)) + sizeof(value_type) + sizeof(size_type)));
+				size_type res = (M * sizeofWeight) +
+				(n * ((M * sizeofWeight) + sizeofValue + sizeofSize));
 				for (g_size_t i = 0; i < n; ++i) {
 					size_type nextsCount = std::count_if(graph[i].begin(), graph[i].end(), [](bool set) { return set; });
-					res += nextsCount * sizeof(index_type);
+					res += nextsCount * sizeofIndex;
 				}
 				return res;
 			}
@@ -106,12 +116,12 @@ namespace gs {
 			inline void fill_data_slice(
 				Iter NextsBegin, Iter NextsEnd
 			) {
-				size_type acc = (n * sizeof(size_type)) + (m * sizeof(weight_type));
+				size_type acc = (n * sizeofSize) + (m * sizeofWeight);
 				size_type i = 0;
 				auto ids = item_data_slice();
 				for (Iter it = NextsBegin; it != NextsEnd; ++it) {
 					ids[i] = acc;
-					acc += sizeof(value_type) + (m * sizeof(weight_type)) + ((*it).size() * sizeof(index_type));
+					acc += sizeofValue + (m * sizeofWeight) + ((*it).size() * sizeofIndex);
 					++i;
 				}
 			}
@@ -122,12 +132,12 @@ namespace gs {
 				assert(graph.size() == n);
 				using g_size_t = typename graphs::adjacency_matrix::size_type;
 
-				size_type acc = (n * sizeof(size_type)) + (m * sizeof(weight_type));
+				size_type acc = (n * sizeofSize) + (m * sizeofWeight);
 				auto ids = item_data_slice();
 				for (g_size_t i = 0; i < graph.size(); ++i) {
 					ids[static_cast<size_type>(i)] = acc;
 					size_type nextsCount = std::count_if(graph[i].begin(), graph[i].end(), [](bool set) { return set; });
-					acc += sizeof(value_type) + (m * sizeof(weight_type)) + (nextsCount * sizeof(index_type));
+					acc += sizeofValue + (m * sizeofWeight) + (nextsCount * sizeofIndex);
 				}
 			}
 
@@ -219,7 +229,7 @@ namespace gs {
 			}
 
 			inline itemlocal_nlist(
-				const Container<uint8_t>& data,
+				const Container& data,
 				std::initializer_list<weight_type> Limits,
 				std::initializer_list<value_type> Values,
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
@@ -287,11 +297,11 @@ namespace gs {
 			}
 
 			inline weights_type limits() {
-				return weights_type((weight_type*)(&storage[n * sizeof(size_type)]), m);
+				return weights_type((weight_type*)(&storage[n * sizeofSize]), m);
 			}
 
 			inline const_weights_type limits() const {
-				return const_weights_type((weight_type*)(&storage[n * sizeof(size_type)]), m);
+				return const_weights_type((weight_type*)(&storage[n * sizeofSize]), m);
 			}
 
 			inline weight_type& limit(size_type i) {
@@ -311,11 +321,11 @@ namespace gs {
 			}
 
 			inline weights_type weights(size_type i) {
-				return weights_type((weight_type*)(&storage[item_data_slice()[i] + sizeof(value_type)]), m);
+				return weights_type((weight_type*)(&storage[item_data_slice()[i] + sizeofValue]), m);
 			}
 
 			inline const_weights_type weights(size_type i) const {
-				return const_weights_type((const weight_type*)(&storage[item_data_slice()[i] + sizeof(value_type)]), m);
+				return const_weights_type((const weight_type*)(&storage[item_data_slice()[i] + sizeofValue]), m);
 			}
 
 			inline weight_type& weight(size_type i, size_type j) {
@@ -331,8 +341,8 @@ namespace gs {
 				auto ids = item_data_slice();
 				uint8_t* ptr = &storage[ids[i]];
 				uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
-				size_type nextsCount = (nextPtr - ptr - sizeof(value_type) - (m * sizeof(weight_type))) / sizeof(index_type);
-				return nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeof(value_type) + (m * sizeof(weight_type))]), nextsCount);
+				size_type nextsCount = (nextPtr - ptr - sizeofValue - (m * sizeofWeight)) / sizeofIndex;
+				return nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeofValue + (m * sizeofWeight)]), nextsCount);
 			}
 			
 			inline const_nexts_type nexts(size_type i) const {
@@ -340,8 +350,8 @@ namespace gs {
 				auto ids = item_data_slice();
 				const uint8_t* ptr = &storage[ids[i]];
 				const uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
-				size_type nextsCount = (nextPtr - ptr - sizeof(value_type) - (m * sizeof(weight_type))) / sizeof(index_type);
-				return const_nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeof(value_type) + (m * sizeof(weight_type))]), nextsCount);
+				size_type nextsCount = (nextPtr - ptr - sizeofValue - (m * sizeofWeight)) / sizeofIndex;
+				return const_nexts_type((index_type*)(&storage[item_data_slice()[i] + sizeofValue + (m * sizeofWeight)]), nextsCount);
 			}
 
 			inline item_type item(size_type i) {
@@ -379,28 +389,28 @@ namespace gs {
 
 				// get storage parameters
 				using sizt = std::vector<uint8_t>::size_type;
-				sizt size = (sizeof(weight_type) * (itnl.n + 1) * itnl.m) + ((sizeof(value_type) + sizeof(size_type)) * itnl.n);
-				sizt stride = (sizeof(weight_type) * itnl.m) + sizeof(value_type);
-				sizt limitsOff = sizeof(size_type) * itnl.n;
-				sizt itemsOff = limitsOff + sizeof(weight_type) * itnl.m;
+				sizt size = (sizeofWeight * (itnl.n + 1) * itnl.m) + ((sizeofValue + sizeofSize) * itnl.n);
+				sizt stride = (sizeofWeight * itnl.m) + sizeofValue;
+				sizt limitsOff = sizeofSize * itnl.n;
+				sizt itemsOff = limitsOff + sizeofWeight * itnl.m;
 
 				// read limitsOff, weights and values
 				std::vector<uint8_t> weight_value(size);
-				for (sizt i = limitsOff; i < itemsOff; i += sizeof(weight_type)) {
+				for (sizt i = limitsOff; i < itemsOff; i += sizeofWeight) {
 					stream >> (*((weight_type*)(&weight_value[i])));
 				}
 				for (sizt i = itemsOff; i < weight_value.size(); i += stride) {
 					stream >> (*((value_type*)(&weight_value[i])));
 				}
 				for (sizt i = itemsOff; i < weight_value.size(); i += stride) {
-					for (sizt j = i + sizeof(value_type); j < i + stride; j += sizeof(weight_type)) {
+					for (sizt j = i + sizeofValue; j < i + stride; j += sizeofWeight) {
 						stream >> (*((weight_type*)(&weight_value[j])));
 					}
 				}
 
 				// read nexts lists
 				std::vector<index_type> nlist;
-				for (sizt i = 0; i < limitsOff; i += sizeof(size_type)) {
+				for (sizt i = 0; i < limitsOff; i += sizeofSize) {
 					size_type count;
 					stream >> count;
 					(*((size_type*)(&weight_value[i]))) = count;
@@ -412,18 +422,18 @@ namespace gs {
 				}
 
 				// copy data
-				itnl.storage.resize(weight_value.size() + nlist.size() * sizeof(index_type));
+				itnl.storage.resize(weight_value.size() + nlist.size() * sizeofIndex);
 				size_type nlistInd = 0;
 				size_type storageInd = itemsOff;
 				sizt j = 0;
 				for (sizt i = itemsOff; i < weight_value.size(); i += stride) {
 					memcpy(itnl.storage.data() + storageInd, weight_value.data() + i, stride);
 					size_type nextsCount = (*(size_type*)(&weight_value[j]));
-					memcpy(itnl.storage.data() + storageInd + stride, nlist.data() + nlistInd, nextsCount * sizeof(size_type));
+					memcpy(itnl.storage.data() + storageInd + stride, nlist.data() + nlistInd, nextsCount * sizeofSize);
 					(*(size_type*)(&weight_value[j])) = storageInd;
-					storageInd += stride + nextsCount * sizeof(size_type);
+					storageInd += stride + nextsCount * sizeofSize;
 					nlistInd += nextsCount;
-					j += sizeof(size_type);
+					j += sizeofSize;
 				}
 				memcpy(itnl.storage.data(), weight_value.data(), itemsOff);
 
