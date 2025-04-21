@@ -149,9 +149,11 @@
     <ClInclude Include="src\requirements.hpp" />
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\SolverRunner.hpp" />
+    <ClInclude Include="src\solvers\BruteForce.hpp" />
     <ClInclude Include="src\solvers\Dynamic.hpp" />
     <ClInclude Include="src\solvers\Greedy.hpp" />
     <ClInclude Include="src\solvers\metric.hpp" />
+    <ClInclude Include="src\solvers\structure_to_find_dispatch.hpp" />
     <ClInclude Include="src\stats.hpp" />
     <ClInclude Include="src\structure_check.hpp" />
     <ClInclude Include="src\inst\weight_value_vector.hpp" />

@@ -134,7 +134,7 @@ namespace gs {
 
 				size_type acc = (n * sizeofSize) + (m * sizeofWeight);
 				auto ids = item_data_slice();
-				for (g_size_t i = 0; i < graph.size(); ++i) {
+				for (g_size_t i = 0; i < n; ++i) {
 					ids[static_cast<size_type>(i)] = acc;
 					size_type nextsCount = std::count_if(graph[i].begin(), graph[i].end(), [](bool set) { return set; });
 					acc += sizeofValue + (m * sizeofWeight) + (nextsCount * sizeofIndex);
@@ -313,14 +313,12 @@ namespace gs {
 			}
 
 			inline weight_type& limit() {
-				assert(weightTreatment == gs::weight_treatment::first_only,
-					"access first limite only is possible only in first only weight treatment");
+				assert(weightTreatment == gs::weight_treatment::first_only);
 				return limits()[0];
 			}
 
 			inline const weight_type& limit() const {
-				assert(weightTreatment == gs::weight_treatment::first_only,
-					"access first limit only is possible only in first only weight treatment");
+				assert(weightTreatment == gs::weight_treatment::first_only);
 				return limits()[0];
 			}
 
@@ -349,14 +347,12 @@ namespace gs {
 			}
 
 			inline weight_type& weight(size_type i) {
-				assert(weightTreatment == gs::weight_treatment::first_only,
-					"access first weight only is possible only in first only weight treatment");
+				assert(weightTreatment == gs::weight_treatment::first_only);
 				return weight(i, 0);
 			}
 
 			inline const weight_type& weight(size_type i) const {
-				assert(weightTreatment == gs::weight_treatment::first_only,
-					"access first weight only is possible only in first only weight treatment");
+				assert(weightTreatment == gs::weight_treatment::first_only);
 				return weight(i, 0);
 			}
 
