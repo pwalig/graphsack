@@ -26,7 +26,7 @@ namespace gs {
 					unsigned i = N;
 					bool fitting = true;
 
-					while (n > 0 && fitting) {
+					while (i > 0 && fitting) {
 						--i;
 						if (n % 2 == 1) {
 							value_memory[id] += values[i];
@@ -61,14 +61,16 @@ namespace gs {
 					cudaStatus = cudaMemcpy(device_memory, data, data_size * sizeof(uint32_t), cudaMemcpyHostToDevice);
 					if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to memcpy host to GPU memory");
 					kernel<<<1, solutionSpace>>>(device_memory, device_memory + M, device_memory + M + N,
-						device_memory + data_size, device_memory + data_size + N, device_memory + memory_size,
+						device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
 						N, M, solutionSpace
 					);
 					cudaStatus = cudaDeviceSynchronize();
 					if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to synch GPU");
 
-					std::vector<uint32_t> result(solutionSpace);
+					std::vector<uint32_t> result(solutionSpace * 2);
 					cudaStatus = cudaMemcpy(result.data(), device_memory + memory_size, solutionSpace * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+					if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to copy results back to CPU");
+					cudaStatus = cudaMemcpy(result.data() + solutionSpace, device_memory + data_size, solutionSpace * sizeof(uint32_t), cudaMemcpyDeviceToHost);
 					if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to copy results back to CPU");
 
 					cudaFree(device_memory);
