@@ -13,7 +13,7 @@ __global__ void addKernel(int *c, const int *a, const int *b)
     c[i] = a[i] + b[i];
 }
 
-int cudaMain()
+void gs::cuda::test()
 {
     const int arraySize = 5;
     const int a[arraySize] = { 1, 2, 3, 4, 5 };
@@ -24,7 +24,7 @@ int cudaMain()
     cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "addWithCuda failed!");
-        return 1;
+        return;
     }
 
     printf("{1,2,3,4,5} + {10,20,30,40,50} = {%d,%d,%d,%d,%d}\n",
@@ -35,10 +35,7 @@ int cudaMain()
     cudaStatus = cudaDeviceReset();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaDeviceReset failed!");
-        return 1;
     }
-
-    return 0;
 }
 
 // Helper function for using CUDA to add vectors in parallel.
@@ -135,7 +132,7 @@ void gs::cuda::info::print()
 		printf("  Device name: %s\n", prop.name);
 		printf("  Memory Clock Rate (KHz): %d\n", prop.memoryClockRate);
 		printf("  Memory Bus Width (bits): %d\n", prop.memoryBusWidth);
-		printf("  Peak Memory Bandwidth (GB/s): %f\n\n", 2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
+		printf("  Peak Memory Bandwidth (GB/s): %f\n", 2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
 		printf("  Threads Per Block: %d\n", prop.maxThreadsPerBlock);
 		printf("  Can Map Host Memory: %d\n", prop.canMapHostMemory);
 	}

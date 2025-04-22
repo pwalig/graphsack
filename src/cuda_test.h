@@ -1,8 +1,8 @@
 #pragma once
-int cudaMain();
 
 namespace gs {
 	namespace cuda {
+		void test();
 		namespace info {
 			void print();
 		}

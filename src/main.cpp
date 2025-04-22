@@ -13,6 +13,7 @@
 #include "inst/gs_random.hpp"
 
 #include "cuda_test.h"
+#include "solvers/CudaBrutforce.hpp"
 
 int main(int argc, char** argv) {
 	const int a = 5;
@@ -48,7 +49,7 @@ int main(int argc, char** argv) {
 		{ 11, 12, 13 },
 		{ 21, 22, 23 },
 		{ {1, 2, 3}, {4, 5, 6}, {7, 8, 9} },
-		{ {1}, {2}, {0, 1}},
+		{ {1}, {2}, {0, 1} },
 		gs::structure::cycle
 	);
 	gs::inst::itemlocal_nlist<unsigned int> ilnl2("instances/itemlocal_nlist_test.txt");
@@ -96,20 +97,25 @@ int main(int argc, char** argv) {
 	gs::random::into<unsigned int>(randomValues.begin() + 3, randomValues.end(), randomValueGen);
 	for (auto i : randomValues) std::cout << i << " ";
 	std::cout << "\n";
-	gs::graphs::adjacency_matrix randomGraph = gs::graphs::adjacency_matrix::from_gnp(10, 0.2, gen);
 	gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t> randomItemlocalNlist(
 		randomValues.begin(), randomValues.begin() + 3,
 		randomValues.begin() + 3, randomValues.begin() + 13,
 		randomValues.begin() + 13, randomValues.end(),
-		randomGraph
+		gs::graphs::adjacency_matrix::from_gnp(10, 0.2, gen)
 	);
-	std::cout << randomItemlocalNlist << "\n";
+	//std::cout << randomItemlocalNlist << "\n";
 	gs::SolverRunner<gs::solver::Greedy<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	gs::SolverRunner<gs::solver::BruteForce<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.weight_treatment() = gs::weight_treatment::first_only;
 	randomItemlocalNlist.structure_to_find() = gs::structure::none;
 	gs::SolverRunner<gs::solver::Dynamic<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 
-	//gs::cuda::info::print();
-	//cudaMain();
+	gs::cuda::info::print();
+	gs::cuda::test();
+	std::vector<uint32_t> cudares = gs::solver::cuda::brute_force::runner_u32_u32(randomValues.data(), 10, 3);
+	uint32_t resid = 0;
+	for (auto val : cudares) {
+		std::cout << resid << "  " << val << "\n";
+		++resid;
+	}
 }

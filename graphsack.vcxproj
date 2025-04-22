@@ -152,6 +152,7 @@
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\SolverRunner.hpp" />
     <ClInclude Include="src\solvers\BruteForce.hpp" />
+    <ClInclude Include="src\solvers\CudaBrutforce.hpp" />
     <ClInclude Include="src\solvers\Dynamic.hpp" />
     <ClInclude Include="src\solvers\Greedy.hpp" />
     <ClInclude Include="src\solvers\metric.hpp" />
@@ -166,6 +167,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
+    <CudaCompile Include="src\solvers\CudaBruteForce.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
