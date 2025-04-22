@@ -112,19 +112,5 @@ int main(int argc, char** argv) {
 
 	gs::cuda::info::print();
 	gs::cuda::test();
-	std::vector<uint32_t> cudares = gs::solver::cuda::brute_force::runner_u32_u32(randomValues.data(), 10, 3);
-	gs::bit_vector solution(10);
-	uint32_t i = 10;
-	uint32_t resid = cudares[0];
-	while (resid > 0) {
-		--i;
-		if (resid % 2 == 1) {
-			solution.add(i);
-		}
-		resid /= 2;
-	}
-	std::cout << cudares[0] <<  "\t" << solution << "\t" << cudares[1024 + cudares[0]] << "\n";
-	for (int x = 0; x < 1024; ++x) {
-		std::cout << x << "\t" << cudares[1024+x] << "\n";
-	}
+	std::cout << gs::solver::cuda::BruteForce::solve(randomValues.data(), 10, 3) << "\n";
 }
