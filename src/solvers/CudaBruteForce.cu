@@ -48,7 +48,7 @@ __global__ void kernel(
 }
 
 // data should be: limits | values | weights
-uint32_t gs::solver::cuda::BruteForce::runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M) {
+uint32_t gs::solver::cuda::brute_force::runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M) {
 	cudaError_t cudaStatus;
 	uint32_t solutionSpace = std::pow(2, N);
 	uint32_t* device_memory;
@@ -71,17 +71,4 @@ uint32_t gs::solver::cuda::BruteForce::runner_u32_u32(uint32_t* data, uint32_t N
 
 	cudaFree(device_memory);
 	return result;
-}
-
-gs::solver::cuda::BruteForce::solution_t gs::solver::cuda::BruteForce::solve(uint32_t* data, uint32_t N, uint32_t M)
-{
-	uint32_t res = runner_u32_u32(data, N, M);
-	solution_t solution(N);
-	uint32_t i = N;
-	while (i > 0) {
-		--i;
-		if (res % 2 == 1) solution.add(i);
-		res /= 2;
-	}
-	return solution;
 }

@@ -15,6 +15,8 @@
 #include "cuda_test.h"
 #include "solvers/CudaBrutforce.hpp"
 
+const std::string gs::solver::cuda::BruteForce<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>::name = "CudaBruteForce";
+
 int main(int argc, char** argv) {
 	const int a = 5;
 	std::cout << a << " A\n";
@@ -112,5 +114,5 @@ int main(int argc, char** argv) {
 
 	gs::cuda::info::print();
 	gs::cuda::test();
-	std::cout << gs::solver::cuda::BruteForce::solve(randomValues.data(), 10, 3) << "\n";
+	gs::SolverRunner<gs::solver::cuda::BruteForce<gs::inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, gs::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 }
