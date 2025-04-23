@@ -4,7 +4,8 @@
 #include <vector>
 #include <cassert>
 
-#include "../requirements.hpp"
+#include "../structure.hpp"
+#include "../weight_treatment.hpp"
 #include "../Validator.hpp"
 
 namespace gs {

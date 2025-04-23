@@ -3,7 +3,8 @@
 
 #include "weight_vector_operations.hpp"
 #include "structure_check.hpp"
-#include "requirements.hpp"
+#include "weight_treatment.hpp"
+#include "structure.hpp"
 
 namespace gs {
 	template <typename instanceT, typename solutionT>

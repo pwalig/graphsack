@@ -140,7 +140,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\bit_vector.hpp" />
+    <ClInclude Include="src\res\bit_vector.hpp" />
     <ClInclude Include="src\cuda_test.h" />
     <ClInclude Include="src\graphs\adjacency_matrix.hpp" />
     <ClInclude Include="src\graphs\arch_list.hpp" />
@@ -148,7 +148,7 @@
     <ClInclude Include="src\inst\gs_random.hpp" />
     <ClInclude Include="src\inst\itemlocal_nlist.hpp" />
     <ClInclude Include="src\inst\random.hpp" />
-    <ClInclude Include="src\requirements.hpp" />
+    <ClInclude Include="src\structure.hpp" />
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\SolverRunner.hpp" />
     <ClInclude Include="src\solvers\BruteForce.hpp" />
@@ -160,9 +160,10 @@
     <ClInclude Include="src\stats.hpp" />
     <ClInclude Include="src\structure_check.hpp" />
     <ClInclude Include="src\inst\weight_value_vector.hpp" />
-    <ClInclude Include="src\composite_instance.hpp" />
+    <ClInclude Include="src\inst\composite_instance.hpp" />
     <ClInclude Include="src\iterator.hpp" />
     <ClInclude Include="src\Validator.hpp" />
+    <ClInclude Include="src\weight_treatment.hpp" />
     <ClInclude Include="src\weight_vector_operations.hpp" />
   </ItemGroup>
   <ItemGroup>

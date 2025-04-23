@@ -1,6 +1,6 @@
 #pragma once
 #include <stdexcept>
-#include "../requirements.hpp"
+#include "../structure.hpp"
 
 #define structure_to_find_dispatch() \
 switch (instance.structure_to_find()) {\

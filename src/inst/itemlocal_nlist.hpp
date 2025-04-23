@@ -7,7 +7,8 @@
 
 #include "../slice.hpp"
 #include "../iterator.hpp"
-#include "../requirements.hpp"
+#include "../structure.hpp"
+#include "../weight_treatment.hpp"
 #include "../graphs/adjacency_matrix.hpp"
 
 namespace gs {

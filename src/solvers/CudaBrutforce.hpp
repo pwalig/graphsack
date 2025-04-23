@@ -1,8 +1,6 @@
 #pragma once
 #include <vector>
 
-#include "../bit_vector.hpp"
-
 namespace gs {
 	namespace solver {
 		namespace cuda {
@@ -30,11 +28,11 @@ namespace gs {
 					for (typename instance_t::size_type i = 0; i < instance.size(); ++i) it = std::copy(instance.weights(i).begin(), instance.weights(i).end(), it);
 
 					// run kernel
-					uint32_t res = brute_force::runner_u32_u32(data.data(), instance.size(), instance.dim());
+					uint32_t res = brute_force::runner_u32_u32(data.data(), (uint32_t)instance.size(), (uint32_t)instance.dim());
 
 					// rewrite to solution
 					solution_t solution(instance.size());
-					uint32_t i = instance.size();
+					size_t i = instance.size();
 					while (i > 0) {
 						--i;
 						if (res % 2 == 1) solution.add(i);

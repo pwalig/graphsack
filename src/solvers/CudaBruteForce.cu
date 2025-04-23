@@ -50,7 +50,7 @@ __global__ void kernel(
 // data should be: limits | values | weights
 uint32_t gs::solver::cuda::brute_force::runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M) {
 	cudaError_t cudaStatus;
-	uint32_t solutionSpace = std::pow(2, N);
+	uint32_t solutionSpace = (uint32_t)std::pow(2, N);
 	uint32_t* device_memory;
 	uint32_t data_size = N * M + N + M;
 	uint32_t memory_size = solutionSpace * M + solutionSpace + data_size;

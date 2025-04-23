@@ -5,8 +5,6 @@
 
 #include "../structure_check.hpp"
 #include "../weight_vector_operations.hpp"
-#include "../requirements.hpp"
-#include "../Validator.hpp"
 #include "structure_to_find_dispatch.hpp"
 
 namespace gs {
@@ -41,7 +39,7 @@ namespace gs {
 				solution_t best_solution(instance.size());
 				value_type best_value = std::numeric_limits<value_type>::min();
 
-				size_t n = std::pow(2, instance.size());
+				size_t n = (size_t)std::pow(2, instance.size());
 
 				for (size_t i = 0; i < n; ++i) {
 					auto solution = solutionFromNumber(instance, i);
