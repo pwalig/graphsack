@@ -17,8 +17,6 @@
 
 using namespace gs;
 
-const std::string solver::cuda::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>::name = "CudaBruteForce";
-
 int main(int argc, char** argv) {
 	const int a = 5;
 	std::cout << a << " A\n";

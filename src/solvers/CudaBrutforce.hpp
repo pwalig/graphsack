@@ -41,6 +41,10 @@ namespace gs {
 					return solution;
 				}
 			};
+
+			template<typename InstanceT, typename SolutionT>
+			const std::string BruteForce<InstanceT, SolutionT>::name = "CudaBruteForce";
 		}
 	}
 }
+
