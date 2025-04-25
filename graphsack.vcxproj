@@ -149,6 +149,7 @@
     <ClInclude Include="src\inst\itemlocal_nlist.hpp" />
     <ClInclude Include="src\inst\random.hpp" />
     <ClInclude Include="src\solvers\GRASP.hpp" />
+    <ClInclude Include="src\solvers\MultiRun.hpp" />
     <ClInclude Include="src\structure.hpp" />
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\SolverRunner.hpp" />
