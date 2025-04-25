@@ -25,12 +25,37 @@ namespace gs {
 		}
 
 		template <typename T, typename instanceT>
+		inline void calculate_into(const instanceT& instance, function<T, instanceT> metricFunction) {
+			std::vector<T> metrix(instance.size());
+			for (typename instanceT::size_type i = 0; i < instance.size(); ++i) {
+				metrix[i] = metricFunction(instance, i);
+			}
+			return metrix;
+		}
+
+		template <typename T, typename instanceT>
 		inline std::vector<T> calculate(const instanceT& instance, function<T, instanceT> metricFunction) {
 			std::vector<T> metrix(instance.size());
 			for (typename instanceT::size_type i = 0; i < instance.size(); ++i) {
 				metrix[i] = metricFunction(instance, i);
 			}
 			return metrix;
+		}
+
+		template <typename T, typename instanceT, typename indexT = typename instanceT::index_type>
+		inline static std::vector<indexT> sorted_indexes(
+			const instanceT& instance,
+			function<T, instanceT> metricFunction,
+			bool ascending = false
+		) {
+			std::vector<indexT> res(instance.size());
+			for (indexT i = 0; i < instance.size(); ++i) {
+				res[i] = i;
+			}
+			std::vector<T> metric = calculate<T, instanceT>(instance, metricFunction);
+			if (ascending) std::sort(res.begin(), res.end(), [&metric](indexT a, indexT b) { return metric[a] < metric[b]; });
+			else std::sort(res.begin(), res.end(), [&metric](indexT a, indexT b) { return metric[a] > metric[b]; });
+			return res;
 		}
 
 		template <typename T>
@@ -69,6 +94,11 @@ namespace gs {
 		template <typename metricT, typename instanceT>
 		inline std::vector<typename metricT::value_type> calculate(const instanceT& instance) {
 			return calculate<typename metricT::value_type, instanceT>(instance, metricT::function);
+		}
+
+		template <typename metricT, typename instanceT, typename indexT = typename instanceT::index_type>
+		inline std::vector<indexT> sorted_indexes(const instanceT& instance, bool ascending = false) {
+			return sorted_indexes<typename metricT::value_type, instanceT, indexT>(instance, metricT::function, ascending);
 		}
 	}
 }
