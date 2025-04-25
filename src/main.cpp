@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 	);
 	//std::cout << randomItemlocalNlist << "\n";
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
-	SolverRunner<solver::MultiRun<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>>::run<float, float>(randomItemlocalNlist, format, std::cout, 1.0f, 0.5f);
+	SolverRunner<solver::MultiRun<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>>::run<float, std::knuth_b, float>(randomItemlocalNlist, format, std::cout, 1.0f, gen, 0.5f);
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.weight_treatment() = weight_treatment::first_only;
 	randomItemlocalNlist.structure_to_find() = structure::none;

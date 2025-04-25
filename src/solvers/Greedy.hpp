@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <algorithm>
 
 #include "../structure_check.hpp"
 #include "../weight_vector_operations.hpp"
