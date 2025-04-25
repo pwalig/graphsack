@@ -113,10 +113,9 @@ namespace gs {
 				for (size_type i = 0; i < n; ++i) {
 					for (size_type j = 0; j < n; ++j) {
 						if (!selfArches && i == j) res.at(i, j) = false;
-						else res.at(i, j) = std::bernoulli_distribution(p)(randomEngine);
-						if (unidirectional) {
-							if (i == j) break;
-							res.at(j, i) = res.at(i, j);
+						else {
+							res.at(i, j) = std::bernoulli_distribution(p)(randomEngine);
+							if (unidirectional) res.at(j, i) = res.at(i, j);
 						}
 					}
 				}
@@ -151,6 +150,34 @@ namespace gs {
 				}
 				return stream;
 			}
+#ifndef NDEBUG
+			class test {
+			public:
+				static void initializer_list_constructable();
+				template <typename Engine>
+				inline static void from_gnp(
+					size_type n, double p, Engine& gen,
+					bool unidirectional = false, bool selfArches = true
+				) {
+					adjacency_matrix am = graphs::adjacency_matrix::from_gnp(n, p, gen, unidirectional, selfArches);
+					assert(am.size() == n);
+					if (unidirectional) {
+						for (size_type i = 0; i < am.size(); ++i) {
+							for (size_type j = 0; j < i; ++j) {
+								assert(am[i][j] && am[j][i]);
+							}
+						}
+					}
+					if (!selfArches) {
+						for (size_type i = 0; i < am.size(); ++i) assert(am[i][i] == false);
+					}
+				}
+				static void g6_converter_consistency_from_file(const std::string& filename);
+				static void g6_converter_consistency(const std::string& graph6);
+				static void all();
+			};
+#endif
+
 		};
 	}
 }

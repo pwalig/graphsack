@@ -11,16 +11,15 @@
 #include "SolverRunner.hpp"
 #include "graphs/adjacency_matrix.hpp"
 #include "inst/gs_random.hpp"
-
-#include "cuda_test.h"
 #include "solvers/CudaBrutforce.hpp"
+
+#ifndef NDEBUG
+#include "cuda_test.h"
+#endif
 
 using namespace gs;
 
 int main(int argc, char** argv) {
-	const int a = 5;
-	std::cout << a << " A\n";
-
 	weight_value_vector<> inst(
 		{ 11, 12, 13 },
 		{ { 21, { 1, 2, 3}}, {22, { 4, 5, 6 }} }
@@ -68,29 +67,18 @@ int main(int argc, char** argv) {
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<unsigned int>, res::bit_vector>>::run(ilnl2, format, std::cout);
 
 
+#ifndef NDEBUG
+	// adjacency matrix
+	gs::graphs::adjacency_matrix::test::all();
 
-	graphs::adjacency_matrix am({
-		{true, true, false},
-		{true, true, false},
-		{true, true, false}
-		});
-	std::cout << am;
+	// cuda
+	cuda::info::print();
+	cuda::test();
+#endif
 
-	am = graphs::adjacency_matrix::from_graph6("SeaLsGRWR{TjcoJYK`hqCYRz@FfnMuhSG");
-	std::cout << am << am.graph6() << "\n";
-
-	std::ifstream fin("instances/1.g6");
-	if (fin.is_open()) {
-		std::string graph6_string;
-		fin >> graph6_string;
-		am = graphs::adjacency_matrix::from_graph6(graph6_string);
-		std::cout << am << am.graph6() << "\n";
-	}
 
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
-	am = graphs::adjacency_matrix::from_gnp(8, 0.5, gen, true, true);
-	std::cout << am;
 
 	std::vector<unsigned int> randomValues(3 + 10 + (3 * 10));
 	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(1, 10), std::ref(gen));
@@ -112,7 +100,5 @@ int main(int argc, char** argv) {
 	randomItemlocalNlist.structure_to_find() = structure::none;
 	SolverRunner<solver::Dynamic<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 
-	cuda::info::print();
-	cuda::test();
 	SolverRunner<solver::cuda::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 }

@@ -95,3 +95,55 @@ std::string gs::graphs::adjacency_matrix::graph6() {
 
 	return result;
 }
+
+#ifndef NDEBUG
+#include <fstream>
+void gs::graphs::adjacency_matrix::test::all()
+{
+	// initializer
+	initializer_list_constructable();
+
+	// gnp
+	std::random_device randomDevice;
+	std::knuth_b gen(randomDevice());
+	from_gnp(24, 0.5, gen, false, false);
+	from_gnp(16, 1.0, gen, true, false);
+	from_gnp(8, 0.0, gen, false, true);
+
+	// g6
+	g6_converter_consistency("SeaLsGRWR{TjcoJYK`hqCYRz@FfnMuhSG");
+	g6_converter_consistency_from_file("tests/adjacency_matrix/1.g6");
+}
+
+void gs::graphs::adjacency_matrix::test::initializer_list_constructable()
+{
+	graphs::adjacency_matrix am({
+		{true, true, false},
+		{true, true, false},
+		{true, true, false}
+		});
+
+	assert(am.size() == 3);
+	assert(am[0][0] == true);
+	assert(am.at(0, 1) == true);
+	assert(am.at(0)[2] == false);
+	assert(am.at(1).at(0) == true);
+	assert(am[2].at(2) == false);
+}
+
+void gs::graphs::adjacency_matrix::test::g6_converter_consistency_from_file(const std::string& filename)
+{
+	std::ifstream fin(filename);
+	if (fin.is_open()) {
+		std::string graph6_string;
+		fin >> graph6_string;
+		g6_converter_consistency(graph6_string);
+	}
+}
+
+void gs::graphs::adjacency_matrix::test::g6_converter_consistency(const std::string& graph6)
+{
+	adjacency_matrix am = graphs::adjacency_matrix::from_graph6(graph6);
+	assert(am.graph6() == graph6);
+}
+#endif
