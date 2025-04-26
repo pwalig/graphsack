@@ -29,8 +29,7 @@ namespace gs {
 				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
 				solution_t best = current_solution;
-				while (to_visit > 0  && sorted.size() > 0) {
-					--to_visit;
+				while ((to_visit--) > 0  && sorted.size() > 0) {
 					indexT itemId = sorted.back();
 					sorted.pop_back();
 
@@ -52,13 +51,55 @@ namespace gs {
 				return best;
 			}
 
-			inline static solution_t solve(
+			inline static solution_t accurate(
 				const instance_t& instance,
+				const solution_t& current_solution,
+				const std::vector<typename instance_t::weight_type>& remaining,
+				typename instance_t::value_type maxValue,
+				std::vector<indexT> sorted,
 				size_t to_visit,
 				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
+				solution_t best = current_solution;
+				while (to_visit > 0  && sorted.size() > 0) {
+					indexT itemId = sorted.back();
+					sorted.pop_back();
+
+					if (fits(instance.weights(itemId), remaining)) {
+						solution_t tmp_solution = current_solution;
+						tmp_solution.add(itemId);
+						if (structure_check(instance, tmp_solution)) {
+							std::vector<typename instance_t::weight_type> tmp_remaining = remaining;
+							sub_from_weights(tmp_remaining, instance.weights(itemId));
+							tmp_solution = accurate(instance, tmp_solution, tmp_remaining, maxValue, sorted, std::max<size_t>(--to_visit, 1), structure_check);
+							typename instance_t::value_type value = Validator<instance_t, solution_t>::getResultValue(instance, tmp_solution);
+							if (value > maxValue) {
+								maxValue = value;
+								best = tmp_solution;
+							}
+						}
+					}
+				}
+				return best;
+			}
+
+			inline static solution_t solve(
+				const instance_t& instance,
+				size_t to_visit,
+				bool Accurate,
+				bool (*structure_check) (const instance_t&, const solution_t&)
+			) {
 				assert(to_visit > 0);
-				return fast(
+				if (Accurate) return accurate(
+					instance,
+					solution_t(instance.size()),
+					std::vector<typename instance_t::weight_type>(instance.limits().begin(), instance.limits().end()),
+					0,
+					metric::sorted_indexes<metricT, instance_t, indexT>(instance, true),
+					to_visit,
+					structure_check
+				);
+				else return fast(
 					instance,
 					solution_t(instance.size()),
 					std::vector<typename instance_t::weight_type>(instance.limits().begin(), instance.limits().end()),
@@ -71,17 +112,18 @@ namespace gs {
 			
 			inline static solution_t solve(
 				const instance_t& instance,
-				size_t to_visit
+				size_t to_visit,
+				bool Accurate
 			) {
 				switch (instance.structure_to_find()) {
 				case structure::none:
-					return solve(instance, to_visit, [](const instance_t&, const solution_t&) {return true; });
+					return solve(instance, to_visit, Accurate, [](const instance_t&, const solution_t&) {return true; });
 					break;
 				case structure::path:
-					return solve(instance, to_visit, is_path_possible);
+					return solve(instance, to_visit, Accurate, is_path_possible);
 					break;
 				case structure::cycle:
-					return solve(instance, to_visit, is_cycle_possible);
+					return solve(instance, to_visit, Accurate, is_cycle_possible);
 					break;
 				default:
 					throw std::logic_error("invalid structure");
@@ -91,9 +133,10 @@ namespace gs {
 
 			inline static solution_t solve(
 				const instance_t& instance,
-				float coverage
+				float coverage,
+				bool Accurate
 			) {
-				return solve(instance, (size_t)(instance.size() * coverage));
+				return solve(instance, (size_t)(instance.size() * coverage), Accurate);
 			}
 		};
 	}
