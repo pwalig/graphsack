@@ -14,7 +14,7 @@ namespace gs {
 		public:
 			using instance_t = InstanceT;
 			using solution_t = SolutionT;
-			inline static const std::string name = "GRASP";
+			inline static const std::string name = "GRASP<" + metricT::name + ">";
 
 			using metric_function = metric::function<metricT, instance_t>;
 

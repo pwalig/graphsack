@@ -82,6 +82,7 @@ namespace gs {
 		class Value {
 		public:
 			using value_type = T;
+			inline static std::string name = "Value";
 
 			template <typename instanceT>
 			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
@@ -93,6 +94,7 @@ namespace gs {
 		class TotalWeight {
 		public:
 			using value_type = T;
+			inline static std::string name = "TotalWeight";
 
 			template <typename instanceT>
 			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
@@ -104,6 +106,7 @@ namespace gs {
 		class NextsCount {
 		public:
 			using value_type = T;
+			inline static std::string name = "NextsCount";
 
 			template <typename instanceT>
 			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
@@ -115,6 +118,7 @@ namespace gs {
 		class NextsCountValue {
 		public:
 			using value_type = T;
+			inline static std::string name = "NextsCountValue";
 
 			template <typename instanceT>
 			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
@@ -123,9 +127,22 @@ namespace gs {
 		};
 
 		template <typename T>
+		class ValueWeightRatio {
+		public:
+			using value_type = T;
+			inline static std::string name = "ValueWeightRatio";
+
+			template <typename instanceT>
+			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
+				return metric::value_weight_ratio<T, instanceT>(instance, itemId);
+			}
+		};
+
+		template <typename T>
 		class NextsCountWeightRatio {
 		public:
 			using value_type = T;
+			inline static std::string name = "NextsCountWeightRatio";
 
 			template <typename instanceT>
 			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
@@ -137,6 +154,7 @@ namespace gs {
 		class NextsCountValueWeightRatio {
 		public:
 			using value_type = T;
+			inline static std::string name = "NextsCountValueWeightRatio";
 
 			template <typename instanceT>
 			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
@@ -144,17 +162,6 @@ namespace gs {
 			}
 		};
 
-
-		template <typename T>
-		class ValueWeightRatio {
-		public:
-			using value_type = T;
-
-			template <typename instanceT>
-			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
-				return metric::value_weight_ratio<T, instanceT>(instance, itemId);
-			}
-		};
 
 		template <typename metricT, typename instanceT>
 		inline std::vector<typename metricT::value_type> calculate(const instanceT& instance) {

@@ -1,7 +1,5 @@
 #pragma once
 #include <vector>
-#include <algorithm>
-#include <stdexcept>
 
 #include "../structure_check.hpp"
 #include "../weight_vector_operations.hpp"
@@ -44,7 +42,7 @@ namespace gs {
 				for (size_t i = 0; i < n; ++i) {
 					auto solution = solutionFromNumber(instance, i);
 					typename instance_t::value_type value = 0;
-					std::vector<typename instance_t::value_type> weights(instance.dim());
+					std::vector<typename instance_t::value_type> weights(instance.dim(), 0);
 					for (size_t i = 0; i < instance.size(); ++i) {
 						if (solution.has(i)) {
 							value += instance.value(i);
