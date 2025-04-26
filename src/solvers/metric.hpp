@@ -20,8 +20,28 @@ namespace gs {
 		}
 
 		template <typename T, typename instanceT>
+		inline T nexts_count(const instanceT& instance, typename instanceT::size_type itemId) {
+			return instance.nexts(itemId).size();
+		}
+
+		template <typename T, typename instanceT>
 		inline T value_weight_ratio(const instanceT& instance, typename instanceT::size_type itemId) {
 			return value<T, instanceT>(instance, itemId) / total_weight<T, instanceT>(instance, itemId);
+		}
+
+		template <typename T, typename instanceT>
+		inline T nexts_count_value(const instanceT& instance, typename instanceT::size_type itemId) {
+			return nexts_count<T, instanceT>(instance, itemId) * value<T, instanceT>(instance, itemId);
+		}
+
+		template <typename T, typename instanceT>
+		inline T nexts_count_weight_ratio(const instanceT& instance, typename instanceT::size_type itemId) {
+			return nexts_count<T, instanceT>(instance, itemId) / total_weight<T, instanceT>(instance, itemId);
+		}
+
+		template <typename T, typename instanceT>
+		inline T nexts_count_value_weight_ratio(const instanceT& instance, typename instanceT::size_type itemId) {
+			return nexts_count_value<T, instanceT>(instance, itemId) / total_weight<T, instanceT>(instance, itemId);
 		}
 
 		template <typename T, typename instanceT>
@@ -79,6 +99,51 @@ namespace gs {
 				return metric::total_weight<T, instanceT>(instance, itemId);
 			}
 		};
+
+		template <typename T>
+		class NextsCount {
+		public:
+			using value_type = T;
+
+			template <typename instanceT>
+			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
+				return metric::nexts_count<T, instanceT>(instance, itemId);
+			}
+		};
+
+		template <typename T>
+		class NextsCountValue {
+		public:
+			using value_type = T;
+
+			template <typename instanceT>
+			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
+				return metric::nexts_count_value<T, instanceT>(instance, itemId);
+			}
+		};
+
+		template <typename T>
+		class NextsCountWeightRatio {
+		public:
+			using value_type = T;
+
+			template <typename instanceT>
+			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
+				return metric::nexts_count_weight_ratio<T, instanceT>(instance, itemId);
+			}
+		};
+
+		template <typename T>
+		class NextsCountValueWeightRatio {
+		public:
+			using value_type = T;
+
+			template <typename instanceT>
+			inline static value_type function(const instanceT& instance, typename instanceT::size_type itemId) {
+				return metric::nexts_count_value_weight_ratio<T, instanceT>(instance, itemId);
+			}
+		};
+
 
 		template <typename T>
 		class ValueWeightRatio {
