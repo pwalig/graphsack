@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 	std::cout << "\n" << ilnl2 << "\n";
 	std::cout << solver::Greedy<inst::itemlocal_nlist<unsigned int>, res::bit_vector>::solve(ilnl) << "\n";
 
-	std::string format = "{solver name}\nresult: {result}\ntime: {time}s\nvalue: {result value}\nweights: {result weights}/ {limits}\nstructure: {structure valid}\nfitting: {fitting}\n";
+	std::string format = "{solver name}\nresult: {result}\ntime: {time}s\nvalue: {result value}\nweights: {result weights}/ {limits}\nstructure: {structure valid}\nfitting: {fitting}\n\n";
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<unsigned int>, res::bit_vector>>::run(ilnl2, format, std::cout);
 
 

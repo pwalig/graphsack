@@ -31,8 +31,8 @@ namespace gs {
 		// {result} - selected words in the result
 		// {instance size} - size of the instance
 		// {result size} - size of the result
-		// {instance N} - limit N of the instance
-		// {result N} - cost N of the result
+		// {instance weights} - limit weights of the instance
+		// {result weights} - cost weights of the result
 		// {structure} - structure validation result
 		// {fitting} - fitting validation result
 		// @param stream - stream where to output
@@ -51,10 +51,10 @@ namespace gs {
 
 			stats.time = std::chrono::duration<double>(end - begin).count();
 
-			stats.S = Validator<instance_t, solution_t>::getResultValue(instance, res);
-			stats.N = Validator<instance_t, solution_t>::getResultWeights(instance, res);
-			stats.structure = Validator<instance_t, solution_t>::validateStructure(instance, res);
-			stats.fitting = Validator<instance_t, solution_t>::validateFit(instance, stats.N);
+			stats.value = Validator<instance_t, solution_t>::getResultValue(instance, res);
+			stats.weights = Validator<instance_t, solution_t>::getResultWeights(instance, res);
+			if (Validator<instance_t, solution_t>::validateFit(instance, stats.weights)) stats.validations |= 1;
+			if (Validator<instance_t, solution_t>::validateStructure(instance, res)) stats.validations |= 2;
 
 			for (std::pair<std::string, std::ostream&>& output : outputs) {
 				size_t pos = output.first.find_first_of('{');
@@ -67,12 +67,12 @@ namespace gs {
 					else if (keyval == "time") output.second << stats.time;
 					else if (keyval == "instance") output.second << instance;
 					else if (keyval == "result") output.second << res;
-					else if (keyval == "instance size") output.second << instance.size();
-					else if (keyval == "result value") output.second << stats.S;
+					else if (keyval == "instance value") output.second << instance.size();
+					else if (keyval == "result value") output.second << stats.value;
 					else if (keyval == "limits") for (auto elem : instance.limits()) output.second << elem << " ";
-					else if (keyval == "result weights") for (auto elem : stats.N) output.second << elem << " ";
-					else if (keyval == "structure valid") output.second << (stats.structure ? "true" : "false");
-					else if (keyval == "fitting") output.second << (stats.fitting ? "true" : "false");
+					else if (keyval == "result weights") for (auto elem : stats.weights) output.second << elem << " ";
+					else if (keyval == "fitting") output.second << (stats.validations & 1 ? "true" : "false");
+					else if (keyval == "structure valid") output.second << (stats.validations & 2 ? "true" : "false");
 					output.first = output.first.substr(pos2 + 1);
 					pos = output.first.find_first_of('{');
 				}
@@ -99,14 +99,14 @@ namespace gs {
 			std::vector<std::pair<std::string, std::ostream&>> avgOutputs,
 			Args... args
 		) {
-			typename stats<instance_t>::sum resultSumStats;
-			typename stats<instance_t>::sum  instanceSumStats;
+			typename stats<instance_t>::accumulate resultSumStats;
+			typename stats<instance_t>::accumulate instanceSumStats;
 
 			// solve all instances
 			for (const instance_t& instance : instances) {
 				resultSumStats += run<Args...>(instance, outputs, args...);
-				instanceSumStats.N += instance.n;
-				instanceSumStats.S += instance.wordSet.size();
+				instanceSumStats.weights.push_back(instance.n);
+				instanceSumStats.value.push_back(instance.wordSet.size());
 			}
 
 			// average results
@@ -122,10 +122,10 @@ namespace gs {
 					std::string keyval = avgOutput.first.substr(pos + 1, pos2 - pos - 1);
 					if (keyval == "solver name") avgOutput.second << Solver::name;
 					else if (keyval == "time") avgOutput.second << avgResultStats.time;
-					else if (keyval == "instance size") avgOutput.second << avgInstanceStats.S;
-					else if (keyval == "result size") avgOutput.second << avgResultStats.S;
-					else if (keyval == "instance N") avgOutput.second << avgInstanceStats.N;
-					else if (keyval == "result N") avgOutput.second << avgResultStats.N;
+					else if (keyval == "instance value") avgOutput.second << avgInstanceStats.value;
+					else if (keyval == "result value") avgOutput.second << avgResultStats.value;
+					else if (keyval == "instance weights") for (auto elem : avgInstanceStats.weights) avgOutput.second << elem << " ";
+					else if (keyval == "result weights") for (auto elem : avgResultStats.weights) avgOutput.second << elem << " ";
 					else if (keyval == "structure") avgOutput.second << avgResultStats.structure;
 					else if (keyval == "fitting") avgOutput.second << avgResultStats.fitting;
 					avgOutput.first = avgOutput.first.substr(pos2 + 1);

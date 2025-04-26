@@ -11,8 +11,8 @@ namespace gs {
 		class avg {
 		public:
 			double time = 0.0;
-			double S = 0.0;
-			std::vector<double> N;
+			double value = 0.0;
+			std::vector<double> weights;
 			double structure = 0.0;
 			double fitting = 0.0;
 		};
@@ -21,23 +21,22 @@ namespace gs {
 
 		class single {
 		public:
+			std::vector<weight_type> weights;
 			double time = 0.0;
-			value_type S = 0;
-			std::vector<weight_type> N;
-			bool structure = false;
-			bool fitting = false;
+			value_type value = 0;
+			uint8_t validations = 0;
 
 			inline sum operator+(const single& other) {
 				sum res;
 				res.time = time + other.time;
-				res.S = S + other.S;
-				res.N = add_weights<std::vector<size_t>>(N, other.N);
-				res.structure = 0;
-				if (structure) res.structure += 1;
-				if (other.structure) res.structure += 1;
+				res.value = value + other.value;
+				res.weights = add_weights<std::vector<size_t>>(weights, other.weights);
 				res.fitting = 0;
-				if (fitting) res.fitting += 1;
-				if (other.fitting) res.fitting += 1;
+				if (validations & 1) res.fitting += 1;
+				if (other.validations & 1) res.fitting += 1;
+				res.structure = 0;
+				if (validations & 2) res.structure += 1;
+				if (other.validations & 2) res.structure += 1;
 				return res;
 			}
 
@@ -46,8 +45,8 @@ namespace gs {
 		class sum {
 		public:
 			double time = 0.0;
-			value_type S = 0;
-			std::vector<weight_type> N;
+			value_type value = 0;
+			std::vector<weight_type> weights;
 			size_t structure = 0;
 			size_t fitting = 0;
 
@@ -55,17 +54,17 @@ namespace gs {
 				time += other.time;
 				structure += other.structure;
 				fitting += other.fitting;
-				S += other.S;
-				add_to_weights(N, other.N);
+				value += other.value;
+				add_to_weights(weights, other.weights);
 				return (*this);
 			}
 
 			inline sum& operator+=(const single& other) {
 				time += other.time;
-				if (other.structure) structure += 1;
-				if (other.fitting) fitting += 1;
-				S += other.S;
-				add_to_weights(N, other.N);
+				if (other.validations & 1) fitting += 1;
+				if (other.validations & 2) structure += 1;
+				value += other.value;
+				add_to_weights(weights, other.weights);
 				return (*this);
 			}
 
@@ -73,17 +72,17 @@ namespace gs {
 				time -= other.time;
 				structure -= other.structure;
 				fitting -= other.fitting;
-				S -= other.S;
-				sub_from_weights(N, other.N);
+				value -= other.value;
+				sub_from_weights(weights, other.weights);
 				return (*this);
 			}
 
 			inline sum& operator-=(const single& other) {
 				time -= other.time;
-				if (other.structure) structure -= 1;
-				if (other.fitting) fitting -= 1;
-				S -= other.S;
-				sub_from_weights(N, other.N);
+				if (other.validations & 1) fitting -= 1;
+				if (other.validations & 2) structure -= 1;
+				value -= other.value;
+				sub_from_weights(weights, other.weights);
 				return (*this);
 			}
 
@@ -115,9 +114,9 @@ namespace gs {
 			inline avg operator/(size_t n) {
 				avg res;
 				res.time = time / (double)n;
-				res.S = (double)S / (double)n;
-				for (size_t i = 0; i < N.size(); ++i) {
-					res.N.push_back((double)N[i] / (double)n);
+				res.value = (double)value / (double)n;
+				for (size_t i = 0; i < weights.size(); ++i) {
+					res.weights.push_back((double)weights[i] / (double)n);
 				}
 				res.structure = (double)structure / (double)n;
 				res.fitting = (double)fitting / (double)n;
@@ -125,5 +124,65 @@ namespace gs {
 			}
 		};
 
+		class accumulate {
+		public:
+			std::vector<double> times;
+			std::vector<value_type> values;
+			std::vector<std::vector<weight_type>> weights;
+			std::vector<uint8_t> validations;
+
+			inline void insert(const single& stat) {
+				times.push_back(stat.time);
+				values.push_back(stat.value);
+				weights.push_back(stat.weights);
+				validations.push_back(stat.validations);
+			}
+
+			inline accumulate& operator+=(const single& stat) {
+				insert(stat);
+			}
+			inline accumulate& operator+(const single& stat) {
+				accumulate tmp = (*this);
+				tmp.insert(stat);
+				return tmp;
+			}
+
+			inline double avg_time() const {
+				double sum = std::accumulate(times.begin(), times.end(), 0.0);
+				return sum / times.size();
+			}
+
+			inline double avg_value() const {
+				double sum = std::accumulate(values.begin(), values.end(), 0.0);
+				return sum / values.size();
+			}
+
+			inline std::vector<double> avg_weights() const {
+				std::vector<double> sum(weights.size(), 0.0);
+				for (size_t i = 0; i < weights.back().size(); ++i) {
+					for (size_t j = 0; j < weights.size(); ++j) {
+						sum[i] += weights[j][i];
+					}
+					sum[i] /= weights.size();
+				}
+				return sum;
+			}
+
+			inline double avg_valid(uint8_t validation_number) const {
+				uint8_t mask = 1 << validation_number;
+				double sum = std::count_if(validations.begin(), validations.end(), [](uint8_t val) {return val & mask; });
+				return sum / validations.size();
+			}
+
+			inline avg operator/(size_t n) {
+				avg res;
+				res.time = avg_time();
+				res.value = avg_value();
+				res.weights = avg_weights();
+				res.fitting = avg_valid(0);
+				res.structure = avg_valid(1);
+				return res;
+			}
+		};
 	};
 }
