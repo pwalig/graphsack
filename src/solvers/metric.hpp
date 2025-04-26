@@ -21,7 +21,7 @@ namespace gs {
 
 		template <typename T, typename instanceT>
 		inline T nexts_count(const instanceT& instance, typename instanceT::size_type itemId) {
-			return instance.nexts(itemId).size();
+			return static_cast<T>(instance.nexts(itemId).size());
 		}
 
 		template <typename T, typename instanceT>
@@ -126,7 +126,7 @@ namespace gs {
 			}
 		};
 
-		template <typename T>
+		template <typename T = float>
 		class ValueWeightRatio {
 		public:
 			using value_type = T;
@@ -138,7 +138,7 @@ namespace gs {
 			}
 		};
 
-		template <typename T>
+		template <typename T = float>
 		class NextsCountWeightRatio {
 		public:
 			using value_type = T;
@@ -150,7 +150,7 @@ namespace gs {
 			}
 		};
 
-		template <typename T>
+		template <typename T = float>
 		class NextsCountValueWeightRatio {
 		public:
 			using value_type = T;

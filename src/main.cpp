@@ -4,6 +4,7 @@
 #include "res/bit_vector.hpp"
 #include "solvers/Greedy.hpp"
 #include "solvers/GRASP.hpp"
+#include "solvers/GHS.hpp"
 #include "solvers/Dynamic.hpp"
 #include "solvers/MultiRun.hpp"
 #include "solvers/BruteForce.hpp"
@@ -97,8 +98,9 @@ int main(int argc, char** argv) {
 	);
 	//std::cout << randomItemlocalNlist << "\n";
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
-	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<float>>>::run(randomItemlocalNlist, format, std::cout);
-	SolverRunner<solver::MultiRun<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>>::run<float, std::knuth_b, float>(randomItemlocalNlist, format, std::cout, 1.0f, gen, 0.5f);
+	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
+	SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t>(randomItemlocalNlist, format, std::cout, 10);
+	SolverRunner<solver::MultiRun<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>>::run(randomItemlocalNlist, format, std::cout, 1.0f, gen, 0.5f);
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.weight_treatment() = weight_treatment::first_only;
 	randomItemlocalNlist.structure_to_find() = structure::none;
