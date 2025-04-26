@@ -151,6 +151,7 @@
     <ClInclude Include="src\solvers\GHS.hpp" />
     <ClInclude Include="src\solvers\GRASP.hpp" />
     <ClInclude Include="src\solvers\MultiRun.hpp" />
+    <ClInclude Include="src\solvers\PathBruteForce.hpp" />
     <ClInclude Include="src\structure.hpp" />
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\SolverRunner.hpp" />

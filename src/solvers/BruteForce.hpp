@@ -35,7 +35,7 @@ namespace gs {
 				using value_type = typename instance_t::value_type;
 
 				solution_t best_solution(instance.size());
-				value_type best_value = std::numeric_limits<value_type>::min();
+				value_type best_value = 0;
 
 				size_t n = (size_t)std::pow(2, instance.size());
 
