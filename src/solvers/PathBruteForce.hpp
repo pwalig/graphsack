@@ -48,6 +48,8 @@ namespace gs {
 			) {
 				if (instance.structure_to_find() != structure::path)
 					throw std::invalid_argument("PathBruteForce can only solve for path structure requirement");
+				if (instance.weight_treatment() != weight_treatment::full)
+					throw std::invalid_argument("PathBruteForce can only solve for full weight treatment");
 				solution_t best_solution(instance.size());
 				typename instance_t::value_type best_value = 0;
 				std::vector<typename instance_t::weight_type> tmp_remaining(instance.limits().begin(), instance.limits().end());

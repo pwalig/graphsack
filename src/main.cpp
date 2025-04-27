@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
-	const uint32_t itemsCount = 17;
+	const uint32_t itemsCount = 6;
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
@@ -97,18 +97,19 @@ int main(int argc, char** argv) {
 		randomValues.begin(), randomValues.begin() + weightsDim,
 		randomValues.begin() + weightsDim, randomValues.begin() + weightsDim + itemsCount,
 		randomValues.begin() + weightsDim + itemsCount, randomValues.end(),
-		graphs::adjacency_matrix::from_gnp(itemsCount, 0.2, gen)
+		graphs::adjacency_matrix::from_gnp(itemsCount, 0.2, gen),
+		structure::cycle, weight_treatment::full
 	);
-	//std::cout << randomItemlocalNlist << "\n";
+	std::cout << randomItemlocalNlist << "\n";
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
 	SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run(randomItemlocalNlist, format, std::cout, gen, 0.5f, 0.5f);
+	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+	SolverRunner<solver::cuda::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.structure_to_find() = structure::path;
 	SolverRunner<solver::PathBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.structure_to_find() = structure::none;
-	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
-	SolverRunner<solver::cuda::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.weight_treatment() = weight_treatment::first_only;
 	SolverRunner<solver::Dynamic<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 }
