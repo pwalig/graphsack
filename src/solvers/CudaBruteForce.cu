@@ -78,7 +78,7 @@ __global__ void cycle_kernel(
 	bool fitting = is_cycle(adjacency, n, N);
 
 	while (i < N && fitting) {
-		if (n % 2 == 1) {
+		if (has(n, i)) {
 			value_memory[id] += values[i];
 			for (uint32_t  wid = 0; wid < M; ++wid) {
 				weight_memory[M * id + wid] += weights[M * i + wid];
@@ -90,7 +90,6 @@ __global__ void cycle_kernel(
 				}
 			}
 		}
-		n /= 2;
 		i++;
 	}
 
@@ -158,9 +157,9 @@ __global__ void pick(
 }
 
 // data should be: limits | values | weights | adjacency
-uint32_t gs::solver::cuda::brute_force::runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock, structure to_find) {
+uint32_t gs::solver::cuda::brute_force::runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock, uint32_t share, structure to_find) {
 	cudaError_t cudaStatus;
-	size_t solutionSpace = (size_t)std::pow(2, N);
+	size_t solutionSpace = (size_t)std::pow(2, N) / share;
 	uint32_t* device_memory;
 	size_t data_size = N * M + N + M + N;
 	size_t memory_size = solutionSpace * M + solutionSpace + data_size;
