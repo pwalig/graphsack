@@ -6,7 +6,7 @@ namespace gs {
 		namespace cuda {
 			namespace brute_force {
 				// data should be: limits | values | weights
-				uint32_t runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M);
+				uint32_t runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock);
 			}
 
 			template <typename InstanceT, typename SolutionT>
@@ -17,9 +17,8 @@ namespace gs {
 				const static std::string name;
 
 				BruteForce() = delete;
-				inline static solution_t solve(const instance_t& instance) 
+				inline static solution_t solve(const instance_t& instance, uint32_t threadsPerBlock = 1024) 
 				{
-					assert(instance.size() <= 10);
 					std::vector<uint32_t> data(instance.dim() * instance.size() + instance.dim() + instance.size());
 
 					// copy instance to data
@@ -28,7 +27,7 @@ namespace gs {
 					for (typename instance_t::size_type i = 0; i < instance.size(); ++i) it = std::copy(instance.weights(i).begin(), instance.weights(i).end(), it);
 
 					// run kernel
-					uint32_t res = brute_force::runner_u32_u32(data.data(), (uint32_t)instance.size(), (uint32_t)instance.dim());
+					uint32_t res = brute_force::runner_u32_u32(data.data(), (uint32_t)instance.size(), (uint32_t)instance.dim(), threadsPerBlock);
 
 					// rewrite to solution
 					solution_t solution(instance.size());
