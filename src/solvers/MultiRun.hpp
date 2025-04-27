@@ -22,7 +22,11 @@ namespace gs {
 				typename instance_t::value_type best_value = std::numeric_limits<typename instance_t::value_type>::min();
 				for (size_t i = 0; i < iterations; ++i) {
 					solution_t solution = Solver::solve(instance, args...);
-					if (Validator<instance_t, solution_t>::getResultValue(instance, solution) > best_value) best = solution;
+					typename instance_t::value_type value = Validator<instance_t, solution_t>::getResultValue(instance, solution);
+					if (value > best_value) {
+						best_value = value;
+						best = solution;
+					}
 				}
 				return best;
 			}

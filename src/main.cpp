@@ -6,7 +6,6 @@
 #include "solvers/GRASP.hpp"
 #include "solvers/GHS.hpp"
 #include "solvers/Dynamic.hpp"
-#include "solvers/MultiRun.hpp"
 #include "solvers/BruteForce.hpp"
 #include "solvers/PathBruteForce.hpp"
 #include "structure_check.hpp"
@@ -101,7 +100,7 @@ int main(int argc, char** argv) {
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
-	SolverRunner<solver::MultiRun<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>>::run(randomItemlocalNlist, format, std::cout, 1.0f, gen, 0.5f);
+	SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run(randomItemlocalNlist, format, std::cout, gen, 0.5f, 0.5f);
 	randomItemlocalNlist.structure_to_find() = structure::path;
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::PathBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
