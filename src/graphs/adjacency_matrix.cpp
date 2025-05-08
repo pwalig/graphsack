@@ -12,6 +12,18 @@ gs::graphs::adjacency_matrix::adjacency_matrix(std::initializer_list<std::initia
 	}
 }
 
+gs::graphs::adjacency_matrix::size_type gs::graphs::adjacency_matrix::ones()
+{
+	size_type res = 0;
+	size_type n = size();
+	for (size_type i = 0; i < n; ++i) {
+		for (size_type j = 0; j < n; ++j) {
+			if (at(i, j)) ++res;
+		}
+	}
+	return res;
+}
+
 gs::graphs::adjacency_matrix gs::graphs::adjacency_matrix::from_graph6(const std::string& buff) {
 	char bit = 32;
 	typename std::string::size_type poz = 0;

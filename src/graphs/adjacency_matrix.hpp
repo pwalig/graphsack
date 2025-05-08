@@ -104,6 +104,8 @@ namespace gs {
 				return const_row(storage, x);
 			}
 
+			size_type ones();
+
 			template <typename Engine>
 			inline static adjacency_matrix from_gnp(
 				size_type n, double p, Engine& randomEngine,
@@ -118,6 +120,38 @@ namespace gs {
 							if (unidirectional) res.at(j, i) = res.at(i, j);
 						}
 					}
+				}
+				return res;
+			}
+
+			template <typename Engine>
+			inline void gnp_fill(
+				double p, Engine& randomEngine,
+				bool unidirectional = false, bool selfArches = true
+			) {
+				size_type n = size();
+				p -= ((double)ones() / storage.size());
+				for (size_type i = 0; i < n; ++i) {
+					for (size_type j = 0; j < n; ++j) {
+						if (!at(i, j)) {
+							at(i, j) = std::bernoulli_distribution(p)(randomEngine);
+							if (unidirectional) at(j, i) = at(i, j);
+						}
+					}
+				}
+			}
+
+			template <typename Iter>
+			static adjacency_matrix from_path(size_type N, Iter Begin, Iter End, bool unidirectional = false) {
+				static_assert(std::is_same<typename Iter::value_type, size_type>::value);
+				adjacency_matrix res(N, false);
+				auto it = Begin;
+				size_type prev = *it;
+				++it;
+				for (; it != End; ++it) {
+					res.at(prev, *it) = true;
+					if (unidirectional) res.at(*it, prev) = true;
+					prev = *it;
 				}
 				return res;
 			}

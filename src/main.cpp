@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 	random::into<unsigned int>(randomValues.begin() + weightsDim, randomValues.end(), randomValueGen);
 	for (auto i : randomValues) std::cout << i << " ";
 	std::cout << "\n";
-	inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t> randomItemlocalNlist(
+	inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t> randomItemlocalNlist (
 		randomValues.begin(), randomValues.begin() + weightsDim,
 		randomValues.begin() + weightsDim, randomValues.begin() + weightsDim + itemsCount,
 		randomValues.begin() + weightsDim + itemsCount, randomValues.end(),

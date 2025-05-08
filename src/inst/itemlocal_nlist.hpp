@@ -393,6 +393,28 @@ namespace gs {
 			inline const gs::structure& structure_to_find() const { return structureToFind; }
 			inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
 
+
+			template <typename Rand, typename ValueGen, typename WeightGen, typename LimitGen>
+			inline itemlocal_nlist random(size_type N, size_type M, double P,
+				ValueGen vg, WeightGen wg, LimitGen lg, Rand& gen,
+				gs::structure StructureToFind = gs::structure::cycle,
+				gs::weight_treatment WeightTreatment = gs::weight_treatment::full
+			) {
+				std::vector<value_type> randomValues(N);
+				std::vector<weight_type> randomWeights(N * M + M);
+				random::into<value_type>(randomValues.begin(), randomValues.end(), vg);
+				random::into<weight_type>(randomWeights.begin() + M, randomWeights.end(), wg);
+				random::into<weight_type>(randomWeights.begin(), randomWeights.begin() + M, lg);
+
+				return inst::itemlocal_nlist(
+					randomWeights.begin(), randomWeights.begin() + M,
+					randomValues.begin(), randomValues.end(),
+					randomWeights.begin() + M, randomWeights.end(),
+					graphs::adjacency_matrix::from_gnp(N, P, gen),
+					StructureToFind, WeightTreatment
+				);
+			}
+
 			friend inline std::ostream& operator<< (std::ostream& stream, const itemlocal_nlist & itnl) {
 				size_type i = 0;
 				stream << "N: " << itnl.n << "\nlimits:";
