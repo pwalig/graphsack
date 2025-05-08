@@ -6,6 +6,7 @@
 #include <random>
 
 #include "../slice.hpp"
+#include "../inst/gs_random.hpp"
 
 namespace gs {
 	namespace graphs {
@@ -113,7 +114,7 @@ namespace gs {
 			) {
 				adjacency_matrix res(n);
 				for (size_type i = 0; i < n; ++i) {
-					for (size_type j = 0; j < n; ++j) {
+					for (size_type j = 0; j < (unidirectional ? i + 1 : n); ++j) {
 						if (!selfArches && i == j) res.at(i, j) = false;
 						else {
 							res.at(i, j) = std::bernoulli_distribution(p)(randomEngine);
@@ -132,7 +133,7 @@ namespace gs {
 				size_type n = size();
 				p -= ((double)ones() / storage.size());
 				for (size_type i = 0; i < n; ++i) {
-					for (size_type j = 0; j < n; ++j) {
+					for (size_type j = 0; j < (unidirectional ? i + 1 : n); ++j) {
 						if (!at(i, j)) {
 							at(i, j) = std::bernoulli_distribution(p)(randomEngine);
 							if (unidirectional) at(j, i) = at(i, j);

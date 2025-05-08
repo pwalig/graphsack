@@ -112,4 +112,10 @@ int main(int argc, char** argv) {
 	randomItemlocalNlist.structure_to_find() = structure::none;
 	randomItemlocalNlist.weight_treatment() = weight_treatment::first_only;
 	SolverRunner<solver::Dynamic<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+
+	std::vector<size_t> path = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+	graphs::adjacency_matrix fp = graphs::adjacency_matrix::from_path(10, path.begin(), path.end(), true);
+	std::cout << fp << "\n";
+	fp.gnp_fill(0.5, gen, true);
+	std::cout << fp << "\n";
 }
