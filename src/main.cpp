@@ -15,6 +15,7 @@
 #include "graphs/adjacency_matrix.hpp"
 #include "inst/gs_random.hpp"
 #include "solvers/CudaBrutforce.hpp"
+#include "inst/inst_generator.hpp"
 
 #ifndef NDEBUG
 #include "cuda_test.h"
@@ -89,8 +90,8 @@ int main(int argc, char** argv) {
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
 	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(1, 10), std::ref(gen));
 	auto randomLimitGen = std::bind(std::uniform_int_distribution<unsigned int>(30, 50), std::ref(gen));
-	random::into<unsigned int>(randomValues.begin(), randomValues.begin() + weightsDim, randomLimitGen);
-	random::into<unsigned int>(randomValues.begin() + weightsDim, randomValues.end(), randomValueGen);
+	random::into(randomValues.begin(), randomValues.begin() + weightsDim, randomLimitGen);
+	random::into(randomValues.begin() + weightsDim, randomValues.end(), randomValueGen);
 	for (auto i : randomValues) std::cout << i << " ";
 	std::cout << "\n";
 	inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t> randomItemlocalNlist (
@@ -118,4 +119,14 @@ int main(int argc, char** argv) {
 	std::cout << fp << "\n";
 	fp.gnp_fill(0.5, gen, true);
 	std::cout << fp << "\n";
+
+	std::cout << inst::Generator<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>>::random(
+		10, 3, 0.2, gen, 30, 50, 1, 10, 1, 10, false, true, structure::cycle, weight_treatment::full
+	) << "\n";
+
+	auto known_res = inst::Generator<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>>::known_looping_path_or_cycle_gnp(
+		10, 3, 0.1, gen, 1, 10, 1, 10, false, true, structure::cycle, weight_treatment::full
+	);
+	std::cout << known_res.first << "\noptimum: " << known_res.second << "\n";
+	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(known_res.first, format, std::cout);
 }

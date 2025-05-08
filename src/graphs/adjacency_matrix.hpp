@@ -146,6 +146,7 @@ namespace gs {
 			static adjacency_matrix from_path(size_type N, Iter Begin, Iter End, bool unidirectional = false) {
 				static_assert(std::is_same<typename Iter::value_type, size_type>::value);
 				adjacency_matrix res(N, false);
+				if (Begin == End) return res;
 				auto it = Begin;
 				size_type prev = *it;
 				++it;

@@ -82,8 +82,8 @@ namespace gs {
 			Container storage;
 			size_type n;
 			size_type m;
-			structure structureToFind;
-			weight_treatment weightTreatment;
+			gs::structure structureToFind;
+			gs::weight_treatment weightTreatment;
 			
 
 			template<typename Iterable>
@@ -209,7 +209,7 @@ namespace gs {
 				WIter WeightsBegin, WIter WeightsEnd,
 				const graphs::adjacency_matrix& graph,
 				structure Structure = structure::path,
-				weight_treatment WeightTreatment = weight_treatment::full
+				gs::weight_treatment WeightTreatment = gs::weight_treatment::full
 			) : n(std::distance(ValuesBegin, ValuesEnd)), m(std::distance(LimitsBegin, LimitsEnd)),
 				storage(get_storage_size(std::distance(LimitsBegin, LimitsEnd), graph)),
 				structureToFind(Structure), weightTreatment(WeightTreatment)
@@ -236,7 +236,7 @@ namespace gs {
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
 				std::initializer_list<std::initializer_list<index_type>> Nexts,
 				structure Structure = structure::path,
-				weight_treatment WeightTreatment = weight_treatment::full
+				gs::weight_treatment WeightTreatment = gs::weight_treatment::full
 			) : n(Values.size()), m(Limits.size()), storage(data),
 				structureToFind(Structure), weightTreatment(WeightTreatment)
 			{
@@ -254,7 +254,7 @@ namespace gs {
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
 				std::initializer_list<std::initializer_list<index_type>> Nexts,
 				structure Structure = structure::path,
-				weight_treatment WeightTreatment = weight_treatment::full
+				gs::weight_treatment WeightTreatment = gs::weight_treatment::full
 			) : n(Values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), Nexts)),
 				structureToFind(Structure), weightTreatment(WeightTreatment)
 			{
@@ -271,7 +271,7 @@ namespace gs {
 				std::initializer_list<std::initializer_list<weight_type>> Weights,
 				const graphs::adjacency_matrix& graph,
 				structure Structure = structure::path,
-				weight_treatment WeightTreatment = weight_treatment::full
+				gs::weight_treatment WeightTreatment = gs::weight_treatment::full
 			) : n(Values.size()), m(Limits.size()), storage(get_storage_size(Limits.size(), graph)),
 				structureToFind(Structure), weightTreatment(WeightTreatment)
 			{
@@ -392,7 +392,6 @@ namespace gs {
 			inline gs::weight_treatment& weight_treatment() { return weightTreatment; }
 			inline const gs::structure& structure_to_find() const { return structureToFind; }
 			inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
-
 
 			template <typename Rand, typename ValueGen, typename WeightGen, typename LimitGen>
 			inline itemlocal_nlist random(size_type N, size_type M, double P,
