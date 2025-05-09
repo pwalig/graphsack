@@ -135,5 +135,7 @@ void gs::cuda::info::print()
 		printf("  Peak Memory Bandwidth (GB/s): %f\n", 2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
 		printf("  Threads Per Block: %d\n", prop.maxThreadsPerBlock);
 		printf("  Can Map Host Memory: %d\n", prop.canMapHostMemory);
+		printf("  totalConstMem: %llu\n", prop.totalConstMem);
+		printf("  totalGlobalMem: %llu\n" ,prop.totalGlobalMem);	
 	}
 }

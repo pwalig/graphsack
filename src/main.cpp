@@ -16,6 +16,7 @@
 #include "inst/gs_random.hpp"
 #include "solvers/CudaBrutforce.hpp"
 #include "inst/inst_generator.hpp"
+#include "inst/cuda_instance.hpp"
 
 #ifndef NDEBUG
 #include "cuda_test.h"
@@ -120,7 +121,7 @@ int main(int argc, char** argv) {
 	fp.gnp_fill(0.5, gen, true);
 	std::cout << fp << "\n";
 
-	std::cout << inst::Generator<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>>::random(
+	std::cout << inst::Generator<inst::cuda::instance<uint32_t, uint32_t>>::random(
 		10, 3, 0.2, gen, 30, 50, 1, 10, 1, 10, false, true, structure::cycle, weight_treatment::full
 	) << "\n";
 

@@ -21,6 +21,9 @@
     <ClCompile Include="src\graphs\adjacency_matrix.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="src\inst\cuda_instance.cu">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\inst\composite_instance.hpp">
@@ -113,6 +116,10 @@
     <ClInclude Include="src\inst\inst_generator.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\inst\cuda_instance.hpp">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inst\cuda_instance_memory.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
