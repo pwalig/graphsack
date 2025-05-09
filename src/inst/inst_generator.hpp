@@ -14,7 +14,29 @@ namespace gs::inst {
 		using instance_t = InstanceT;
 		using value_type = typename instance_t::value_type;
 		using weight_type = typename instance_t::weight_type;
+		using index_type = typename instance_t::index_type;
 		using size_type = typename instance_t::size_type;
+		
+	private:
+		template <typename Rand>
+		static std::vector<index_type> random_path(
+			size_type N, size_type PathLen, Rand& gen
+		) {
+			assert(PathLen <= N && PathLen >= 0);
+			std::uniform_int_distribution<size_type> sd(0, N-1);
+			std::vector<index_type> path;
+			path.reserve(N + 1); // +1 is for potential cycle
+			std::vector<bool> selected(N, false);
+			for (size_type i = 0; i < PathLen; ++i) {
+				index_type select = sd(gen);
+				while (selected[select]) select = sd(gen);
+				path.push_back(select);
+				selected[select] = true;
+			}
+			return path;
+		}
+
+	public:
 
 		template <typename Rand>
 		static instance_t random(
@@ -49,8 +71,8 @@ namespace gs::inst {
 		// generates a random instance with known optimum
 		// structure must be either path or cycle
 		template <typename Rand>
-		static std::pair<instance_t, value_type> known_looping_path_or_cycle_gnp(
-			size_type N, size_type M, double P,
+		static std::pair<instance_t, value_type> known_path_or_cycle_gnp(
+			size_type N, size_type M, size_type PathLen,
 			Rand& gen,
 			value_type MinValue, value_type MaxValue,
 			weight_type MinWeight, weight_type MaxWeight,
@@ -73,40 +95,23 @@ namespace gs::inst {
 					return gs::random::function<Rand>::from_uniform_distribution(gen, MinValue, MaxValue);
 				});
 
-			// calculate cycle / path length
-			size_type count_base = N * N;
-			if (!selfArches) count_base -= N;
-			if (unidirectional) count_base /= 2; // TO DO -> calculate it precisely
-			std::normal_distribution<float> ld(count_base * P, count_base * P * (1 - P));
-			size_type reslen = (size_type)std::max(0.0f, ld(gen));
-			std::cout << "reslen: " << reslen << "\n";
-
 			// construct a path / cycle
-			std::vector<size_type> path;
-			path.reserve(reslen);
-			std::vector<bool> solution(N, false);
-			std::uniform_int_distribution<size_type> sd(0, N - 1);
-			if (reslen > 0 && Structure == structure::cycle) reslen -= 1;
-			for (size_type i = 0; i < reslen; ++i) {
-				size_type select = sd(gen);
-				if (!selfArches) while (path.back() == select) select = sd(gen);
-				path.push_back(select);
-				solution[select] = true;
-			}
-			if (!path.empty() && Structure == structure::cycle) {
-				path.push_back(path.front());
-			}
+			std::vector<index_type> path = random_path<Rand>(N, PathLen, gen);
 
 			// calculate limits and optimum
 			std::vector<weight_type> limits(M, 0);
 			value_type optimum = 0;
-			for (size_type itemId = 0; itemId < N; ++itemId) {
-				if (solution[itemId]) {
-					for (size_type i = 0; i < M; ++i)
-						limits[i] += randomWeights[itemId * M + i];
-					optimum += randomValues[itemId];
-				}
+			for (index_type itemId : path) {
+				for (size_type i = 0; i < M; ++i)
+					limits[i] += randomWeights[itemId * M + i];
+				optimum += randomValues[itemId];
 			}
+
+			// close path if cycle required
+			if (!path.empty() && Structure == structure::cycle) {
+				path.push_back(path.front());
+			}
+
 
 #ifndef NDEBUG
 			for (auto elem : path)

@@ -124,9 +124,9 @@ int main(int argc, char** argv) {
 		10, 3, 0.2, gen, 30, 50, 1, 10, 1, 10, false, true, structure::cycle, weight_treatment::full
 	) << "\n";
 
-	auto known_res = inst::Generator<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>>::known_looping_path_or_cycle_gnp(
-		10, 3, 0.1, gen, 1, 10, 1, 10, false, true, structure::cycle, weight_treatment::full
+	auto known_res = inst::Generator<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>>::known_path_or_cycle_gnp(
+		10, 3, 5, gen, 1, 10, 1, 10, false, true, structure::path, weight_treatment::full
 	);
-	std::cout << known_res.first << "\noptimum: " << known_res.second << "\n";
+	std::cout << known_res.first << "\noptimum: " << known_res.second << "\n\n";
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(known_res.first, format, std::cout);
 }

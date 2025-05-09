@@ -4,6 +4,7 @@
 #include <cassert>
 #include <ostream>
 #include <random>
+#include <type_traits>
 
 #include "../slice.hpp"
 #include "../inst/gs_random.hpp"
@@ -144,11 +145,11 @@ namespace gs {
 
 			template <typename Iter>
 			static adjacency_matrix from_path(size_type N, Iter Begin, Iter End, bool unidirectional = false) {
-				static_assert(std::is_same<typename Iter::value_type, size_type>::value);
+				static_assert(std::is_integral_v<typename Iter::value_type>);
 				adjacency_matrix res(N, false);
 				if (Begin == End) return res;
 				auto it = Begin;
-				size_type prev = *it;
+				auto prev = *it;
 				++it;
 				for (; it != End; ++it) {
 					res.at(prev, *it) = true;
