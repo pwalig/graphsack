@@ -145,7 +145,7 @@ namespace gs {
 
 			template <typename Iter>
 			static adjacency_matrix from_path(size_type N, Iter Begin, Iter End, bool unidirectional = false) {
-				static_assert(std::is_integral_v<typename Iter::value_type>);
+				static_assert(std::is_integral_v<typename Iter::value_type>, "indices of path must be numbers");
 				adjacency_matrix res(N, false);
 				if (Begin == End) return res;
 				auto it = Begin;

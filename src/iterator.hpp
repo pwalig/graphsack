@@ -96,7 +96,7 @@ public:
 		temp -= n;
 		return temp;
 	}
-	friend inline difference_type operator-(const trivial_proxy_random_access_iterator& lhs, const trivial_proxy_random_access_iterator& rhs) { return (lhs.ptr - rhs.ptr) / siz; }
+	friend inline difference_type operator-(const trivial_proxy_random_access_iterator& lhs, const trivial_proxy_random_access_iterator& rhs) { return (lhs.ptr - rhs.ptr) / rhs.siz; }
 };
 
 #define iterator_defs(ptr, size) \
