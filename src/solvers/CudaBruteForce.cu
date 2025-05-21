@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "CudaBrutforce.hpp"
-//#include "../inst/cuda_instance_memory.cuh"
+#include "../inst/cuda_instance_memory.cuh"
 
 __device__  bool has_connection_to(const uint32_t* adjacency, uint32_t from, uint32_t to) {
 	if (adjacency[from] & (1 << to)) return true;
@@ -168,7 +168,7 @@ uint32_t gs::cuda::solver::brute_force::runner_u32_u32(uint32_t* data, uint32_t 
 	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
 	cudaStatus = cudaMemcpy(device_memory, data, data_size * sizeof(uint32_t), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to memcpy host to GPU memory");
-	uint32_t blocksCount = std::max<uint32_t>(1, solutionSpace / threadsPerBlock);
+	uint32_t blocksCount = std::max<uint32_t>(1, (uint32_t)(solutionSpace / threadsPerBlock));
 	if (to_find == structure::cycle) cycle_kernel<<<blocksCount, threadsPerBlock>>>(device_memory, device_memory + M, device_memory + M + N, device_memory + (N * M) + N + M,
 		device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
 		N, M, solutionSpace
@@ -208,57 +208,59 @@ uint32_t gs::cuda::solver::brute_force::runner_u32_u32(uint32_t* data, uint32_t 
 	return result;
 }
 
-//gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_u32_u32(
-//	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
-//) {
-//	cudaError_t cudaStatus;
-//	//inst::copy_to_symbol(instance);
-//
-//	size_t solutionSpace = (size_t)std::pow(2, instance.size()) / share;
-//
-//	uint32_t* device_memory;
-//	size_t memory_size = solutionSpace * (instance.dim() + 2);
-//
-//	cudaStatus = cudaMalloc(&device_memory, memory_size * sizeof(uint32_t));
-//	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
-//
-//	//uint32_t blocksCount = std::max<uint32_t>(1, solutionSpace / threadsPerBlock);
-//	//if (instance.structure_to_find() == structure::cycle) cycle_kernel << <blocksCount, threadsPerBlock >> >(device_memory, device_memory + M, device_memory + M + N, device_memory + (N * M) + N + M,
-//	//	device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
-//	//	N, M, solutionSpace
-//	//);
-//	//else base_kernel<<<blocksCount, threadsPerBlock>>>(device_memory, device_memory + M, device_memory + M + N,
-//	//	device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
-//	//	N, M, solutionSpace
-//	//);
-//	//cudaStatus = cudaDeviceSynchronize();
-//	//if (cudaStatus != cudaSuccess) {
-//	//	cudaFree(device_memory);
-//	//	throw std::runtime_error("failed to synch GPU");
-//	//}
-//
-//	//if (blocksCount > 1) {
-//	//	pick<<<1, blocksCount>>> (
-//	//		device_memory + data_size,
-//	//		device_memory + memory_size,
-//	//		threadsPerBlock,
-//	//		solutionSpace
-//	//	);
-//	//	cudaStatus = cudaDeviceSynchronize();
-//	//	if (cudaStatus != cudaSuccess) {
-//	//		cudaFree(device_memory);
-//	//		throw std::runtime_error("failed to synch GPU");
-//	//	}
-//	//}
-//
-//	res::solution64 result;
-//
-//	cudaStatus = cudaMemcpy(&result._data, device_memory + memory_size - solutionSpace, sizeof(uint64_t), cudaMemcpyDeviceToHost);
-//	if (cudaStatus != cudaSuccess) {
-//		cudaFree(device_memory);
-//		throw std::runtime_error("failed to synch GPU");
-//	}
-//
-//	cudaFree(device_memory);
-//	return result;
-//}
+const std::string gs::cuda::solver::BruteForce64::name = "CudaBruteForce64";
+
+gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solution64(
+	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
+) {
+	cudaError_t cudaStatus;
+	inst::copy_to_symbol(instance);
+
+	size_t solutionSpace = (size_t)std::pow(2, instance.size()) / share;
+
+	uint32_t* device_memory;
+	size_t memory_size = solutionSpace * (instance.dim() + 2);
+
+	cudaStatus = cudaMalloc(&device_memory, memory_size * sizeof(uint32_t));
+	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
+
+	//uint32_t blocksCount = std::max<uint32_t>(1, solutionSpace / threadsPerBlock);
+	//if (instance.structure_to_find() == structure::cycle) cycle_kernel << <blocksCount, threadsPerBlock >> >(device_memory, device_memory + M, device_memory + M + N, device_memory + (N * M) + N + M,
+	//	device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
+	//	N, M, solutionSpace
+	//);
+	//else base_kernel<<<blocksCount, threadsPerBlock>>>(device_memory, device_memory + M, device_memory + M + N,
+	//	device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
+	//	N, M, solutionSpace
+	//);
+	//cudaStatus = cudaDeviceSynchronize();
+	//if (cudaStatus != cudaSuccess) {
+	//	cudaFree(device_memory);
+	//	throw std::runtime_error("failed to synch GPU");
+	//}
+
+	//if (blocksCount > 1) {
+	//	pick<<<1, blocksCount>>> (
+	//		device_memory + data_size,
+	//		device_memory + memory_size,
+	//		threadsPerBlock,
+	//		solutionSpace
+	//	);
+	//	cudaStatus = cudaDeviceSynchronize();
+	//	if (cudaStatus != cudaSuccess) {
+	//		cudaFree(device_memory);
+	//		throw std::runtime_error("failed to synch GPU");
+	//	}
+	//}
+
+	res::solution64 result;
+
+	cudaStatus = cudaMemcpy(&result._data, device_memory + memory_size - solutionSpace, sizeof(uint64_t), cudaMemcpyDeviceToHost);
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(device_memory);
+		throw std::runtime_error("failed to synch GPU");
+	}
+
+	cudaFree(device_memory);
+	return result;
+}

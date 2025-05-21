@@ -23,7 +23,7 @@ namespace gs::inst {
 			size_type N, size_type PathLen, Rand& gen
 		) {
 			assert(PathLen <= N && PathLen >= 0);
-			std::uniform_int_distribution<size_type> sd(0, N-1);
+			std::uniform_int_distribution<index_type> sd(0, static_cast<index_type>(N-1));
 			std::vector<index_type> path;
 			path.reserve(N + 1); // +1 is for potential cycle
 			std::vector<bool> selected(N, false);

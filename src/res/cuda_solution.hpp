@@ -12,9 +12,9 @@ namespace gs {
 
 				inline solution64() : _n(0), _data(0) {}
 				inline solution64(size_t N) : _n(N), _data(0) {}
-				inline void add(size_t i) { _data |= (1 << i); }
-				inline void remove(size_t i) { _data &= ~(1 << i); }
-				inline bool has(size_t i) const { return (_data & (1 << i)); }
+				inline void add(size_t i) { _data |= (uint64_t(1) << i); }
+				inline void remove(size_t i) { _data &= ~(uint64_t(1) << i); }
+				inline bool has(size_t i) const { return (_data & (uint64_t(1) << i)); }
 				inline size_t size() const { return _n; }
 				inline size_t selected_count() const {
 					size_t sum = 0;

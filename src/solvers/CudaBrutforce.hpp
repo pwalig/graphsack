@@ -10,22 +10,20 @@ namespace gs {
 			namespace brute_force {
 				// data should be: limits | values | weights
 				uint32_t runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock, uint32_t share, structure to_find);
-				//res::solution64 runner_u32_u32(
-				//	const inst::instance64<uint32_t, uint32_t>& data,
-				//	uint32_t threadsPerBlock, uint32_t share
-				//);
+				res::solution64 runner_instance64_solution64(
+					const inst::instance64<uint32_t, uint32_t>& instance,
+					uint32_t threadsPerBlock, uint32_t share
+				);
 			}
 
-			//class BruteForce64 {
-			//public:
-			//	using solution_t = res::solution64;
-			//	using instance_t = inst::instance64<uint32_t, uint32_t>;
-			//	const static std::string name;
+			class BruteForce64 {
+			public:
+				using solution_t = res::solution64;
+				using instance_t = inst::instance64<uint32_t, uint32_t>;
+				const static std::string name;
 
-			//	BruteForce64() = delete;
-			//};
-
-			//const std::string BruteForce64::name = "CudaBruteForce64";
+				BruteForce64() = delete;
+			};
 
 			template <typename InstanceT, typename SolutionT>
 			class BruteForce {

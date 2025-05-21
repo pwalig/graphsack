@@ -33,7 +33,7 @@ namespace gs {
 
 				// solve
 				while (sorted.size() > 0) {
-					std::uniform_int_distribution<indexT> distrib(0, std::min(choose_from, sorted.size() - 1));
+					std::uniform_int_distribution<indexT> distrib(0, (indexT)std::min(choose_from, sorted.size() - 1));
 					indexT pick = distrib(randomEngine);
 					indexT itemId = sorted[pick];
 

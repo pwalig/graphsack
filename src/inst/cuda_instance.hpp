@@ -44,7 +44,7 @@ namespace gs {
 					for (size_type i = 0; i < n; ++i) {
 						for (size_type j = 0; j < n; ++j) {
 							if (graph.at(i, j))
-								adjacency[i] |= (1 << j);
+								adjacency[i] |= (uint64_t(1) << j);
 						}
 					}
 				}
@@ -91,7 +91,7 @@ namespace gs {
 					stream << "\ngraph:\n";
 					for (size_type i = 0; i < ci.adjacency.size(); ++i) {
 						for (size_type j = 0; j < ci.adjacency.size(); ++j) {
-							if (ci.adjacency[i] & (1 << j)) std::cout << '1';
+							if (ci.adjacency[i] & (uint64_t(1) << j)) std::cout << '1';
 							else std::cout << '0';
 						}
 						std::cout << '\n';
