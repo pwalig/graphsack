@@ -76,6 +76,11 @@ namespace gs {
 				inline uint64_t* graph_data() { return adjacency.data(); }
 				inline const uint64_t* graph_data() const { return adjacency.data(); }
 
+				inline gs::structure& structure_to_find() { return structureToFind; }
+				inline gs::weight_treatment& weight_treatment() { return weightTreatment; }
+				inline const gs::structure& structure_to_find() const { return structureToFind; }
+				inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
+
 				friend inline std::ostream& operator<< (std::ostream& stream, const instance64& ci) {
 					stream << "limits:";
 					for (auto i : ci._limits) stream << " " << i;

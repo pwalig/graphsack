@@ -8,15 +8,17 @@ namespace gs {
 			class solution64 {
 			public:
 				uint64_t _data;
+				size_t _n;
 
-				inline solution64() : _data(0) {}
+				inline solution64() : _n(0), _data(0) {}
+				inline solution64(size_t N) : _n(N), _data(0) {}
 				inline void add(size_t i) { _data |= (1 << i); }
 				inline void remove(size_t i) { _data &= ~(1 << i); }
 				inline bool has(size_t i) const { return (_data & (1 << i)); }
-				inline size_t size() const { return 64; }
+				inline size_t size() const { return _n; }
 				inline size_t selected_count() const {
 					size_t sum = 0;
-					for (int j = 0; j < 64; j++)
+					for (int j = 0; j < _n; j++)
 						if (has(j)) ++sum;
 					return sum;
 				}
