@@ -7,10 +7,10 @@
 #include "../weight_treatment.hpp"
 
 namespace gs {
-	namespace inst {
-		namespace cuda {
-			template <typename ValueT, typename WeightT, typename adjBase = uint64_t>
-			class instance {
+	namespace cuda {
+		namespace inst {
+			template <typename ValueT, typename WeightT>
+			class instance64 {
 			public:
 				using value_type = ValueT;
 				using weight_type = WeightT;
@@ -21,13 +21,13 @@ namespace gs {
 				std::vector<weight_type> _limits;
 				std::vector<value_type> _values;
 				std::vector<weight_type> _weights;
-				std::vector<adjBase> adjacency;
+				std::vector<uint64_t> adjacency;
 				gs::structure structureToFind;
 				gs::weight_treatment weightTreatment;
 
 			public:
 				template <typename LIter, typename VIter, typename WIter>
-				inline instance(
+				inline instance64(
 					LIter LimitsBegin, LIter LimitsEnd,
 					VIter ValuesBegin, VIter ValuesEnd,
 					WIter WeightsBegin, WIter WeightsEnd,
@@ -73,10 +73,10 @@ namespace gs {
 				inline weight_type* weights_data() { return _weights.data(); }
 				inline const weight_type* weights_data() const { return _weights.data(); }
 
-				inline adjBase* graph_data() { return adjacency.data(); }
-				inline const adjBase* graph_data() const { return adjacency.data(); }
+				inline uint64_t* graph_data() { return adjacency.data(); }
+				inline const uint64_t* graph_data() const { return adjacency.data(); }
 
-				friend inline std::ostream& operator<< (std::ostream& stream, const instance& ci) {
+				friend inline std::ostream& operator<< (std::ostream& stream, const instance64& ci) {
 					stream << "limits:";
 					for (auto i : ci._limits) stream << " " << i;
 					stream << "\nvalues:";
@@ -95,9 +95,9 @@ namespace gs {
 				}
 			};
 
-			using instance_t = instance<uint32_t, uint32_t>;
+			using instance_t = instance64<uint32_t, uint32_t>;
 
-			void copy_to_symbol(const instance<uint32_t, uint32_t>& inst);
+			void copy_to_symbol(const instance64<uint32_t, uint32_t>& inst);
 		}
 	}
 }

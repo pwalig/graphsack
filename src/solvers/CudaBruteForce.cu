@@ -157,7 +157,7 @@ __global__ void pick(
 }
 
 // data should be: limits | values | weights | adjacency
-uint32_t gs::solver::cuda::brute_force::runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock, uint32_t share, structure to_find) {
+uint32_t gs::cuda::solver::brute_force::runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock, uint32_t share, structure to_find) {
 	cudaError_t cudaStatus;
 	size_t solutionSpace = (size_t)std::pow(2, N) / share;
 	uint32_t* device_memory;

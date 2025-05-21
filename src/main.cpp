@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 	SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
 	SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run(randomItemlocalNlist, format, std::cout, gen, 0.5f, 0.5f);
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
-	SolverRunner<solver::cuda::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run<size_t, size_t>(randomItemlocalNlist, format, std::cout, 1024, 1);
+	SolverRunner<cuda::solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run<size_t, size_t>(randomItemlocalNlist, format, std::cout, 1024, 1);
 	randomItemlocalNlist.structure_to_find() = structure::path;
 	SolverRunner<solver::PathBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.structure_to_find() = structure::none;
@@ -121,9 +121,11 @@ int main(int argc, char** argv) {
 	fp.gnp_fill(0.5, gen, true);
 	std::cout << fp << "\n";
 
-	std::cout << inst::Generator<inst::cuda::instance<uint32_t, uint32_t>>::random(
+	auto cudaInstance = inst::Generator<cuda::inst::instance64<uint32_t, uint32_t>>::random(
 		10, 3, 0.2, gen, 30, 50, 1, 10, 1, 10, false, true, structure::cycle, weight_treatment::full
-	) << "\n";
+	);
+	cuda::inst::copy_to_symbol(cudaInstance);
+	std::cout << cudaInstance << "\n";
 
 	auto known_res = inst::Generator<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>>::known_path_or_cycle_gnp(
 		10, 3, 5, gen, 1, 10, 1, 10, false, true, structure::path, weight_treatment::full

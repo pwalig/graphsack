@@ -3,8 +3,8 @@
 #include "../structure.hpp"
 
 namespace gs {
-	namespace solver {
-		namespace cuda {
+	namespace cuda {
+		namespace solver {
 			namespace brute_force {
 				// data should be: limits | values | weights
 				uint32_t runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock, uint32_t share, structure to_find);
