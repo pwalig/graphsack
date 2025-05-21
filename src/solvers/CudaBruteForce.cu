@@ -210,6 +210,47 @@ uint32_t gs::cuda::solver::brute_force::runner_u32_u32(uint32_t* data, uint32_t 
 
 const std::string gs::cuda::solver::BruteForce64::name = "CudaBruteForce64";
 
+namespace gs {
+	namespace cuda {
+		__device__ void cycle_kernel(
+			uint32_t N, uint32_t M, uint64_t solutionSpace,
+			uint32_t* value_memory, uint32_t* weight_memory, uint64_t* result_memory
+		) {
+			const uint64_t id = blockIdx.x * blockDim.x + threadIdx.x;
+			if (id > solutionSpace) return;
+			result_memory[id] = id;
+			value_memory[id] = 0;
+			for (unsigned wid = 0; wid < M; ++wid) weight_memory[M * id + wid] = 0;
+
+			uint32_t n = id;
+			uint32_t i = 0;
+			bool fitting = is_cycle(inst::adjacency, n, N);
+
+			while (i < N && fitting) {
+				if (has(n, i)) {
+					value_memory[id] += inst::values[i];
+					for (uint32_t  wid = 0; wid < M; ++wid) {
+						weight_memory[M * id + wid] += inst::weights[M * i + wid];
+						
+						if (weight_memory[M * id + wid] > inst::limits[wid]) {
+							fitting = false;
+							value_memory[id] = 0;
+							break;
+						}
+					}
+				}
+				i++;
+			}
+
+			for (n = 1; n < solutionSpace; n *= 2) {
+				__syncthreads();
+				if (id % (n*2) != 0) return;
+				if (value_memory[result_memory[id + n]] > value_memory[result_memory[id]]) result_memory[id] = result_memory[id + n];
+			}
+		}
+	}
+}
+
 gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solution64(
 	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
 ) {
@@ -224,34 +265,35 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 	cudaStatus = cudaMalloc(&device_memory, memory_size * sizeof(uint32_t));
 	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
 
-	//uint32_t blocksCount = std::max<uint32_t>(1, solutionSpace / threadsPerBlock);
-	//if (instance.structure_to_find() == structure::cycle) cycle_kernel << <blocksCount, threadsPerBlock >> >(device_memory, device_memory + M, device_memory + M + N, device_memory + (N * M) + N + M,
-	//	device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
-	//	N, M, solutionSpace
-	//);
-	//else base_kernel<<<blocksCount, threadsPerBlock>>>(device_memory, device_memory + M, device_memory + M + N,
-	//	device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
-	//	N, M, solutionSpace
-	//);
-	//cudaStatus = cudaDeviceSynchronize();
-	//if (cudaStatus != cudaSuccess) {
-	//	cudaFree(device_memory);
-	//	throw std::runtime_error("failed to synch GPU");
-	//}
+	uint32_t blocksCount = std::max<uint32_t>(1, solutionSpace / threadsPerBlock);
+	if (instance.structure_to_find() == structure::cycle) cycle_kernel<<<blocksCount, threadsPerBlock>>>(
+		device_memory, device_memory + M, device_memory + M + N, device_memory + (N * M) + N + M,
+		device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
+		N, M, solutionSpace
+	);
+	else base_kernel<<<blocksCount, threadsPerBlock>>>(device_memory, device_memory + M, device_memory + M + N,
+		device_memory + data_size, device_memory + data_size + solutionSpace, device_memory + memory_size,
+		N, M, solutionSpace
+	);
+	cudaStatus = cudaDeviceSynchronize();
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(device_memory);
+		throw std::runtime_error("failed to synch GPU");
+	}
 
-	//if (blocksCount > 1) {
-	//	pick<<<1, blocksCount>>> (
-	//		device_memory + data_size,
-	//		device_memory + memory_size,
-	//		threadsPerBlock,
-	//		solutionSpace
-	//	);
-	//	cudaStatus = cudaDeviceSynchronize();
-	//	if (cudaStatus != cudaSuccess) {
-	//		cudaFree(device_memory);
-	//		throw std::runtime_error("failed to synch GPU");
-	//	}
-	//}
+	if (blocksCount > 1) {
+		pick<<<1, blocksCount>>> (
+			device_memory + data_size,
+			device_memory + memory_size,
+			threadsPerBlock,
+			solutionSpace
+		);
+		cudaStatus = cudaDeviceSynchronize();
+		if (cudaStatus != cudaSuccess) {
+			cudaFree(device_memory);
+			throw std::runtime_error("failed to synch GPU");
+		}
+	}
 
 	res::solution64 result;
 
