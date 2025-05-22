@@ -52,26 +52,36 @@ namespace gs {
 				inline size_type size() const { return adjacency.size(); }
 				inline size_type dim() const { return _limits.size(); }
 
-				inline std::vector<weight_type>& limits() { return _limits; }
-				inline const std::vector<weight_type>& limits() const { return _limits; }
-
-				inline weight_type* limits_data() { return _limits.data(); }
-				inline const weight_type* limits_data() const { return _limits.data(); }
-
 				inline weight_type& limit(size_type limitId) { return _limits[limitId]; }
 				inline const weight_type& limit(size_type limitId) const { return _limits[limitId]; }
+
+				inline std::vector<weight_type>& limits() { return _limits; }
+				inline const std::vector<weight_type>& limits() const { return _limits; }
 
 				inline value_type& value(size_type itemId) { return _values[itemId]; }
 				inline const value_type& value(size_type itemId) const { return _values[itemId]; }
 
-				inline value_type* values_data() { return _values.data(); }
-				inline const value_type* values_data() const { return _values.data(); }
+				inline std::vector<value_type>& values() { return _values; }
+				inline const std::vector<value_type>& values() const { return _values; }
 
 				inline weight_type& weight(size_type itemId, size_type weightId) { return _weights[itemId * dim() + weightId]; }
 				inline const weight_type& weight(size_type itemId, size_type weightId) const { return _weights[itemId * dim() + weightId]; }
 
-				inline weight_type* weights_data() { return _weights.data(); }
-				inline const weight_type* weights_data() const { return _weights.data(); }
+				inline std::vector<weight_type>& weights() { return _weights; }
+				inline const std::vector<weight_type>& weights() const { return _weights; }
+
+				inline slice<weight_type> weights(size_t itemId) { return slice<weight_type>(_weights.data() + (dim() * itemId), dim()); }
+				inline slice<const weight_type> weights(size_t itemId) const { return slice<const weight_type>(_weights.data() + (dim() * itemId), dim()); }
+
+				inline std::vector<index_type> nexts(size_t itemId) const {
+					std::vector<index_type> res;
+					uint64_t mask = 1;
+					for (index_type i = 0; i < size(); ++i) {
+						if (mask & adjacency[itemId]) res.push_back(i);
+						mask <<= 1;
+					}
+					return res;
+				}
 
 				inline uint64_t* graph_data() { return adjacency.data(); }
 				inline const uint64_t* graph_data() const { return adjacency.data(); }
@@ -80,6 +90,10 @@ namespace gs {
 				inline gs::weight_treatment& weight_treatment() { return weightTreatment; }
 				inline const gs::structure& structure_to_find() const { return structureToFind; }
 				inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
+
+				inline bool has_connection_to(index_type from, index_type to) const {
+					return adjacency[from] & (uint64_t(1) << to);
+				}
 
 				friend inline std::ostream& operator<< (std::ostream& stream, const instance64& ci) {
 					stream << "limits:";

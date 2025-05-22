@@ -7,14 +7,15 @@
 #include <vector>
 
 #include "CudaBrutforce.hpp"
-#include "../inst/cuda_instance_memory.cuh"
+#include "../inst/cuda_instance.cuh"
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
 
-__constant__ uint32_t limits[GS_CUDA_INST_MAXM];
-__constant__ uint32_t values[GS_CUDA_INST_MAXN];
-__constant__ uint32_t weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
-__constant__ uint64_t adjacency[GS_CUDA_INST_MAXN];
+//__constant__ uint32_t gs::cuda::inst::limits[GS_CUDA_INST_MAXM];
+//__constant__ uint32_t gs::cuda::inst::values[GS_CUDA_INST_MAXN];
+//__constant__ uint32_t gs::cuda::inst::weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
+//__constant__ uint64_t gs::cuda::inst::adjacency[GS_CUDA_INST_MAXN];
+GS_CUDA_INST_CONSTANTS
 
 __device__  bool has_connection_to(const uint32_t* adjacency, uint32_t from, uint32_t to) {
 	if (adjacency[from] & (1 << to)) return true;
@@ -262,7 +263,8 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
 ) {
 	cudaError_t cudaStatus;
-	inst::copy_to_symbol(instance);
+	GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
+	//inst::copy_to_symbol(instance);
 
 	size_t solutionSpace = (size_t)std::pow(2, instance.size()) / share;
 
@@ -280,7 +282,7 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 		throw std::runtime_error("failed to allocate GPU memory");
 	}
 
-	uint32_t blocksCount = std::max<uint32_t>(1, solutionSpace / threadsPerBlock);
+	uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(solutionSpace / threadsPerBlock));
 	cycle_kernel<<<blocksCount, threadsPerBlock>>>(
 		instance.size(), instance.dim(), solutionSpace,
 		device_weight_value_memory, device_weight_value_memory + solutionSpace, device_result_memory
@@ -292,7 +294,7 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 		throw std::runtime_error("failed to synch GPU");
 	}
 
-	res::solution64 result;
+	res::solution64 result(instance.size());
 
 	cudaStatus = cudaMemcpy(&result._data, device_result_memory, sizeof(uint64_t), cudaMemcpyDeviceToHost);
 	if (cudaStatus != cudaSuccess) {

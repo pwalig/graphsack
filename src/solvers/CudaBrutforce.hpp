@@ -23,6 +23,11 @@ namespace gs {
 				const static std::string name;
 
 				BruteForce64() = delete;
+
+				inline static solution_t solve(const instance_t& instance, uint32_t threadsPerBlock = 1024, uint32_t share = 1) 
+				{
+					return brute_force::runner_instance64_solution64(instance, threadsPerBlock, share);
+				}
 			};
 
 			template <typename InstanceT, typename SolutionT>

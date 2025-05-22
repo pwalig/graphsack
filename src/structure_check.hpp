@@ -32,7 +32,7 @@ namespace gs {
             if (!fit) continue;
 
             visited[next] = true;
-            if (has_connection_to(instance, next, start)) { // is it a cycle (closed path)
+            if (instance.has_connection_to(next, start)) { // is it a cycle (closed path)
                 bool _found = true; // found some cycle lets check if it has all selected vertices
                 for (indexT i = 0; i < selected.size(); ++i) {
                     if (selected[i] && !visited[i]) {
@@ -66,7 +66,7 @@ namespace gs {
             if (!fit) continue;
 
             visited[i] = true;
-            if (has_connection_to(instance, i, i)) { // is it a cycle (closed path)
+            if (instance.has_connection_to(i, i)) { // is it a cycle (closed path)
                 bool _found = true; // found some cycle lets check if it has all selected vertices
                 for (indexT j = 0; j < selected.size(); ++j) {
                     if (selected.has(j) && j != i) {
@@ -206,7 +206,7 @@ namespace gs {
 		for (indexT next : instance.nexts(current)) {
 			if (selected.has(next) && !visited[next]){ // next item has to be selected and new
 				visited[next] = true;
-				if (depth == length && has_connection_to(instance, next, start)) return true; // cycle found
+				if (depth == length && instance.has_connection_to(next, start)) return true; // cycle found
 				if (depth > length) return false; // cycle would have to be to long
 				if (is_cycle_DFS<instance_t, solution_t, indexT>(instance, selected, visited, next, start, length, depth + 1)) return true; // cycle found later
 				visited[next] = false;
@@ -233,7 +233,7 @@ namespace gs {
 		std::vector<bool> visited(selected.size(), false);
 		for (indexT i = 0; i < selected.size(); ++i) {
 			if (selected.has(i)){
-                if (length == 1) return has_connection_to(instance, i, i);
+                if (length == 1) return instance.has_connection_to(i, i);
 				visited[i] = true;
 				if (is_cycle_DFS<instance_t, solution_t, indexT>(instance, selected, visited, i, i, length, 2)) return true; // cycle found somewhere
 				visited[i] = false;

@@ -119,17 +119,21 @@
     <ClInclude Include="src\inst\cuda_instance.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="src\inst\cuda_instance_memory.cuh" />
+    <ClInclude Include="src\inst\cuda_instance.cuh" />
     <ClInclude Include="src\res\cuda_solution.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="src\res\cuda_solution.cuh" />
     <ClInclude Include="src\cuda_structure_check.cuh" />
+    <ClInclude Include="src\cuda_init.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
     <CudaCompile Include="src\solvers\CudaBruteForce.cu" />
     <CudaCompile Include="src\res\cuda_soluton.cu" />
     <CudaCompile Include="src\cuda_structure_check.cu" />
+    <CudaCompile Include="src\cuda_init.cu" />
   </ItemGroup>
 </Project>

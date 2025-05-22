@@ -24,8 +24,8 @@ namespace gs {
 				}
 				inline friend std::ostream& operator<< (std::ostream& stream, const solution64& sol64) {
 					for (int j = 0; j < sol64.size(); j++) {
-						if (sol64.has(j)) stream << 1;
-						else stream << 0;
+						if (sol64.has(j)) stream << '1';
+						else stream << '0';
 					}
 					return stream;
 				}
