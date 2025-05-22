@@ -6,6 +6,11 @@
 
 #include "cuda_instance_memory.cuh"
 
+__constant__ uint32_t gs::cuda::inst::limits[GS_CUDA_INST_MAXM];
+__constant__ uint32_t gs::cuda::inst::values[GS_CUDA_INST_MAXN];
+__constant__ uint32_t gs::cuda::inst::weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
+__constant__ uint64_t gs::cuda::inst::adjacency[GS_CUDA_INST_MAXN];
+
 void gs::cuda::inst::copy_to_symbol(const instance64<uint32_t, uint32_t>& inst)
 {
 	cudaMemcpyToSymbol(limits, inst.limits_data(), inst.dim() * sizeof(uint32_t));
