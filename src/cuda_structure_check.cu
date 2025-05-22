@@ -1,6 +1,8 @@
 #include "cuda_structure_check.cuh"
 #include "res/cuda_solution.cuh"
 
+#define GS_CUDA_MAX_RECURSION 10
+
 __device__  bool gs::cuda::has_connection_to(const uint64_t* adjacency, uint32_t from, uint32_t to) {
 	if (adjacency[from] & (uint64_t(1) << to)) return true;
 	else return false;
@@ -35,7 +37,8 @@ __device__ bool gs::cuda::is_cycle(
 		if (res::has(selected, i)) length++;
 		
 	if (length == 0) return true;
-	
+	if (length > GS_CUDA_MAX_RECURSION) return false;
+
 	// check from each starting point
 	uint64_t visited = 0;
 	for (uint32_t i = 0; i < N; ++i) {

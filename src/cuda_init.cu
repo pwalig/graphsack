@@ -20,4 +20,7 @@ void gs::cuda::init() {
 		//printf("  totalConstMem: %llu\n", prop.totalConstMem);
 		//printf("  totalGlobalMem: %llu\n" ,prop.totalGlobalMem);	
 	}
+
+	cudaSetDevice(0);
+	cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
 }

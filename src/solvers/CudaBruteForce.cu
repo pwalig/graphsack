@@ -11,11 +11,15 @@
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
 
-//__constant__ uint32_t gs::cuda::inst::limits[GS_CUDA_INST_MAXM];
-//__constant__ uint32_t gs::cuda::inst::values[GS_CUDA_INST_MAXN];
-//__constant__ uint32_t gs::cuda::inst::weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
-//__constant__ uint64_t gs::cuda::inst::adjacency[GS_CUDA_INST_MAXN];
-GS_CUDA_INST_CONSTANTS
+namespace gs {
+	namespace cuda {
+		namespace solver {
+			namespace brute_force {
+				GS_CUDA_INST_CONSTANTS
+			}
+		}
+	}
+}
 
 __device__  bool has_connection_to(const uint32_t* adjacency, uint32_t from, uint32_t to) {
 	if (adjacency[from] & (1 << to)) return true;
@@ -220,40 +224,62 @@ const std::string gs::cuda::solver::BruteForce64::name = "CudaBruteForce64";
 
 namespace gs {
 	namespace cuda {
-		__global__ void cycle_kernel(
-			uint32_t N, uint32_t M, uint64_t solutionSpace,
-			uint32_t* value_memory, uint32_t* weight_memory, uint64_t* result_memory
-		) {
-			const uint64_t id = blockIdx.x * blockDim.x + threadIdx.x;
-			if (id > solutionSpace) return;
-			result_memory[id] = id;
-			value_memory[id] = 0;
-			for (unsigned wid = 0; wid < M; ++wid) weight_memory[M * id + wid] = 0;
+		namespace solver {
+			namespace brute_force {
+				__global__ void cycle_kernel(
+					uint32_t N, uint32_t M, uint64_t solutionSpace, uint32_t share,
+					uint32_t* value_memory, uint32_t* weight_memory, uint64_t* result_memory
+				) {
+					const uint64_t id = blockIdx.x * blockDim.x + threadIdx.x;
+					if (id > solutionSpace) return;
 
-			uint64_t n = id;
-			uint32_t i = 0;
-			bool fitting = is_cycle(adjacency, n, N);
+					// check share solutions
+					value_memory[id] = 0;
+					result_memory[id] = id * share;
+					for (uint32_t resId = 0; resId < share; ++resId) {
+						// setup
+						uint64_t n = id * share + resId;
+						uint32_t value = 0;
+						for (unsigned wid = 0; wid < M; ++wid) weight_memory[M * id + wid] = 0;
 
-			while (i < N && fitting) {
-				if (res::has(n, i)) {
-					value_memory[id] += values[i];
-					for (uint32_t  wid = 0; wid < M; ++wid) {
-						weight_memory[M * id + wid] += weights[M * i + wid];
+						// check if valid structure
+						//bool fitting = true;
+						bool fitting = is_cycle(adjacency, n, N);
+
+						// check if valid weight and sum value
+						uint32_t i = 0;
+						while (i < N && fitting) {
+							if (res::has(n, i)) {
+								value += values[i];
+								for (uint32_t  wid = 0; wid < M; ++wid) {
+									weight_memory[M * id + wid] += weights[M * i + wid];
+									
+									if (weight_memory[M * id + wid] > limits[wid]) {
+										fitting = false;
+										value = 0;
+										break;
+									}
+								}
+							}
+							i++;
+						}
 						
-						if (weight_memory[M * id + wid] > limits[wid]) {
-							fitting = false;
-							value_memory[id] = 0;
-							break;
+						if (value > value_memory[id]) {
+							value_memory[id] = value;
+							result_memory[id] = n;
+						}
+					}
+
+					// do reduction
+					for (uint64_t n = 1; n < solutionSpace; n *= 2) {
+						__syncthreads();
+						if (id % (n*2) != 0) return;
+						if (value_memory[id + n] > value_memory[id]) {
+							result_memory[id] = result_memory[id + n];
+							value_memory[id] = value_memory[id + n];
 						}
 					}
 				}
-				i++;
-			}
-
-			for (n = 1; n < solutionSpace; n *= 2) {
-				__syncthreads();
-				if (id % (n*2) != 0) return;
-				if (value_memory[result_memory[id + n]] > value_memory[result_memory[id]]) result_memory[id] = result_memory[id + n];
 			}
 		}
 	}
@@ -264,9 +290,8 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 ) {
 	cudaError_t cudaStatus;
 	GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
-	//inst::copy_to_symbol(instance);
 
-	size_t solutionSpace = (size_t)std::pow(2, instance.size()) / share;
+	size_t solutionSpace = (size_t(1) << instance.size()) / share;
 
 	uint32_t* device_weight_value_memory;
 	size_t device_weight_value_memory_size = solutionSpace * (instance.dim() + 1);
@@ -283,8 +308,9 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 	}
 
 	uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(solutionSpace / threadsPerBlock));
+	assert(blocksCount == 1);
 	cycle_kernel<<<blocksCount, threadsPerBlock>>>(
-		instance.size(), instance.dim(), solutionSpace,
+		instance.size(), instance.dim(), solutionSpace, share,
 		device_weight_value_memory, device_weight_value_memory + solutionSpace, device_result_memory
 	);
 	cudaStatus = cudaDeviceSynchronize();

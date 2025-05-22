@@ -11,11 +11,6 @@ __constant__ uint32_t values[GS_CUDA_INST_MAXN]; \
 __constant__ uint32_t weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM]; \
 __constant__ uint64_t adjacency[GS_CUDA_INST_MAXN];
 
-#define GS_CUDA_INST_NAMESPACED_CONSTANTS(NAMESPACE) \
-namespace NAMESPACE { \
-GS_CUDA_INST_CONSTANTS \
-}
-
 #define GS_CUDA_INST_COPY_TO_SYMBOL_FUNCTION \
 void copy_to_symbol(const instance64<uint32_t, uint32_t>& inst) { \
 	cudaMemcpyToSymbol(limits, inst.limits().data(), inst.dim() * sizeof(uint32_t)); \
@@ -26,6 +21,7 @@ void copy_to_symbol(const instance64<uint32_t, uint32_t>& inst) { \
 }
 
 #define GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(inst) \
+assert(inst.size() <= 64);\
 cudaMemcpyToSymbol(limits, inst.limits().data(), inst.dim() * sizeof(uint32_t)); \
 cudaMemcpyToSymbol(values, inst.values().data(), inst.size() * sizeof(uint32_t)); \
 cudaMemcpyToSymbol(weights, inst.weights().data(), inst.size() * inst.dim() * sizeof(uint32_t)); \
