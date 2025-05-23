@@ -13,6 +13,7 @@ __device__ bool gs::cuda::is_cycle_DFS(
 	uint32_t N, uint64_t selected, uint64_t visited,
 	uint32_t current, uint32_t start, uint32_t length, uint32_t depth
 ) {
+	if (depth > GS_CUDA_MAX_RECURSION) return false;
 	for (uint32_t next = 0; next < N; ++next) {
 		if (!has_connection_to(adjacency, current, next)) continue;
 		if (res::has(selected, next) && !res::has(visited, next)) { // next item has to be selected and new
@@ -26,7 +27,7 @@ __device__ bool gs::cuda::is_cycle_DFS(
 	return false;
 }
 
-__device__ bool gs::cuda::is_cycle(
+__device__ bool gs::cuda::is_cycle_recursive(
 	const uint64_t* adjacency,
 	uint64_t selected, uint32_t N
 ) {
@@ -37,7 +38,6 @@ __device__ bool gs::cuda::is_cycle(
 		if (res::has(selected, i)) length++;
 		
 	if (length == 0) return true;
-	if (length > GS_CUDA_MAX_RECURSION) return false;
 
 	// check from each starting point
 	uint64_t visited = 0;
@@ -47,6 +47,49 @@ __device__ bool gs::cuda::is_cycle(
 			res::add(visited, i);
 			if (is_cycle_DFS(adjacency, N, selected, visited, i, i, length, 2)) return true;
 			res::remove(visited, i);
+		}
+	}
+	return false;
+}
+
+__device__ bool gs::cuda::is_cycle_iterative(
+	const uint64_t* adjacency,
+	uint32_t* stack_memory,
+	uint64_t selected, uint32_t N
+) {
+	uint32_t stack_pointer = 0;
+
+	// calculate whats the length of the cycle
+	uint32_t length = 0;
+	for (uint32_t i = 0; i < N; ++i)
+		if (res::has(selected, i)) length++;
+		
+	if (length == 0) return true;
+
+	// check from each starting point
+	uint64_t visited = 0;
+	uint32_t visitedCount = 0;
+	for (uint32_t start = 0; start < N; ++start) {
+		if (res::has(selected, start)){
+			stack_memory[++stack_pointer] = start;
+			while (visitedCount > 0) {
+				uint32_t prev = stack_memory[--stack_pointer];
+
+				if (res::has(visited, prev)) continue;
+
+				res::add(visited, prev);
+				++visitedCount;
+				if (visitedCount == length && has_connection_to(adjacency, prev, start))
+					return true;
+				stack_memory[++stack_pointer] = prev;
+
+				for (uint32_t next = 0; next < N; ++next) {
+					if (!has_connection_to(adjacency, prev, next)) continue;
+					if (res::has(selected, next) && !res::has(visited, next)) {
+						stack_memory[++stack_pointer] = next;
+					}
+				}
+			}
 		}
 	}
 	return false;

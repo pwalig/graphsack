@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
-	const uint32_t itemsCount = 20;
+	const uint32_t itemsCount = 15;
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
@@ -120,7 +120,8 @@ int main(int argc, char** argv) {
 	//SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run(randomItemlocalNlist, format, std::cout, gen, 0.5f, 0.5f);
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<cuda::solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run<size_t, size_t>(randomItemlocalNlist, format, std::cout, 1024, 1 << (itemsCount - 10));
-	SolverRunner<cuda::solver::BruteForce64>::run<size_t, size_t>(cudaInstance, format, std::cout, 1024, 1 << (itemsCount - 10));
+	const uint32_t blockSizeBits = 10;
+	SolverRunner<cuda::solver::BruteForce64>::run<size_t, size_t>(cudaInstance, format, std::cout, 1 << blockSizeBits, 1 << (itemsCount - blockSizeBits));
 	randomItemlocalNlist.structure_to_find() = structure::path;
 	//SolverRunner<solver::PathBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.structure_to_find() = structure::none;

@@ -244,7 +244,7 @@ namespace gs {
 
 						// check if valid structure
 						//bool fitting = true;
-						bool fitting = is_cycle(adjacency, n, N);
+						bool fitting = is_cycle_recursive(adjacency, n, N);
 
 						// check if valid weight and sum value
 						uint32_t i = 0;

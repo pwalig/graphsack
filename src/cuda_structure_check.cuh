@@ -10,8 +10,13 @@ namespace gs {
 			uint32_t N, uint64_t selected, uint64_t visited,
 			uint32_t current, uint32_t start, uint32_t length, uint32_t depth
 		);
-		__device__ bool is_cycle(
+		__device__ bool is_cycle_recursive(
 			const uint64_t* adjacency,
+			uint64_t selected, uint32_t N
+		);
+		__device__ bool is_cycle_iterative(
+			const uint64_t* adjacency,
+			uint32_t* stack_memory,
 			uint64_t selected, uint32_t N
 		);
 	}
