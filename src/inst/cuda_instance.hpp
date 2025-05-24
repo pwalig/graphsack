@@ -9,8 +9,8 @@
 namespace gs {
 	namespace cuda {
 		namespace inst {
-			template <typename ValueT, typename WeightT>
-			class instance64 {
+			template <typename StorageBase, typename ValueT, typename WeightT>
+			class instance {
 			public:
 				using value_type = ValueT;
 				using weight_type = WeightT;
@@ -21,13 +21,13 @@ namespace gs {
 				std::vector<weight_type> _limits;
 				std::vector<value_type> _values;
 				std::vector<weight_type> _weights;
-				std::vector<uint64_t> adjacency;
+				std::vector<StorageBase> adjacency;
 				gs::structure structureToFind;
 				gs::weight_treatment weightTreatment;
 
 			public:
 				template <typename LIter, typename VIter, typename WIter>
-				inline instance64(
+				inline instance(
 					LIter LimitsBegin, LIter LimitsEnd,
 					VIter ValuesBegin, VIter ValuesEnd,
 					WIter WeightsBegin, WIter WeightsEnd,
@@ -39,12 +39,12 @@ namespace gs {
 				{
 					using size_type = typename graphs::adjacency_matrix::size_type;
 					size_type n = graph.size();
-					assert(n <= 64);
+					assert(n <= sizeof(StorageBase) * 8);
 					adjacency.resize(n, 0);
 					for (size_type i = 0; i < n; ++i) {
 						for (size_type j = 0; j < n; ++j) {
 							if (graph.at(i, j))
-								adjacency[i] |= (uint64_t(1) << j);
+								adjacency[i] |= (StorageBase(1) << j);
 						}
 					}
 				}
@@ -75,7 +75,7 @@ namespace gs {
 
 				inline std::vector<index_type> nexts(size_t itemId) const {
 					std::vector<index_type> res;
-					uint64_t mask = 1;
+					StorageBase mask = 1;
 					for (index_type i = 0; i < size(); ++i) {
 						if (mask & adjacency[itemId]) res.push_back(i);
 						mask <<= 1;
@@ -83,19 +83,19 @@ namespace gs {
 					return res;
 				}
 
-				inline uint64_t* graph_data() { return adjacency.data(); }
-				inline const uint64_t* graph_data() const { return adjacency.data(); }
+				inline StorageBase* graph_data() { return adjacency.data(); }
+				inline const StorageBase* graph_data() const { return adjacency.data(); }
 
 				inline gs::structure& structure_to_find() { return structureToFind; }
 				inline gs::weight_treatment& weight_treatment() { return weightTreatment; }
 				inline const gs::structure& structure_to_find() const { return structureToFind; }
 				inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
 
-				inline bool has_connection_to(index_type from, index_type to) const {
-					return adjacency[from] & (uint64_t(1) << to);
+				inline bool has_connection_to(size_type from, size_type to) const {
+					return adjacency[from] & (StorageBase(1) << to);
 				}
 
-				friend inline std::ostream& operator<< (std::ostream& stream, const instance64& ci) {
+				friend inline std::ostream& operator<< (std::ostream& stream, const instance& ci) {
 					stream << "limits:";
 					for (auto i : ci._limits) stream << " " << i;
 					stream << "\nvalues:";
@@ -105,7 +105,7 @@ namespace gs {
 					stream << "\ngraph:\n";
 					for (size_type i = 0; i < ci.adjacency.size(); ++i) {
 						for (size_type j = 0; j < ci.adjacency.size(); ++j) {
-							if (ci.adjacency[i] & (uint64_t(1) << j)) std::cout << '1';
+							if (ci.adjacency[i] & (StorageBase(1) << j)) std::cout << '1';
 							else std::cout << '0';
 						}
 						std::cout << '\n';
@@ -114,9 +114,17 @@ namespace gs {
 				}
 			};
 
-			using instance_t = instance64<uint32_t, uint32_t>;
+			template<typename ValueT, typename WeightT>
+			using instance8 = instance<uint8_t, ValueT, WeightT>;
 
-			void copy_to_symbol(const instance64<uint32_t, uint32_t>& inst);
+			template<typename ValueT, typename WeightT>
+			using instance16 = instance<uint16_t, ValueT, WeightT>;
+
+			template<typename ValueT, typename WeightT>
+			using instance32 = instance<uint32_t, ValueT, WeightT>;
+
+			template<typename ValueT, typename WeightT>
+			using instance64 = instance<uint64_t, ValueT, WeightT>;
 		}
 	}
 }

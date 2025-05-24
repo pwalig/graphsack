@@ -227,11 +227,12 @@ namespace gs {
 	namespace cuda {
 		namespace solver {
 			namespace brute_force {
+				template <typename StorageBase>
 				__global__ void cycle_kernel(
-					uint32_t N, uint32_t M, uint64_t solutionSpace, uint32_t share,
-					uint32_t* value_memory, uint32_t* weight_memory, uint64_t* result_memory, uint32_t* stack_memory
+					uint32_t N, uint32_t M, StorageBase solutionSpace, uint32_t share,
+					uint32_t* value_memory, uint32_t* weight_memory, StorageBase* result_memory, uint32_t* stack_memory
 				) {
-					const uint64_t id = blockIdx.x * blockDim.x + threadIdx.x;
+					const StorageBase id = blockIdx.x * blockDim.x + threadIdx.x;
 					if (id > solutionSpace) return;
 
 					// check share solutions
@@ -239,7 +240,7 @@ namespace gs {
 					result_memory[id] = id * share;
 					for (uint32_t resId = 0; resId < share; ++resId) {
 						// setup
-						uint64_t n = id * share + resId;
+						StorageBase n = resId * share + id;
 						uint32_t value = 0;
 						for (unsigned wid = 0; wid < M; ++wid) weight_memory[M * id + wid] = 0;
 
@@ -264,8 +265,8 @@ namespace gs {
 							i++;
 						}
 
-						if (is_cycle_iterative(adjacency, stack_memory + (2 * N * id), n, N) && value > value_memory[id]) {
-						//if (is_cycle_recursive(adjacency, n, N) && value > value_memory[id]) {
+						if (is_cycle_iterative(adjacency<StorageBase>(), stack_memory + (2 * N * id), n, N) && value > value_memory[id]) {
+						//if (is_cycle_recursive(adjacency<StorageBase>(), n, N) && value > value_memory[id]) {
 						//if (value > value_memory[id]) {
 							value_memory[id] = value;
 							result_memory[id] = n;
@@ -273,7 +274,7 @@ namespace gs {
 					}
 
 					// do reduction
-					for (uint64_t n = 1; n < solutionSpace; n *= 2) {
+					for (StorageBase n = 1; n < solutionSpace; n *= 2) {
 						__syncthreads();
 						if (id % (n*2) != 0) return;
 						if (value_memory[id + n] > value_memory[id]) {
@@ -283,17 +284,18 @@ namespace gs {
 					}
 				}
 
-				__global__ void pick2(
+				template <typename T>
+				__global__ void reduce(
 					uint32_t* value_memory,
-					uint64_t* result_memory,
+					T* result_memory,
 					uint32_t stride,
-					uint32_t solutionSpace
+					T solutionSpace
 				) {
-					uint64_t id = (blockIdx.x * blockDim.x + threadIdx.x) * stride * 2;
+					T id = (T)(blockIdx.x * blockDim.x + threadIdx.x) * stride * 2;
 
 					if (id > solutionSpace) return;
 
-					for (uint64_t n = stride; n < solutionSpace; n *= 2) {
+					for (T n = stride; n < solutionSpace; n *= 2) {
 						__syncthreads();
 						if (value_memory[n + id] > value_memory[id]) {
 							result_memory[id] = result_memory[n + id];
@@ -302,72 +304,88 @@ namespace gs {
 						if (id % (n*4) != 0) return;
 					}
 				}
+
+				template <typename StorageBase>
+				res::solution<StorageBase> runner(
+					const inst::instance<StorageBase, uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
+				) {
+					cudaError_t cudaStatus;
+					GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
+
+					StorageBase solutionSpace = (size_t(1) << instance.size()) / share;
+
+					uint32_t* device_memory;
+					size_t device_weight_value_memory_size = solutionSpace * (instance.dim() + 1);
+					size_t device_stack_memory_size = solutionSpace * 2 * (instance.size());
+					StorageBase* device_result_memory;
+					size_t device_result_memory_size = solutionSpace;
+
+					cudaStatus = cudaMalloc(&device_memory, (device_weight_value_memory_size + device_stack_memory_size) * sizeof(uint32_t));
+					if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
+
+					cudaStatus = cudaMalloc(&device_result_memory, device_result_memory_size * sizeof(StorageBase));
+					if (cudaStatus != cudaSuccess) {
+						cudaFree(device_memory);
+						throw std::runtime_error("failed to allocate GPU memory");
+					}
+
+					uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(solutionSpace / threadsPerBlock));
+					cycle_kernel<StorageBase><<<blocksCount, threadsPerBlock>>>(
+						instance.size(), instance.dim(), solutionSpace, share,
+						device_memory, device_memory + solutionSpace, device_result_memory, device_memory + device_weight_value_memory_size
+					);
+					cudaStatus = cudaDeviceSynchronize();
+					if (cudaStatus != cudaSuccess) {
+						cudaFree(device_memory);
+						cudaFree(device_result_memory);
+						throw std::runtime_error("failed to synch GPU");
+					}
+
+					if (blocksCount > 1) {
+						blocksCount /= 2;
+						reduce<StorageBase><<<1, blocksCount>>> (
+							device_memory,
+							device_result_memory,
+							threadsPerBlock,
+							solutionSpace
+						);
+						cudaStatus = cudaDeviceSynchronize();
+						if (cudaStatus != cudaSuccess) {
+							cudaFree(device_memory);
+							cudaFree(device_result_memory);
+							throw std::runtime_error("failed to synch GPU");
+						}
+					}
+
+					res::solution<StorageBase> result(instance.size());
+
+					cudaStatus = cudaMemcpy(&result._data, device_result_memory, sizeof(StorageBase), cudaMemcpyDeviceToHost);
+					if (cudaStatus != cudaSuccess) {
+						cudaFree(device_memory);
+						cudaFree(device_result_memory);
+						throw std::runtime_error("failed to copy from GPU do CPU");
+					}
+
+					cudaFree(device_memory);
+					cudaFree(device_result_memory);
+					return result;
+				}
 			}
 		}
 	}
 }
 
-gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solution64(
+gs::cuda::res::solution32 gs::cuda::solver::brute_force::runner32(
+	const inst::instance32<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
+) {
+	assert(instance.size() <= 32);
+	cudaMemcpyToSymbol(adjacency32, instance.graph_data(), instance.size() * sizeof(uint32_t));
+	return runner<uint32_t>(instance, threadsPerBlock, share);
+}
+gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner64(
 	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
 ) {
-	cudaError_t cudaStatus;
-	GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
-
-	size_t solutionSpace = (size_t(1) << instance.size()) / share;
-
-	uint32_t* device_memory;
-	size_t device_weight_value_memory_size = solutionSpace * (instance.dim() + 1);
-	size_t device_stack_memory_size = solutionSpace * 2 * (instance.size());
-	uint64_t* device_result_memory;
-	size_t device_result_memory_size = solutionSpace;
-
-	cudaStatus = cudaMalloc(&device_memory, (device_weight_value_memory_size + device_stack_memory_size) * sizeof(uint32_t));
-	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
-
-	cudaStatus = cudaMalloc(&device_result_memory, device_result_memory_size * sizeof(uint64_t));
-	if (cudaStatus != cudaSuccess) {
-		cudaFree(device_memory);
-		throw std::runtime_error("failed to allocate GPU memory");
-	}
-
-	uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(solutionSpace / threadsPerBlock));
-	cycle_kernel<<<blocksCount, threadsPerBlock>>>(
-		instance.size(), instance.dim(), solutionSpace, share,
-		device_memory, device_memory + solutionSpace, device_result_memory, device_memory + device_weight_value_memory_size
-	);
-	cudaStatus = cudaDeviceSynchronize();
-	if (cudaStatus != cudaSuccess) {
-		cudaFree(device_memory);
-		cudaFree(device_result_memory);
-		throw std::runtime_error("failed to synch GPU");
-	}
-
-	if (blocksCount > 1) {
-		blocksCount /= 2;
-		pick2<<<1, blocksCount>>> (
-			device_memory,
-			device_result_memory,
-			threadsPerBlock,
-			solutionSpace
-		);
-		cudaStatus = cudaDeviceSynchronize();
-		if (cudaStatus != cudaSuccess) {
-			cudaFree(device_memory);
-			cudaFree(device_result_memory);
-			throw std::runtime_error("failed to synch GPU");
-		}
-	}
-
-	res::solution64 result(instance.size());
-
-	cudaStatus = cudaMemcpy(&result._data, device_result_memory, sizeof(uint64_t), cudaMemcpyDeviceToHost);
-	if (cudaStatus != cudaSuccess) {
-		cudaFree(device_memory);
-		cudaFree(device_result_memory);
-		throw std::runtime_error("failed to copy from GPU do CPU");
-	}
-
-	cudaFree(device_memory);
-	cudaFree(device_result_memory);
-	return result;
+	assert(instance.size() <= 64);
+	cudaMemcpyToSymbol(adjacency64, instance.graph_data(), instance.size() * sizeof(uint64_t));
+	return runner<uint64_t>(instance, threadsPerBlock, share);
 }

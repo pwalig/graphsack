@@ -21,9 +21,6 @@
     <ClCompile Include="src\graphs\adjacency_matrix.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="src\inst\cuda_instance.cu">
-      <Filter>Pliki źródłowe</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\inst\composite_instance.hpp">

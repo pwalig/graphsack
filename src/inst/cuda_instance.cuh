@@ -9,7 +9,15 @@
 __constant__ uint32_t limits[GS_CUDA_INST_MAXM]; \
 __constant__ uint32_t values[GS_CUDA_INST_MAXN]; \
 __constant__ uint32_t weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM]; \
-__constant__ uint64_t adjacency[GS_CUDA_INST_MAXN];
+__constant__ uint32_t adjacency32[32]; \
+__constant__ uint64_t adjacency64[64]; \
+template <typename StorageBase> \
+__device__ const StorageBase* adjacency(); \
+template <> \
+__device__ const uint32_t* adjacency() { return adjacency32; } \
+template <> \
+__device__ const uint64_t* adjacency() { return adjacency64; } 
+
 
 #define GS_CUDA_INST_COPY_TO_SYMBOL_FUNCTION \
 void copy_to_symbol(const instance64<uint32_t, uint32_t>& inst) { \
@@ -21,22 +29,14 @@ void copy_to_symbol(const instance64<uint32_t, uint32_t>& inst) { \
 }
 
 #define GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(inst) \
-assert(inst.size() <= 64);\
 cudaMemcpyToSymbol(limits, inst.limits().data(), inst.dim() * sizeof(uint32_t)); \
 cudaMemcpyToSymbol(values, inst.values().data(), inst.size() * sizeof(uint32_t)); \
 cudaMemcpyToSymbol(weights, inst.weights().data(), inst.size() * inst.dim() * sizeof(uint32_t)); \
-cudaMemcpyToSymbol(adjacency, inst.graph_data(), inst.size() * sizeof(uint64_t)); \
 cudaDeviceSynchronize();
-
 
 namespace gs {
 	namespace cuda {
 		namespace inst {
-			extern __constant__ uint32_t limits[GS_CUDA_INST_MAXM];
-			extern __constant__ uint32_t values[GS_CUDA_INST_MAXN];
-			extern __constant__ uint32_t weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
-			extern __constant__ uint64_t adjacency[GS_CUDA_INST_MAXN];
-
 			template <typename adjacency_base_type, typename index_type>
 			inline __device__  bool has_connection_to(
 				const adjacency_base_type* adjacency, index_type from, index_type to

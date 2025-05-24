@@ -2,6 +2,7 @@
 
 #include "cuda_runtime.h"
 #include <stdexcept>
+#include <iostream>
 
 gs::cuda::device_properties gs::cuda::init() {
     int nDevices;
@@ -17,6 +18,7 @@ gs::cuda::device_properties gs::cuda::init() {
 			prop.maxThreadsPerBlock,
 			prop.canMapHostMemory
 		};
+		std::cout << "selected: " << prop.name << '\n';
 		cudaSetDevice(i);
 		return current;
 	}
