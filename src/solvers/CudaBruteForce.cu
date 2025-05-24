@@ -221,6 +221,7 @@ uint32_t gs::cuda::solver::brute_force::runner_u32_u32(uint32_t* data, uint32_t 
 	return result;
 }
 
+const std::string gs::cuda::solver::BruteForce32::name = "CudaBruteForce32";
 const std::string gs::cuda::solver::BruteForce64::name = "CudaBruteForce64";
 
 namespace gs {
@@ -284,9 +285,9 @@ namespace gs {
 					}
 				}
 
-				template <typename T>
+				template <typename T, typename ValueT>
 				__global__ void reduce(
-					uint32_t* value_memory,
+					ValueT* value_memory,
 					T* result_memory,
 					uint32_t stride,
 					T solutionSpace
