@@ -13,6 +13,8 @@
 
 namespace gs {
 	namespace inst {
+		// instance with nexts list graph representation
+		// aiming to store all of heap allocated data in one contigous memory segment
 		template <typename valueT, typename weightT = valueT, typename indexT = size_t, class Container = std::vector<uint8_t>>
 		class itemlocal_nlist {
 		public:
