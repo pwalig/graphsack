@@ -37,7 +37,13 @@ namespace gs {
 			extern __constant__ uint32_t weights[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
 			extern __constant__ uint64_t adjacency[GS_CUDA_INST_MAXN];
 
-			__device__  bool has_connection_to(const uint64_t* adjacency, uint32_t from, uint32_t to);
+			template <typename adjacency_base_type, typename index_type>
+			inline __device__  bool has_connection_to(
+				const adjacency_base_type* adjacency, index_type from, index_type to
+			) {
+				if (adjacency[from] & (adjacency_base_type(1) << to)) return true;
+				else return false;
+			}
 		}
 	}
 }

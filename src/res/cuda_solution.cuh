@@ -5,10 +5,23 @@
 namespace gs {
 	namespace cuda {
 		namespace res {
-			__device__ bool has(uint64_t solution, uint32_t itemId);
-			__device__ bool not_has(uint64_t solution, uint32_t itemId);
-			__device__ void add(uint64_t& solution, uint32_t itemId);
-			__device__ void remove(uint64_t& solution, uint32_t itemId);
+			template <typename res_type, typename index_type>
+			inline __device__ bool has(res_type solution, index_type itemId) {
+				if (solution & (res_type(1) << itemId)) return true;
+				else return false;
+			}
+
+			template <typename res_type, typename index_type>
+			inline __device__ void add(res_type& solution, index_type itemId)
+			{
+				solution |= (res_type(1) << itemId);
+			}
+
+			template <typename res_type, typename index_type>
+			inline __device__ void remove(res_type& solution, index_type itemId)
+			{
+				solution &= ~(res_type(1) << itemId);
+			}
 		}
 	}
 }

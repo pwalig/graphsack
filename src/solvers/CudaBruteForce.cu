@@ -266,6 +266,7 @@ namespace gs {
 
 						if (is_cycle_iterative(adjacency, stack_memory + (2 * N * id), n, N) && value > value_memory[id]) {
 						//if (is_cycle_recursive(adjacency, n, N) && value > value_memory[id]) {
+						//if (value > value_memory[id]) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}

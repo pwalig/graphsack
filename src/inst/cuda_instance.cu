@@ -20,8 +20,3 @@ void gs::cuda::inst::copy_to_symbol(const instance64<uint32_t, uint32_t>& inst)
 	cudaDeviceSynchronize();
 }
 
-__device__  bool gs::cuda::inst::has_connection_to(const uint64_t* adjacency, uint32_t from, uint32_t to) {
-	if (adjacency[from] & (uint64_t(1) << to)) return true;
-	else return false;
-}
-
