@@ -129,7 +129,6 @@
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
     <CudaCompile Include="src\solvers\CudaBruteForce.cu" />
-    <CudaCompile Include="src\cuda_structure_check.cu" />
     <CudaCompile Include="src\cuda_init.cu" />
   </ItemGroup>
 </Project>
