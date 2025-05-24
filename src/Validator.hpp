@@ -102,7 +102,7 @@ namespace gs {
 				return is_path(instance, result);
 				break;
 			case structure::cycle:
-				return is_cycle(instance, result);
+				return is_cycle_recursive(instance, result);
 				break;
 			default:
 				throw std::logic_error("not implemented");

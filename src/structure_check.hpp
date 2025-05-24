@@ -217,7 +217,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_cycle(
+	bool is_cycle_recursive(
 		const instance_t& instance,
 		const solution_t& selected
 	) {

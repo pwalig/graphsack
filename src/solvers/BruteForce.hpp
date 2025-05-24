@@ -57,7 +57,7 @@ namespace gs {
 				return best_solution;
 			}
 
-			inline static solution_t solve(const instance_t& instance) {
+			inline static solution_t solve(const instance_t& instance, bool iterative_structure_check = false) {
 				if (instance.weight_treatment() != weight_treatment::full)
 					throw std::invalid_argument("BruteForce can only solve for full weight treatment");
 
@@ -69,7 +69,8 @@ namespace gs {
 					return solve(instance, is_path);
 					break;
 				case structure::cycle:
-					return solve(instance, is_cycle_iterative);
+					if (iterative_structure_check) return solve(instance, is_cycle_iterative);
+					else return solve(instance, is_cycle_recursive);
 					break;
 				default:
 					throw std::logic_error("invalid structure");
