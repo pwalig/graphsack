@@ -84,6 +84,10 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <NvccCompilation>compile</NvccCompilation>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -102,6 +106,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <NvccCompilation>compile</NvccCompilation>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -116,6 +124,10 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <NvccCompilation>compile</NvccCompilation>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -134,6 +146,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <NvccCompilation>compile</NvccCompilation>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\graphs\adjacency_matrix.cpp" />
@@ -141,8 +157,10 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cuda_init.h" />
+    <ClInclude Include="src\cuda_structure_check.cuh" />
     <ClInclude Include="src\inst\cuda_instance.hpp" />
-    <ClInclude Include="src\inst\cuda_instance_memory.cuh" />
+    <ClInclude Include="src\inst\cuda_instance.cuh" />
     <ClInclude Include="src\inst\inst_generator.hpp" />
     <ClInclude Include="src\res\bit_vector.hpp" />
     <ClInclude Include="src\cuda_test.h" />
@@ -152,6 +170,7 @@
     <ClInclude Include="src\inst\gs_random.hpp" />
     <ClInclude Include="src\inst\itemlocal_nlist.hpp" />
     <ClInclude Include="src\inst\random.hpp" />
+    <ClInclude Include="src\res\cuda_solution.cuh" />
     <ClInclude Include="src\res\cuda_solution.hpp" />
     <ClInclude Include="src\solvers\GHS.hpp" />
     <ClInclude Include="src\solvers\GRASP.hpp" />
@@ -176,7 +195,10 @@
     <ClInclude Include="src\weight_vector_operations.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="src\cuda_init.cu" />
+    <CudaCompile Include="src\cuda_structure_check.cu" />
     <CudaCompile Include="src\cuda_test.cu" />
+    <CudaCompile Include="src\res\cuda_soluton.cu" />
     <CudaCompile Include="src\solvers\CudaBruteForce.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

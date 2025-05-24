@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include "../structure.hpp"
+#include "../res/cuda_solution.hpp"
+#include "../inst/cuda_instance.hpp"
 
 namespace gs {
 	namespace cuda {
@@ -8,7 +10,26 @@ namespace gs {
 			namespace brute_force {
 				// data should be: limits | values | weights
 				uint32_t runner_u32_u32(uint32_t* data, uint32_t N, uint32_t M, uint32_t threadsPerBlock, uint32_t share, structure to_find);
+				res::solution64 runner_instance64_solution64(
+					const inst::instance64<uint32_t, uint32_t>& instance,
+					uint32_t threadsPerBlock, uint32_t share
+				);
 			}
+
+			class BruteForce64 {
+			public:
+				using solution_t = res::solution64;
+				using instance_t = inst::instance64<uint32_t, uint32_t>;
+				const static std::string name;
+
+				BruteForce64() = delete;
+
+				inline static solution_t solve(const instance_t& instance, uint32_t threadsPerBlock = 1024, uint32_t share = 1) 
+				{
+					if (share < 1) share = 1;
+					return brute_force::runner_instance64_solution64(instance, threadsPerBlock, share);
+				}
+			};
 
 			template <typename InstanceT, typename SolutionT>
 			class BruteForce {
@@ -20,6 +41,7 @@ namespace gs {
 				BruteForce() = delete;
 				inline static solution_t solve(const instance_t& instance, uint32_t threadsPerBlock = 1024, uint32_t share = 1) 
 				{
+					if (share < 1) share = 1;
 					std::vector<uint32_t> data(instance.dim() * instance.size() + instance.dim() + instance.size() + instance.size(), 0);
 
 					// copy instance to data

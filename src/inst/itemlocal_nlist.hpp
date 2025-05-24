@@ -393,6 +393,10 @@ namespace gs {
 			inline const gs::structure& structure_to_find() const { return structureToFind; }
 			inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
 
+			inline bool has_connection_to(index_type from, index_type to) const {
+				return std::find(nexts(from).begin(), nexts(from).end(), to) != nexts(from).end();
+			}
+
 			template <typename Rand, typename ValueGen, typename WeightGen, typename LimitGen>
 			inline itemlocal_nlist random(size_type N, size_type M, double P,
 				ValueGen vg, WeightGen wg, LimitGen lg, Rand& gen,
