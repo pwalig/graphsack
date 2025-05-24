@@ -52,14 +52,64 @@ __device__ bool gs::cuda::is_cycle_recursive(
 	return false;
 }
 
+__device__ bool gs::cuda::is_cycle_iterative_helper(
+	const uint64_t* adjacency,
+	uint32_t* stack_memory,
+	uint64_t selected, uint32_t N,
+	uint32_t start, uint32_t length
+) {
+	uint64_t visited = 0;
+	uint32_t visitedCount = 0;
+	uint32_t stack_pointer = 0;
+
+	uint32_t prev = start;
+	while (true) {
+
+		// visiting for the first time
+		if (!res::has(visited, prev)) {
+			res::add(visited, prev);
+			++visitedCount;
+			if (visitedCount == length && has_connection_to(adjacency, prev, start))
+				return true;
+			if (visitedCount > length) {
+				stack_memory[stack_pointer++] = prev;
+				stack_memory[stack_pointer++] = N;
+			}
+			else {
+				stack_memory[stack_pointer++] = prev;
+				stack_memory[stack_pointer++] = 0;
+			}
+		}
+
+		uint32_t next = stack_memory[--stack_pointer] + 1;
+		--stack_pointer;
+		for (; next < N; ++next) {
+			if (!has_connection_to(adjacency, prev, next)) continue;
+			if (res::has(selected, next) && !res::has(visited, next)) {
+				stack_memory[stack_pointer++] = prev;
+				stack_memory[stack_pointer++] = next;
+				prev = next;
+				break;
+			}
+		}
+
+		// visited all nexts
+		if (next == N) {
+			res::remove(visited, prev);
+			--visitedCount;
+			if (stack_pointer == 0) break;
+			prev = stack_memory[stack_pointer - 2];
+		}
+	}
+	return false;
+}
+
 // does not work because cuda refuses to enter if (true) block
 __device__ bool gs::cuda::is_cycle_iterative(
 	const uint64_t* adjacency,
 	uint32_t* stack_memory,
 	uint64_t selected, uint32_t N
 ) {
-	uint32_t stack_pointer = 0;
-
 	// calculate whats the length of the cycle
 	uint32_t length = 0;
 	for (uint32_t i = 0; i < N; ++i)
@@ -68,42 +118,9 @@ __device__ bool gs::cuda::is_cycle_iterative(
 	if (length == 0) return true;
 
 	// check from each starting point
-	uint64_t visited = 0;
-	uint32_t visitedCount = 0;
 	for (uint32_t start = 0; start < N; ++start) {
 		if (res::has(selected, start)) {
-			uint32_t prev = start;
-			while (true) {
-
-				// visiting for the first time
-				if (!res::has(visited, prev)) {
-					res::add(visited, prev);
-					++visitedCount;
-					if (visitedCount == length && has_connection_to(adjacency, prev, start))
-						return true;
-					if (visitedCount > length) stack_memory[stack_pointer++] = N;
-					else stack_memory[stack_pointer++] = 0;
-				}
-
-				uint32_t next = stack_memory[--stack_pointer];
-				for (; next < N; ++next) {
-					if (!has_connection_to(adjacency, prev, next)) continue;
-					if (res::has(selected, next) && !res::has(visited, next)) {
-						stack_memory[stack_pointer++] = next + 1;
-						prev = next;
-						break;
-					}
-				}
-
-				// visited all nexts
-				if (next == N) {
-					res::remove(visited, prev);
-					--visitedCount;
-					if (stack_pointer == 0)
-						prev = stack_memory[stack_pointer] - 1;
-					else break;
-				}
-			}
+			if (is_cycle_iterative_helper(adjacency, stack_memory, selected, N, start, length)) return true;
 		}
 	}
 	return false;

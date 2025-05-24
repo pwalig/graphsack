@@ -263,7 +263,7 @@ namespace gs {
 							i++;
 						}
 
-						if (is_cycle_iterative(adjacency, stack_memory + (N * id), n, N) && value > value_memory[id]) {
+						if (is_cycle_iterative(adjacency, stack_memory + (2 * N * id), n, N) && value > value_memory[id]) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}
@@ -302,7 +302,7 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 	cudaStatus = cudaMalloc(&device_weight_value_memory, device_weight_value_memory_size * sizeof(uint32_t));
 	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
 
-	cudaStatus = cudaMalloc(&device_stack_memory, device_stack_memory_size * sizeof(uint32_t));
+	cudaStatus = cudaMalloc(&device_stack_memory, device_stack_memory_size * 2 * sizeof(uint32_t));
 	if (cudaStatus != cudaSuccess) {
 		cudaFree(device_weight_value_memory);
 		throw std::runtime_error("failed to allocate GPU memory");

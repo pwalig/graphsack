@@ -69,7 +69,7 @@ namespace gs {
 					return solve(instance, is_path);
 					break;
 				case structure::cycle:
-					return solve(instance, is_cycle);
+					return solve(instance, is_cycle_iterative);
 					break;
 				default:
 					throw std::logic_error("invalid structure");

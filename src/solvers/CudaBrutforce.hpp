@@ -26,6 +26,7 @@ namespace gs {
 
 				inline static solution_t solve(const instance_t& instance, uint32_t threadsPerBlock = 1024, uint32_t share = 1) 
 				{
+					if (share < 1) share = 1;
 					return brute_force::runner_instance64_solution64(instance, threadsPerBlock, share);
 				}
 			};
@@ -40,6 +41,7 @@ namespace gs {
 				BruteForce() = delete;
 				inline static solution_t solve(const instance_t& instance, uint32_t threadsPerBlock = 1024, uint32_t share = 1) 
 				{
+					if (share < 1) share = 1;
 					std::vector<uint32_t> data(instance.dim() * instance.size() + instance.dim() + instance.size() + instance.size(), 0);
 
 					// copy instance to data
