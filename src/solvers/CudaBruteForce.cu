@@ -228,7 +228,7 @@ namespace gs {
 			namespace brute_force {
 				__global__ void cycle_kernel(
 					uint32_t N, uint32_t M, uint64_t solutionSpace, uint32_t share,
-					uint32_t* value_memory, uint32_t* weight_memory, uint64_t* result_memory
+					uint32_t* value_memory, uint32_t* weight_memory, uint64_t* result_memory, uint32_t* stack_memory
 				) {
 					const uint64_t id = blockIdx.x * blockDim.x + threadIdx.x;
 					if (id > solutionSpace) return;
@@ -243,8 +243,7 @@ namespace gs {
 						for (unsigned wid = 0; wid < M; ++wid) weight_memory[M * id + wid] = 0;
 
 						// check if valid structure
-						//bool fitting = true;
-						bool fitting = is_cycle_recursive(adjacency, n, N);
+						bool fitting = true;
 
 						// check if valid weight and sum value
 						uint32_t i = 0;
@@ -263,8 +262,8 @@ namespace gs {
 							}
 							i++;
 						}
-						
-						if (value > value_memory[id]) {
+
+						if (is_cycle_iterative(adjacency, stack_memory + (N * id), n, N) && value > value_memory[id]) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}
@@ -295,15 +294,24 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 
 	uint32_t* device_weight_value_memory;
 	size_t device_weight_value_memory_size = solutionSpace * (instance.dim() + 1);
+	uint32_t* device_stack_memory;
+	size_t device_stack_memory_size = solutionSpace * (instance.size());
 	uint64_t* device_result_memory;
 	size_t device_result_memory_size = solutionSpace;
 
 	cudaStatus = cudaMalloc(&device_weight_value_memory, device_weight_value_memory_size * sizeof(uint32_t));
 	if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
 
+	cudaStatus = cudaMalloc(&device_stack_memory, device_stack_memory_size * sizeof(uint32_t));
+	if (cudaStatus != cudaSuccess) {
+		cudaFree(device_weight_value_memory);
+		throw std::runtime_error("failed to allocate GPU memory");
+	}
+
 	cudaStatus = cudaMalloc(&device_result_memory, device_result_memory_size * sizeof(uint64_t));
 	if (cudaStatus != cudaSuccess) {
 		cudaFree(device_weight_value_memory);
+		cudaFree(device_stack_memory);
 		throw std::runtime_error("failed to allocate GPU memory");
 	}
 
@@ -311,11 +319,12 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 	assert(blocksCount == 1);
 	cycle_kernel<<<blocksCount, threadsPerBlock>>>(
 		instance.size(), instance.dim(), solutionSpace, share,
-		device_weight_value_memory, device_weight_value_memory + solutionSpace, device_result_memory
+		device_weight_value_memory, device_weight_value_memory + solutionSpace, device_result_memory, device_stack_memory
 	);
 	cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess) {
 		cudaFree(device_weight_value_memory);
+		cudaFree(device_stack_memory);
 		cudaFree(device_result_memory);
 		throw std::runtime_error("failed to synch GPU");
 	}
@@ -325,11 +334,13 @@ gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner_instance64_solut
 	cudaStatus = cudaMemcpy(&result._data, device_result_memory, sizeof(uint64_t), cudaMemcpyDeviceToHost);
 	if (cudaStatus != cudaSuccess) {
 		cudaFree(device_weight_value_memory);
+		cudaFree(device_stack_memory);
 		cudaFree(device_result_memory);
 		throw std::runtime_error("failed to copy from GPU do CPU");
 	}
 
 	cudaFree(device_weight_value_memory);
+	cudaFree(device_stack_memory);
 	cudaFree(device_result_memory);
 	return result;
 }

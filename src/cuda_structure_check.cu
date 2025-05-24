@@ -13,7 +13,7 @@ __device__ bool gs::cuda::is_cycle_DFS(
 	uint32_t N, uint64_t selected, uint64_t visited,
 	uint32_t current, uint32_t start, uint32_t length, uint32_t depth
 ) {
-	if (depth > GS_CUDA_MAX_RECURSION) return false;
+	//if (depth > GS_CUDA_MAX_RECURSION) return false;
 	for (uint32_t next = 0; next < N; ++next) {
 		if (!has_connection_to(adjacency, current, next)) continue;
 		if (res::has(selected, next) && !res::has(visited, next)) { // next item has to be selected and new
@@ -52,6 +52,7 @@ __device__ bool gs::cuda::is_cycle_recursive(
 	return false;
 }
 
+// does not work because cuda refuses to enter if (true) block
 __device__ bool gs::cuda::is_cycle_iterative(
 	const uint64_t* adjacency,
 	uint32_t* stack_memory,
@@ -70,24 +71,37 @@ __device__ bool gs::cuda::is_cycle_iterative(
 	uint64_t visited = 0;
 	uint32_t visitedCount = 0;
 	for (uint32_t start = 0; start < N; ++start) {
-		if (res::has(selected, start)){
-			stack_memory[++stack_pointer] = start;
-			while (visitedCount > 0) {
-				uint32_t prev = stack_memory[--stack_pointer];
+		if (res::has(selected, start)) {
+			uint32_t prev = start;
+			while (true) {
 
-				if (res::has(visited, prev)) continue;
+				// visiting for the first time
+				if (!res::has(visited, prev)) {
+					res::add(visited, prev);
+					++visitedCount;
+					if (visitedCount == length && has_connection_to(adjacency, prev, start))
+						return true;
+					if (visitedCount > length) stack_memory[stack_pointer++] = N;
+					else stack_memory[stack_pointer++] = 0;
+				}
 
-				res::add(visited, prev);
-				++visitedCount;
-				if (visitedCount == length && has_connection_to(adjacency, prev, start))
-					return true;
-				stack_memory[++stack_pointer] = prev;
-
-				for (uint32_t next = 0; next < N; ++next) {
+				uint32_t next = stack_memory[--stack_pointer];
+				for (; next < N; ++next) {
 					if (!has_connection_to(adjacency, prev, next)) continue;
 					if (res::has(selected, next) && !res::has(visited, next)) {
-						stack_memory[++stack_pointer] = next;
+						stack_memory[stack_pointer++] = next + 1;
+						prev = next;
+						break;
 					}
+				}
+
+				// visited all nexts
+				if (next == N) {
+					res::remove(visited, prev);
+					--visitedCount;
+					if (stack_pointer == 0)
+						prev = stack_memory[stack_pointer] - 1;
+					else break;
 				}
 			}
 		}
