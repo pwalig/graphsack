@@ -15,7 +15,7 @@ namespace gs {
 			public:
 				using value_type = ValueT;
 				using weight_type = WeightT;
-				using index_type = uint32_t;
+				using index_type = uint8_t;
 				using size_type = size_t;
 
 			private:

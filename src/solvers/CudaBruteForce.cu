@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "CudaBrutforce.hpp"
+#include "cuda_reductions.cuh"
 #include "../inst/cuda_instance.cuh"
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
@@ -275,35 +276,7 @@ namespace gs {
 					}
 
 					// do reduction
-					for (StorageBase n = 1; n < solutionSpace; n *= 2) {
-						__syncthreads();
-						if (id % (n*2) != 0) return;
-						if (value_memory[id + n] > value_memory[id]) {
-							result_memory[id] = result_memory[id + n];
-							value_memory[id] = value_memory[id + n];
-						}
-					}
-				}
-
-				template <typename T, typename ValueT>
-				__global__ void reduce(
-					ValueT* value_memory,
-					T* result_memory,
-					uint32_t stride,
-					T solutionSpace
-				) {
-					T id = (T)(blockIdx.x * blockDim.x + threadIdx.x) * stride * 2;
-
-					if (id > solutionSpace) return;
-
-					for (T n = stride; n < solutionSpace; n *= 2) {
-						__syncthreads();
-						if (value_memory[n + id] > value_memory[id]) {
-							result_memory[id] = result_memory[n + id];
-							value_memory[id] = value_memory[id + n];
-						}
-						if (id % (n*4) != 0) return;
-					}
+					GS_CUDA_REDUCTIONS_PICK(StorageBase, id)
 				}
 
 				template <typename StorageBase>
@@ -344,7 +317,7 @@ namespace gs {
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
-						reduce<StorageBase><<<1, blocksCount>>> (
+						reductions::pick<StorageBase, uint32_t><<<1, blocksCount>>>(
 							device_memory,
 							device_result_memory,
 							threadsPerBlock,

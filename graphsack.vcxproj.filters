@@ -128,10 +128,16 @@
     <ClInclude Include="src\inst\inst_macros.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\solvers\CudaGRASP.hpp">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\solvers\cuda_reductions.cuh" />
+    <ClInclude Include="src\solvers\cuda_greedy_utils.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
     <CudaCompile Include="src\solvers\CudaBruteForce.cu" />
     <CudaCompile Include="src\cuda_init.cu" />
+    <CudaCompile Include="src\solvers\CudaGRASP.cu" />
   </ItemGroup>
 </Project>

@@ -172,6 +172,9 @@
     <ClInclude Include="src\inst\random.hpp" />
     <ClInclude Include="src\res\cuda_solution.cuh" />
     <ClInclude Include="src\res\cuda_solution.hpp" />
+    <ClInclude Include="src\solvers\CudaGRASP.hpp" />
+    <ClInclude Include="src\solvers\cuda_greedy_utils.cuh" />
+    <ClInclude Include="src\solvers\cuda_reductions.cuh" />
     <ClInclude Include="src\solvers\GHS.hpp" />
     <ClInclude Include="src\solvers\GRASP.hpp" />
     <ClInclude Include="src\solvers\MultiRun.hpp" />
@@ -198,6 +201,7 @@
     <CudaCompile Include="src\cuda_init.cu" />
     <CudaCompile Include="src\cuda_test.cu" />
     <CudaCompile Include="src\solvers\CudaBruteForce.cu" />
+    <CudaCompile Include="src\solvers\CudaGRASP.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
