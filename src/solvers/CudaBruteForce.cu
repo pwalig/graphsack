@@ -230,28 +230,31 @@ namespace gs {
 	namespace cuda {
 		namespace solver {
 			namespace brute_force {
-				template <typename StorageBase>
+				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
-					uint32_t N, uint32_t M, StorageBase solutionSpace, uint32_t share,
-					uint32_t* value_memory, uint32_t* weight_memory, StorageBase* result_memory, uint32_t* stack_memory
+					uint32_t N, uint32_t M, result_type totalThreads, uint32_t share,
+					uint32_t* value_memory, uint32_t* weight_memory, result_type* result_memory, index_type* stack_memory
 				) {
-					const StorageBase id = blockIdx.x * blockDim.x + threadIdx.x;
-					if (id > solutionSpace) return;
+					const result_type id = blockIdx.x * blockDim.x + threadIdx.x;
+					if (id > totalThreads) return;
 
 					// check share solutions
 					value_memory[id] = 0;
-					result_memory[id] = id * share;
-					for (uint32_t resId = 0; resId < share; ++resId) {
+					result_memory[id] = id;
+					for (result_type resId = 0; resId < share; ++resId) {
+
 						// setup
-						StorageBase n = resId * share + id;
+						result_type n = id * share + resId;
 						uint32_t value = 0;
-						for (unsigned wid = 0; wid < M; ++wid) weight_memory[M * id + wid] = 0;
+						for (uint32_t wid = 0; wid < M; ++wid) {
+							weight_memory[M * id + wid] = 0;
+						}
 
 						// check if valid structure
 						bool fitting = true;
 
 						// check if valid weight and sum value
-						uint32_t i = 0;
+						index_type i = 0;
 						while (i < N && fitting) {
 							if (res::has(n, i)) {
 								value += values[i];
@@ -268,36 +271,44 @@ namespace gs {
 							i++;
 						}
 
-						if (is_cycle_iterative(adjacency<StorageBase>(), stack_memory + (2 * N * id), n, N) && value > value_memory[id]) {
-						//if (is_cycle_recursive(adjacency<StorageBase>(), n, N) && value > value_memory[id]) {
-						//if (value > value_memory[id]) {
+						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(adjacency<result_type>(), stack_memory + (2 * N * id), n, N)) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}
 					}
 
 					// do reduction
-					GS_CUDA_REDUCTIONS_PICK(StorageBase, id, value_memory, result_memory)
+					GS_CUDA_REDUCTIONS_PICK(result_type, id, value_memory, result_memory)
 				}
 
-				template <typename StorageBase>
-				res::solution<StorageBase> runner(
-					const inst::instance<StorageBase, uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
+				template <typename result_type>
+				res::solution<result_type> runner(
+					const inst::instance<result_type, uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
 				) {
+					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
+
 					cudaError_t cudaStatus;
 					GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
 
-					StorageBase solutionSpace = (size_t(1) << instance.size()) / share;
+					result_type solutionSpace = (size_t(1) << instance.size());
+					result_type totalThreads = solutionSpace / share;
 
-					buffer<uint32_t> device_memory(solutionSpace * (instance.dim() + 1));
-					buffer<uint32_t> stack_memory(solutionSpace * 2 * instance.size());
-					buffer<StorageBase> result_memory(solutionSpace);
+					threadsPerBlock = std::min<result_type>(threadsPerBlock, totalThreads);
 
-					uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(solutionSpace / threadsPerBlock));
-					cycle_kernel<StorageBase><<<blocksCount, threadsPerBlock>>>(
-						instance.size(), instance.dim(), solutionSpace, share,
+					buffer<uint32_t> device_memory(totalThreads * (instance.dim() + 1));
+					buffer<index_type> stack_memory(totalThreads * 2 * instance.size());
+					buffer<result_type> result_memory(totalThreads);
+
+					uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(totalThreads / threadsPerBlock));
+					printf("solution space: %d\n", solutionSpace);
+					printf("share: %d\n", share);
+					printf("total threads: %d\n", totalThreads);
+					printf("threads per block: %d\n", threadsPerBlock);
+					printf("blocks count: %d\n", blocksCount);
+					cycle_kernel<result_type><<<blocksCount, threadsPerBlock>>>(
+						instance.size(), instance.dim(), totalThreads, share,
 						device_memory.data(), // value_memory
-						device_memory.data() + solutionSpace, // weight_memory
+						device_memory.data() + totalThreads, // weight_memory
 						result_memory.data(),
 						stack_memory.data()
 					);
@@ -307,18 +318,18 @@ namespace gs {
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
-						reductions::pick<StorageBase, uint32_t><<<1, blocksCount>>>(
+						reductions::pick<result_type, uint32_t><<<1, blocksCount>>>(
 							device_memory.data(),
 							result_memory.data(),
 							threadsPerBlock,
-							solutionSpace
+							totalThreads
 						);
 						if (cudaDeviceSynchronize() != cudaSuccess) {
 							throw std::runtime_error("failed to synch GPU");
 						}
 					}
 
-					res::solution<StorageBase> result(instance.size());
+					res::solution<result_type> result(instance.size());
 					result_memory.get(&result._data);
 
 					return result;

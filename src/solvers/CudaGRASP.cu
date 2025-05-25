@@ -84,21 +84,21 @@ namespace gs {
 				) {
 					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
 
+					if (blocksCount > 200) throw std::invalid_argument("blocksCount limit of 200 exeeded");
 					uint32_t threadsPerBlock = 256;
-					size_t solutionSpace = threadsPerBlock * blocksCount;
+					size_t totalThreads = threadsPerBlock * blocksCount;
 
 					cudaError_t cudaStatus;
 					GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
 
-					buffer<uint32_t> weight_value(solutionSpace * (instance.dim() + 1));
-					buffer<index_type> index_memory(solutionSpace * instance.size() + instance.size());
-					buffer<result_type> result_memory(solutionSpace);
+					buffer<uint32_t> weight_value(totalThreads * (instance.dim() + 1));
+					buffer<index_type> index_memory(totalThreads * instance.size() + instance.size());
+					buffer<result_type> result_memory(totalThreads);
 
 					buffer<curandStateMtgp32> random_states(blocksCount);
 					buffer<mtgp32_kernel_params> kernel_params(1);
 
 					curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, kernel_params.data());
-					//curandMakeMTGP32KernelState(devMTGPStates, mtgp32dc_params_fast_11213, devKernelParams, blocksCount, 1234);
 					curandMakeMTGP32KernelState(random_states.data(), mtgp32dc_params_fast_11213, kernel_params.data(), blocksCount, time(NULL));
 
 					sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
@@ -108,7 +108,8 @@ namespace gs {
 
 					cycle_kernel<result_type, index_type><<<blocksCount, threadsPerBlock>>>(
 						instance.size(), instance.dim(), random_states.data(),
-						weight_value.data(), weight_value.data() + solutionSpace, result_memory.data(), index_memory.data() + instance.size(),
+						weight_value.data(), weight_value.data() + totalThreads,
+						result_memory.data(), index_memory.data() + instance.size(),
 						index_memory.data(), instance.size() / 2
 					);
 					if (cudaDeviceSynchronize() != cudaSuccess) {
@@ -121,7 +122,7 @@ namespace gs {
 							weight_value.data(),
 							result_memory.data(),
 							threadsPerBlock,
-							solutionSpace
+							totalThreads
 						);
 						if (cudaDeviceSynchronize() != cudaSuccess) {
 							throw std::runtime_error("failed to synch GPU");

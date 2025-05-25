@@ -21,7 +21,9 @@ namespace gs {
 				if (cudaMalloc(&ptr, siz * sizeof(value_type)) != cudaSuccess) {
 					throw std::bad_alloc();
 				}
+#ifdef GS_CUDA_BUFFER_DIAGNOSTIC
 				printf("allocated %d bytes of GPU memory\n", siz * sizeof(value_type));
+#endif
 			}
 
 			buffer(const buffer& other) = delete;
@@ -29,7 +31,9 @@ namespace gs {
 
 			inline ~buffer() {
 				cudaFree(ptr);
+#ifdef GS_CUDA_BUFFER_DIAGNOSTIC
 				printf("freed GPU memory\n");
+#endif
 			}
 
 			inline pointer data() { return ptr; }
