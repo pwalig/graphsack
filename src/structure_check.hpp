@@ -60,7 +60,7 @@ namespace gs {
 			bool fit = true;
 			std::vector<typename instance_t::weight_type> _remaining_space(instance.dim());
 			memcpy(_remaining_space.data(), instance.limits().data(), instance.dim() * sizeof(typename instance_t::weight_type));
-			for (int j = 0; j < _remaining_space.size(); ++j) {
+			for (indexT j = 0; j < _remaining_space.size(); ++j) {
 				if (_remaining_space[j] >= instance.weight(i, j)) _remaining_space[j] -= instance.weight(i, j);
 				else { fit = false; break; }
 			}
@@ -90,15 +90,16 @@ namespace gs {
 		const instance_t& instance,
 		const solution_t& selected, 
 		std::vector<bool>& visited,
-		std::vector<typename instance_t::weight_type> _remaining_space,
+		const std::vector<typename instance_t::weight_type>& _remaining_space,
 		const indexT& current
 	) {
 		for (indexT next : instance.nexts(current)) {
 			if (visited[next]) continue; // next item has to be new (not visited yet)
 
 			bool fit = true;
-			for (indexT j = 0; j < _remaining_space.size(); ++j) {
-				if (_remaining_space[j] >= instance.weight(next, j)) _remaining_space[j] -= instance.weight(next, j);
+			std::vector<typename instance_t::weight_type> new_remaining_space(_remaining_space);
+			for (indexT j = 0; j < new_remaining_space.size(); ++j) {
+				if (new_remaining_space[j] >= instance.weight(next, j)) new_remaining_space[j] -= instance.weight(next, j);
 				else { fit = false; break; }
 			}
 			if (!fit) { continue; }
@@ -114,7 +115,7 @@ namespace gs {
 			}
 			if (_found) { return true; } // it has - path found
 			if (is_path_possible_DFS<instance_t, solution_t, indexT>(
-				instance, selected, visited, _remaining_space, next)
+				instance, selected, visited, new_remaining_space, next)
 			) return true; // path found later
 			visited[next] = false;
 		}

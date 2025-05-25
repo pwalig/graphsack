@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include "../iterator.hpp"
+#include "inst_macros.hpp"
 
 namespace gs {
 	template <typename T = unsigned int>
@@ -14,6 +15,7 @@ namespace gs {
 	public:
 		using value_type = T;
 		using weight_type = T;
+		using size_type = size_t;
 
 		// proxy class for accessing single items
 		template <typename T = value_type>
@@ -98,6 +100,8 @@ namespace gs {
 		std::vector<value_type> _data;
 		size_t _n;
 		size_t _m;
+		GS_INST_WEIGHT_TREATMENT_MEMBER
+
 		inline size_t its() const { return _m + 1; }
 	public:
 
@@ -160,6 +164,9 @@ namespace gs {
 		
 		inline value_type& weight(size_t i, size_t w) { return _data[_m + (i * its()) + w]; }
 		inline const value_type& weight(size_t i, size_t w) const { return _data[_m + (i * its()) + w]; }
+
+		GS_INST_WEIGHT_TREATMENT_ACCESS
+		GS_INST_WEIGHT_TREATMENT_FIRST_ONLY_ACCESS
 
 		friend inline std::ostream& operator<< (std::ostream& stream, const weight_value_vector& inst) {
 			stream << inst.limits() << "\n";

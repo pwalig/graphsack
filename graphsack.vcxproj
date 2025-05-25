@@ -161,6 +161,7 @@
     <ClInclude Include="src\inst\cuda_instance.hpp" />
     <ClInclude Include="src\inst\cuda_instance.cuh" />
     <ClInclude Include="src\inst\inst_generator.hpp" />
+    <ClInclude Include="src\inst\inst_macros.hpp" />
     <ClInclude Include="src\res\bit_vector.hpp" />
     <ClInclude Include="src\cuda_test.h" />
     <ClInclude Include="src\graphs\adjacency_matrix.hpp" />

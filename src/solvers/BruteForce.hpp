@@ -48,7 +48,7 @@ namespace gs {
 							add_to_weights(weights, instance.weights(i));
 						}
 					}
-					if (value > best_value && structure_check(instance, solution) && fits(weights, instance.limits())) {
+					if (value > best_value && fits(weights, instance.limits()) && structure_check(instance, solution)) {
 						best_solution = solution;
 						best_value = value;
 					}

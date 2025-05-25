@@ -123,10 +123,10 @@ int main(int argc, char** argv) {
 	std::cout << randomItemlocalNlist << "\n";
 	std::cout << cudaInstance32 << "\n";
 	std::cout << cudaInstance64 << "\n";
-	//SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
-	//SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
-	//SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
-	//SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run(randomItemlocalNlist, format, std::cout, gen, 0.5f, 0.5f);
+	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
+	SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
+	SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run(randomItemlocalNlist, format, std::cout, gen, 0.5f, 0.5f);
 	//SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	//SolverRunner<cuda::solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run<size_t, size_t>(randomItemlocalNlist, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
 	SolverRunner<cuda::solver::BruteForce32>::run<size_t, size_t>(cudaInstance32, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);

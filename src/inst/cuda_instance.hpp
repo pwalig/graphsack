@@ -5,6 +5,7 @@
 #include "../graphs/adjacency_matrix.hpp"
 #include "../structure.hpp"
 #include "../weight_treatment.hpp"
+#include "inst_macros.hpp"
 
 namespace gs {
 	namespace cuda {
@@ -22,8 +23,7 @@ namespace gs {
 				std::vector<value_type> _values;
 				std::vector<weight_type> _weights;
 				std::vector<StorageBase> adjacency;
-				gs::structure structureToFind;
-				gs::weight_treatment weightTreatment;
+				GS_INST_WEIGHT_TREATMENT_AND_STRUCTURE_MEMBERS
 
 			public:
 				template <typename LIter, typename VIter, typename WIter>
@@ -86,10 +86,7 @@ namespace gs {
 				inline StorageBase* graph_data() { return adjacency.data(); }
 				inline const StorageBase* graph_data() const { return adjacency.data(); }
 
-				inline gs::structure& structure_to_find() { return structureToFind; }
-				inline gs::weight_treatment& weight_treatment() { return weightTreatment; }
-				inline const gs::structure& structure_to_find() const { return structureToFind; }
-				inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
+				GS_INST_WEIGHT_TREATMENT_AND_STRUCTURE_ACCESS_ALL
 
 				inline bool has_connection_to(size_type from, size_type to) const {
 					return adjacency[from] & (StorageBase(1) << to);

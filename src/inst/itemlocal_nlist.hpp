@@ -10,6 +10,7 @@
 #include "../structure.hpp"
 #include "../weight_treatment.hpp"
 #include "../graphs/adjacency_matrix.hpp"
+#include "inst_macros.hpp"
 
 namespace gs {
 	namespace inst {
@@ -84,9 +85,7 @@ namespace gs {
 			Container storage;
 			size_type n;
 			size_type m;
-			gs::structure structureToFind;
-			gs::weight_treatment weightTreatment;
-			
+			GS_INST_WEIGHT_TREATMENT_AND_STRUCTURE_MEMBERS
 
 			template<typename Iterable>
 			inline static size_type get_storage_size(
@@ -315,16 +314,6 @@ namespace gs {
 				return limits()[i];
 			}
 
-			inline weight_type& limit() {
-				assert(weightTreatment == gs::weight_treatment::first_only);
-				return limits()[0];
-			}
-
-			inline const weight_type& limit() const {
-				assert(weightTreatment == gs::weight_treatment::first_only);
-				return limits()[0];
-			}
-
 			inline value_type& value(size_type i) {
 				return *((value_type*)(&storage[item_data_slice()[i]]));
 			}
@@ -347,16 +336,6 @@ namespace gs {
 
 			inline const weight_type& weight(size_type i, size_type j) const {
 				return weights(i)[j];
-			}
-
-			inline weight_type& weight(size_type i) {
-				assert(weightTreatment == gs::weight_treatment::first_only);
-				return weight(i, 0);
-			}
-
-			inline const weight_type& weight(size_type i) const {
-				assert(weightTreatment == gs::weight_treatment::first_only);
-				return weight(i, 0);
 			}
 
 			inline nexts_type nexts(size_type i) {
@@ -390,10 +369,8 @@ namespace gs {
 
 			inline size_type size() const { return n; }
 			inline size_type dim() const { return m; }
-			inline gs::structure& structure_to_find() { return structureToFind; }
-			inline gs::weight_treatment& weight_treatment() { return weightTreatment; }
-			inline const gs::structure& structure_to_find() const { return structureToFind; }
-			inline const gs::weight_treatment& weight_treatment() const { return weightTreatment; }
+
+			GS_INST_WEIGHT_TREATMENT_AND_STRUCTURE_ACCESS_ALL
 
 			inline bool has_connection_to(size_type from, size_type to) const {
 				return std::find(nexts(from).begin(), nexts(from).end(), to) != nexts(from).end();
