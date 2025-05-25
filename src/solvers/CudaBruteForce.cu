@@ -8,6 +8,7 @@
 
 #include "CudaBrutforce.hpp"
 #include "cuda_reductions.cuh"
+#include "cuda_buffer.cuh"
 #include "../inst/cuda_instance.cuh"
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
@@ -276,7 +277,7 @@ namespace gs {
 					}
 
 					// do reduction
-					GS_CUDA_REDUCTIONS_PICK(StorageBase, id)
+					GS_CUDA_REDUCTIONS_PICK(StorageBase, id, value_memory, result_memory)
 				}
 
 				template <typename StorageBase>
@@ -288,60 +289,38 @@ namespace gs {
 
 					StorageBase solutionSpace = (size_t(1) << instance.size()) / share;
 
-					uint32_t* device_memory;
-					size_t device_weight_value_memory_size = solutionSpace * (instance.dim() + 1);
-					size_t device_stack_memory_size = solutionSpace * 2 * (instance.size());
-					StorageBase* device_result_memory;
-					size_t device_result_memory_size = solutionSpace;
-
-					cudaStatus = cudaMalloc(&device_memory, (device_weight_value_memory_size + device_stack_memory_size) * sizeof(uint32_t));
-					if (cudaStatus != cudaSuccess) throw std::runtime_error("failed to allocate GPU memory");
-
-					cudaStatus = cudaMalloc(&device_result_memory, device_result_memory_size * sizeof(StorageBase));
-					if (cudaStatus != cudaSuccess) {
-						cudaFree(device_memory);
-						throw std::runtime_error("failed to allocate GPU memory");
-					}
+					buffer<uint32_t> device_memory(solutionSpace * (instance.dim() + 1));
+					buffer<uint32_t> stack_memory(solutionSpace * 2 * instance.size());
+					buffer<StorageBase> result_memory(solutionSpace);
 
 					uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(solutionSpace / threadsPerBlock));
 					cycle_kernel<StorageBase><<<blocksCount, threadsPerBlock>>>(
 						instance.size(), instance.dim(), solutionSpace, share,
-						device_memory, device_memory + solutionSpace, device_result_memory, device_memory + device_weight_value_memory_size
+						device_memory.data(), // value_memory
+						device_memory.data() + solutionSpace, // weight_memory
+						result_memory.data(),
+						stack_memory.data()
 					);
-					cudaStatus = cudaDeviceSynchronize();
-					if (cudaStatus != cudaSuccess) {
-						cudaFree(device_memory);
-						cudaFree(device_result_memory);
+					if (cudaDeviceSynchronize() != cudaSuccess) {
 						throw std::runtime_error("failed to synch GPU");
 					}
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
 						reductions::pick<StorageBase, uint32_t><<<1, blocksCount>>>(
-							device_memory,
-							device_result_memory,
+							device_memory.data(),
+							result_memory.data(),
 							threadsPerBlock,
 							solutionSpace
 						);
-						cudaStatus = cudaDeviceSynchronize();
-						if (cudaStatus != cudaSuccess) {
-							cudaFree(device_memory);
-							cudaFree(device_result_memory);
+						if (cudaDeviceSynchronize() != cudaSuccess) {
 							throw std::runtime_error("failed to synch GPU");
 						}
 					}
 
 					res::solution<StorageBase> result(instance.size());
+					result_memory.get(&result._data);
 
-					cudaStatus = cudaMemcpy(&result._data, device_result_memory, sizeof(StorageBase), cudaMemcpyDeviceToHost);
-					if (cudaStatus != cudaSuccess) {
-						cudaFree(device_memory);
-						cudaFree(device_result_memory);
-						throw std::runtime_error("failed to copy from GPU do CPU");
-					}
-
-					cudaFree(device_memory);
-					cudaFree(device_result_memory);
 					return result;
 				}
 			}

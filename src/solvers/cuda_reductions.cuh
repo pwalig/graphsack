@@ -4,7 +4,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
-#define GS_CUDA_REDUCTIONS_PICK(result_type, thread_id) \
+#define GS_CUDA_REDUCTIONS_PICK(result_type, thread_id, value_memory, result_memory) \
 for (result_type n = 1; n < gridDim.x * blockDim.x; n *= 2) { \
 	__syncthreads(); \
 	if (thread_id % (n*2) != 0) return; \
@@ -13,6 +13,8 @@ for (result_type n = 1; n < gridDim.x * blockDim.x; n *= 2) { \
 		value_memory[thread_id] = value_memory[thread_id + n]; \
 	} \
 }
+
+#define GS_CUDA_REDUCTIONS_PICK_STANDARD GS_CUDA_REDUCTIONS_PICK(result_type, id, value_memory, result_memory)
 
 namespace gs {
 	namespace cuda {

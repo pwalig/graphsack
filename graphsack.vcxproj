@@ -173,6 +173,7 @@
     <ClInclude Include="src\res\cuda_solution.cuh" />
     <ClInclude Include="src\res\cuda_solution.hpp" />
     <ClInclude Include="src\solvers\CudaGRASP.hpp" />
+    <ClInclude Include="src\solvers\cuda_buffer.cuh" />
     <ClInclude Include="src\solvers\cuda_greedy_utils.cuh" />
     <ClInclude Include="src\solvers\cuda_reductions.cuh" />
     <ClInclude Include="src\solvers\GHS.hpp" />

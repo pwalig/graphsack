@@ -133,6 +133,7 @@
     </ClInclude>
     <ClInclude Include="src\solvers\cuda_reductions.cuh" />
     <ClInclude Include="src\solvers\cuda_greedy_utils.cuh" />
+    <ClInclude Include="src\solvers\cuda_buffer.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
