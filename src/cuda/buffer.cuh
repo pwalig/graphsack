@@ -5,6 +5,7 @@
 #include <cuda_runtime_api.h>
 
 #include <stdexcept>
+#include <iostream>
 
 #include "error_wrapper.cuh"
 
@@ -17,10 +18,11 @@ namespace gs {
 			using pointer = T*;
 		private:
 			pointer ptr;
+			size_t siz;
 		public:
 			buffer() = delete;
-			inline buffer(size_t siz) {
-				if (cudaMalloc(&ptr, siz * sizeof(value_type)) != cudaSuccess) {
+			inline buffer(size_t Size) : siz(Size) {
+				if (cudaMalloc(&ptr, Size * sizeof(value_type)) != cudaSuccess) {
 					throw std::bad_alloc();
 				}
 #ifdef GS_CUDA_BUFFER_DIAGNOSTIC
@@ -40,16 +42,19 @@ namespace gs {
 
 			inline pointer data() { return ptr; }
 
-			inline void get(pointer dst, size_t count = 1, size_t offset = 0) {
-				if (cudaMemcpy(dst, ptr + offset, count * sizeof(value_type), cudaMemcpyDeviceToHost) != cudaSuccess) {
-					throw std::runtime_error("failed to copy data from GPU do CPU");
-				}
+			inline void get(pointer dst, size_t count = 1, size_t offset = 0) const {
+				except::Memcpy(dst, ptr + offset, count * sizeof(value_type), cudaMemcpyDeviceToHost);
+			}
+
+			inline void debug_print(size_t start, size_t stop, size_t step) {
+				pointer host = new value_type[siz];
+				get(host, siz);
+				for (size_t i = start; i < stop; i += step) std::cout << (uint64_t)host[i] << '\n';
+				delete[] host;
 			}
 
 			inline void set(const pointer src, size_t count = 1, size_t offset = 0) {
-				if (cudaMemcpy(ptr + offset, src, count * sizeof(value_type), cudaMemcpyHostToDevice) != cudaSuccess) {
-					throw std::runtime_error("failed to copy data from CPU do GPU");
-				}
+				except::Memcpy(ptr + offset, src, count * sizeof(value_type), cudaMemcpyHostToDevice);
 			}
 		};
 	}

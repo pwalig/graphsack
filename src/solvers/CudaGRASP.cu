@@ -87,7 +87,6 @@ namespace gs {
 					uint32_t threadsPerBlock = 256;
 					size_t totalThreads = threadsPerBlock * blocksCount;
 
-					cudaError_t cudaStatus;
 					GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
 
 					buffer<uint32_t> weight_value(totalThreads * (instance.dim() + 1));
@@ -99,11 +98,11 @@ namespace gs {
 
 					curand::MakeMTGP32Constants(kernel_params);
 					curand::MakeMTGP32KernelState(random_states, kernel_params, blocksCount, time(NULL));
-					//curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, kernel_params.data());
-					//curandMakeMTGP32KernelState(random_states.data(), mtgp32dc_params_fast_11213, kernel_params.data(), blocksCount, time(NULL));
 
 					sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
+					//sort::by_value<index_type, uint32_t><<<1, 64>>>(index_memory.data(), values, instance.size());
 					except::DeviceSynchronize();
+					//index_memory.debug_print(0, instance.size(), 1);
 
 					cycle_kernel<result_type, index_type><<<blocksCount, threadsPerBlock>>>(
 						instance.size(), instance.dim(), random_states.data(),

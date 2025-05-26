@@ -15,24 +15,30 @@ namespace gs {
 					if (id < N) memory[id] = id;
 				}
 
+				// does not work for some reason
 				template <typename index_type, typename value_type>
 				inline __global__ void by_value(index_type* index_memory, const value_type* value_memory, index_type N) {
 					index_type i = blockIdx.x * blockDim.x + threadIdx.x;
+					if (i > N) return;
+					index_memory[i] = i;
 
-					for (index_type k = 2; k <= N; k *= 2) {// k is doubled every iteration
+					index_type n = 2;
+					while (n < N) n *= 2;
+
+					for (index_type k = 2; k <= n; k *= 2) {// k is doubled every iteration
 						for (index_type j = k / 2; j > 0; j /= 2) { // j is halved at every iteration, with truncation of fractional parts
 							__syncthreads();
-							index_type l = i ^ j; // in C-like languages this is "i ^ j"
-							if (l > i) {
+							index_type l = i ^ j;
+							if (l > i && l < N) {
 								if (
-									(i & k == 0) &&
-									(value_memory[index_memory[i]] > value_memory[index_memory[l]]) ||
-									(i & k != 0) &&
-									(value_memory[index_memory[i]] < value_memory[index_memory[l]])
+									//((i & k == 0) && (value_memory[index_memory[i]] > value_memory[index_memory[l]])) ||
+									//((i & k != 0) && (value_memory[index_memory[i]] < value_memory[index_memory[l]]))
+									((i & k == 0) && (index_memory[i] < index_memory[l])) ||
+									((i & k != 0) && (index_memory[i] > index_memory[l]))
 								) {
 									index_type tmp = index_memory[i];
-									index_memory[i] = index_memory[k];
-									index_memory[k] = tmp;
+									index_memory[i] = index_memory[l];
+									index_memory[l] = tmp;
 								}
 							}
 						}

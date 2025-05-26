@@ -26,6 +26,10 @@ namespace gs {
 			inline void DeviceSynchronize() {
 				GS_CUDA_EXCEPT_CALL(cudaDeviceSynchronize())
 			}
+
+			inline void Memcpy(void* dst, const void* src, size_t count, cudaMemcpyKind kind) {
+				GS_CUDA_EXCEPT_CALL(cudaMemcpy(dst, src, count, kind))
+			}
 		}
 		namespace assert {
 			template <typename T>
@@ -39,7 +43,7 @@ namespace gs {
 				GS_CUDA_ASSERT_CALL(cudaFree(devPtr))
 			}
 
-			inline void DeviceLSynchronize() {
+			inline void DeviceSynchronize() {
 				GS_CUDA_ASSERT_CALL(cudaDeviceSynchronize())
 			}
 		}

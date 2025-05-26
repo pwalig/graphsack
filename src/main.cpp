@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
-	const uint32_t itemsCount = 14;
+	const uint32_t itemsCount = 16;
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
