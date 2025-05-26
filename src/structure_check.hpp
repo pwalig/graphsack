@@ -5,7 +5,7 @@
 
 namespace gs {
 	template<typename instance_t>
-	bool has_connection_to(
+	inline bool has_connection_to(
 		const instance_t& instance,
 		const typename instance_t::index_type& from,
 		const typename instance_t::index_type& to
@@ -14,7 +14,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_cycle_possible_DFS(
+	inline bool is_cycle_possible_DFS(
 		const instance_t& instance,
 		const solution_t& selected,
 		std::vector<bool>& visited,
@@ -52,7 +52,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_cycle_possible(const instance_t& instance, const solution_t& selected) {
+	inline bool is_cycle_possible(const instance_t& instance, const solution_t& selected) {
 		assert(selected.size() == instance.size());
 		std::vector<bool> visited(selected.size(), false);
 		for (int i = 0; i < selected.size(); ++i) {
@@ -86,7 +86,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_path_possible_DFS(
+	inline bool is_path_possible_DFS(
 		const instance_t& instance,
 		const solution_t& selected, 
 		std::vector<bool>& visited,
@@ -123,7 +123,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_path_possible(const instance_t& instance, const solution_t& selected) {
+	inline bool is_path_possible(const instance_t& instance, const solution_t& selected) {
 		assert(selected.size() == instance.size());
 		std::vector<bool> visited(selected.size(), false);
 
@@ -157,7 +157,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_path_DFS(
+	inline bool is_path_DFS(
 		const instance_t& problem,
 		const solution_t& selected,
 		std::vector<bool>& visited,
@@ -176,7 +176,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_path(const instance_t& instance, const solution_t& selected) {
+	inline bool is_path(const instance_t& instance, const solution_t& selected) {
 		assert(selected.size() == instance.size());
 
 		// calculate whats the length of the path
@@ -199,7 +199,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_cycle_DFS(
+	inline bool is_cycle_DFS(
 		const instance_t& instance,
 		const solution_t& selected,
 		std::vector<bool>& visited,
@@ -218,7 +218,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_cycle_recursive(
+	inline bool is_cycle_recursive(
 		const instance_t& instance,
 		const solution_t& selected
 	) {
@@ -245,7 +245,7 @@ namespace gs {
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	bool is_cycle_iterative(
+	inline bool is_cycle_iterative(
 		const instance_t& instance,
 		const solution_t& selected
 	) {

@@ -156,6 +156,8 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cuda\curand_wrapper.cuh" />
+    <ClInclude Include="src\cuda\error_wrapper.cuh" />
     <ClInclude Include="src\cuda_init.h" />
     <ClInclude Include="src\cuda_structure_check.cuh" />
     <ClInclude Include="src\inst\cuda_instance.hpp" />
@@ -173,7 +175,7 @@
     <ClInclude Include="src\res\cuda_solution.cuh" />
     <ClInclude Include="src\res\cuda_solution.hpp" />
     <ClInclude Include="src\solvers\CudaGRASP.hpp" />
-    <ClInclude Include="src\solvers\cuda_buffer.cuh" />
+    <ClInclude Include="src\cuda\buffer.cuh" />
     <ClInclude Include="src\solvers\cuda_greedy_utils.cuh" />
     <ClInclude Include="src\solvers\cuda_reductions.cuh" />
     <ClInclude Include="src\solvers\GHS.hpp" />

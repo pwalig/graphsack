@@ -12,20 +12,12 @@
 #include "CudaGRASP.hpp"
 #include "cuda_reductions.cuh"
 #include "cuda_greedy_utils.cuh"
-#include "cuda_buffer.cuh"
+#include "../cuda/buffer.cuh"
+#include "../cuda/error_wrapper.cuh"
+#include "../cuda/curand_wrapper.cuh"
 #include "../inst/cuda_instance.cuh"
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
-
-namespace gs {
-	namespace cuda {
-		namespace solver {
-			namespace grasp {
-				GS_CUDA_INST_CONSTANTS
-			}
-		}
-	}
-}
 
 const std::string gs::cuda::solver::GRASP32::name = "CudaGRASP32";
 const std::string gs::cuda::solver::GRASP64::name = "CudaGRASP64";
@@ -34,6 +26,8 @@ namespace gs {
 	namespace cuda {
 		namespace solver {
 			namespace grasp {
+				GS_CUDA_INST_CONSTANTS
+
 				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
 					index_type N, uint32_t M, curandStateMtgp32* random_state, 
@@ -49,7 +43,7 @@ namespace gs {
 
 					// construct solution
 					for (index_type left = N; left > 0; --left) {
-						index_type left_index = curand(&random_state[blockIdx.x]) % (left < choose_from ? left : choose_from);
+						index_type left_index = ::curand(&random_state[blockIdx.x]) % (left < choose_from ? left : choose_from);
 
 						index_type sorted_index = 0;
 						while (res::has(result_memory[id], sorted[sorted_index])) ++sorted_index;
@@ -68,9 +62,14 @@ namespace gs {
 							}
 						}
 						if (fitting) {
-							for (uint32_t wid = 0; wid < M; ++wid) weight_memory[M * id + wid] += weights[M * to_add + wid];
-							value_memory[id] += values[to_add];
 							res::add(result_memory[id], to_add);
+							if (!is_cycle_possible_recursive<result_type, uint32_t, index_type>(
+								adjacency<result_type>(), weights, limits, result_memory[id], N, M
+							)) res::remove(result_memory[id], to_add);
+							else {
+								for (uint32_t wid = 0; wid < M; ++wid) weight_memory[M * id + wid] += weights[M * to_add + wid];
+								value_memory[id] += values[to_add];
+							}
 						}
 					}
 
@@ -98,13 +97,13 @@ namespace gs {
 					buffer<curandStateMtgp32> random_states(blocksCount);
 					buffer<mtgp32_kernel_params> kernel_params(1);
 
-					curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, kernel_params.data());
-					curandMakeMTGP32KernelState(random_states.data(), mtgp32dc_params_fast_11213, kernel_params.data(), blocksCount, time(NULL));
+					curand::MakeMTGP32Constants(kernel_params);
+					curand::MakeMTGP32KernelState(random_states, kernel_params, blocksCount, time(NULL));
+					//curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, kernel_params.data());
+					//curandMakeMTGP32KernelState(random_states.data(), mtgp32dc_params_fast_11213, kernel_params.data(), blocksCount, time(NULL));
 
 					sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
-					if (cudaDeviceSynchronize()) {
-						throw std::runtime_error("failed to synch GPU");
-					}
+					except::DeviceSynchronize();
 
 					cycle_kernel<result_type, index_type><<<blocksCount, threadsPerBlock>>>(
 						instance.size(), instance.dim(), random_states.data(),
@@ -112,9 +111,7 @@ namespace gs {
 						result_memory.data(), index_memory.data() + instance.size(),
 						index_memory.data(), instance.size() / 2
 					);
-					if (cudaDeviceSynchronize() != cudaSuccess) {
-						throw std::runtime_error("failed to synch GPU");
-					}
+					except::DeviceSynchronize();
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
@@ -124,9 +121,7 @@ namespace gs {
 							threadsPerBlock,
 							totalThreads
 						);
-						if (cudaDeviceSynchronize() != cudaSuccess) {
-							throw std::runtime_error("failed to synch GPU");
-						}
+						except::DeviceSynchronize();
 					}
 
 					res::solution<result_type> result(instance.size());

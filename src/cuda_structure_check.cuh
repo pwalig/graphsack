@@ -3,6 +3,7 @@
 #include <device_launch_parameters.h>
 
 #include "res/cuda_solution.cuh"
+#include "inst/cuda_instance.cuh"
 
 //#define GS_CUDA_MAX_RECURSION 10
 
@@ -14,8 +15,83 @@ namespace gs {
 			else return false;
 		}
 
+		template <typename result_type, typename weight_type, typename index_type>
+		inline __device__ bool is_cycle_possible_DFS(
+			const result_type* adjacency, const weight_type* weights,
+			result_type selected,
+			result_type visited,
+			const weight_type _remaining_space[GS_CUDA_INST_MAXM],
+			index_type current, index_type start, index_type N, uint32_t M
+		) {
+			for (index_type next = 0; next < N; ++next) {
+				if (!has_connection_to(adjacency, current, next)) continue;
+				if (res::has(visited, next)) continue; // next item has to be new (not visited yet)
+
+				bool fit = true;
+				weight_type new_remaining_space[GS_CUDA_INST_MAXM];
+				for (uint32_t j = 0; j < M; ++j) {
+					if (_remaining_space[j] >= weights[next * M + j])
+						new_remaining_space[j] = _remaining_space[j] - weights[next * M + j];
+					else { fit = false; break; }
+				}
+				if (!fit) continue;
+
+				res::add(visited, next);
+				if (has_connection_to(adjacency, next, start)) { // is it a cycle (closed path)
+					bool _found = true; // found some cycle lets check if it has all selected vertices
+					for (index_type i = 0; i < N; ++i) {
+						if (res::has(selected, i) && !res::has(visited, i)) {
+							_found = false;
+							break;
+						}
+					}
+					if (_found) return true; // it has - cycle found
+				}
+				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
+					adjacency, weights, selected, visited, new_remaining_space, next, start, N, M)
+				) return true; // cycle found later
+				res::remove(visited, next);
+			}
+			return false; // cycle not found
+		}
+
+		template <typename result_type, typename weight_type, typename index_type>
+		inline __device__ bool is_cycle_possible_recursive(
+			const result_type* adjacency, const weight_type* weights, const weight_type* limits,
+			result_type selected, index_type N, uint32_t M
+		) {
+			result_type visited = 0;
+			for (index_type i = 0; i < N; ++i) {
+
+				bool fit = true;
+				weight_type _remaining_space[GS_CUDA_INST_MAXM];
+				for (uint32_t j = 0; j < M; ++j) {
+					if (limits[j] >= weights[i * M + j]) _remaining_space[j] = limits[j] - weights[i * M + j];
+					else { fit = false; break; }
+				}
+				if (!fit) continue;
+
+				res::add(visited, i);
+				if (has_connection_to(adjacency, i, i)) { // is it a cycle (closed path)
+					bool _found = true; // found some cycle lets check if it has all selected vertices
+					for (index_type j = 0; j < N; ++j) {
+						if (res::has(selected, j) && j != i) {
+							_found = false;
+							break;
+						}
+					}
+					if (_found) return true; // it has - cycle found
+				}
+				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
+					adjacency, weights, selected, visited, _remaining_space, i, i, N, M)
+				) return true; // cycle found somewhere
+				res::remove(visited, i);
+			}
+			return false;
+		}
+
 		template <typename adjacency_base_type, typename index_type>
-		__device__ bool is_cycle_DFS(
+		inline __device__ bool is_cycle_DFS(
 			const adjacency_base_type* adjacency,
 			index_type N, adjacency_base_type selected, adjacency_base_type visited,
 			index_type current, index_type start, index_type length, index_type depth
@@ -39,7 +115,7 @@ namespace gs {
 		}
 
 		template <typename adjacency_base_type, typename index_type>
-		__device__ bool is_cycle_recursive(
+		inline __device__ bool is_cycle_recursive(
 			const adjacency_base_type* adjacency,
 			adjacency_base_type selected, index_type N
 		) {
@@ -67,7 +143,7 @@ namespace gs {
 		}
 
 		template <typename adjacency_base_type, typename index_type>
-		__device__ bool is_cycle_iterative_helper(
+		inline __device__ bool is_cycle_iterative_helper(
 			const adjacency_base_type* adjacency,
 			index_type* stack_memory,
 			adjacency_base_type selected, index_type N,
@@ -120,7 +196,7 @@ namespace gs {
 		}
 
 		template <typename adjacency_base_type, typename index_type>
-		__device__ bool is_cycle_iterative(
+		inline __device__ bool is_cycle_iterative(
 			const adjacency_base_type* adjacency,
 			index_type* stack_memory,
 			adjacency_base_type selected, index_type N

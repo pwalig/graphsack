@@ -6,6 +6,8 @@
 
 #include <stdexcept>
 
+#include "error_wrapper.cuh"
+
 namespace gs {
 	namespace cuda {
 		template <typename T>
@@ -30,7 +32,7 @@ namespace gs {
 			buffer& operator=(const buffer& other) = delete;
 
 			inline ~buffer() {
-				cudaFree(ptr);
+				except::Free(ptr);
 #ifdef GS_CUDA_BUFFER_DIAGNOSTIC
 				printf("freed GPU memory\n");
 #endif

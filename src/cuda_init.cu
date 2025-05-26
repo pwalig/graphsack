@@ -1,6 +1,6 @@
 #include "cuda_init.h"
 
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 #include <stdexcept>
 #include <iostream>
 
