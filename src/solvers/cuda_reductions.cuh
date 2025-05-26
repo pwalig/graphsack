@@ -19,6 +19,8 @@ for (result_type n = 1; n < blockDim.x; n *= 2) { \
 namespace gs {
 	namespace cuda {
 		namespace reductions {
+			// should be called with 1 blocks per grid and `stride` / 2 threads per block
+			// stride should be exactly threads per block of solver kernel
 			template <typename ResT, typename ValueT>
 			__global__ void pick(
 				ValueT* value_memory,
@@ -37,6 +39,37 @@ namespace gs {
 						value_memory[id] = value_memory[id + n];
 					}
 					if (id % (n*4) != 0) return;
+				}
+			}
+
+			// should be called with 1 blocks per grid and at least `stride` amount of threads
+			// stride should be exactly threads per block of solver kernel
+			template <typename ResT, typename ValueT>
+			__global__ void shared_pick(
+				ValueT* value_memory,
+				ResT* result_memory,
+				ResT stride,
+				ResT totalThreads
+			) {
+				ResT id = (ResT)(blockIdx.x * blockDim.x + threadIdx.x) * (totalThreads / blockDim.x);
+
+				if (id > totalThreads) return;
+
+				ResT strideStride = stride;
+				for (; stride < totalThreads / blockDim.x; stride += strideStride) {
+					if (value_memory[id + stride] > value_memory[id]) {
+						result_memory[id] = result_memory[id + stride];
+						value_memory[id] = value_memory[id + stride];
+					}
+				}
+
+				for (; stride < totalThreads; stride *= 2) {
+					__syncthreads();
+					if (id % (stride*2) != 0) return;
+					if (value_memory[id + stride] > value_memory[id]) {
+						result_memory[id] = result_memory[id + stride];
+						value_memory[id] = value_memory[id + stride];
+					}
 				}
 			}
 		}

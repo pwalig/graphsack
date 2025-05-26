@@ -316,14 +316,29 @@ namespace gs {
 						throw std::runtime_error("failed to synch GPU");
 					}
 
+					// debug
+					//result_type* result_debug = new result_type[totalThreads];
+					//result_memory.get(result_debug, totalThreads);
+					//for (result_type i = 0; i < totalThreads; i += 1024) std::cout << result_debug[i] << "\n";
+
 					if (blocksCount > 1) {
 						blocksCount /= 2;
-						reductions::pick<result_type, uint32_t><<<1, blocksCount>>>(
-							device_memory.data(),
-							result_memory.data(),
-							threadsPerBlock,
-							totalThreads
-						);
+						if (blocksCount > 1024) {
+							reductions::shared_pick<result_type, uint32_t><<<1, 1024>>>(
+								device_memory.data(),
+								result_memory.data(),
+								threadsPerBlock,
+								totalThreads
+							);
+						}
+						else {
+							reductions::pick<result_type, uint32_t><<<1, blocksCount>>>(
+								device_memory.data(),
+								result_memory.data(),
+								threadsPerBlock,
+								totalThreads
+							);
+						}
 						if (cudaDeviceSynchronize() != cudaSuccess) {
 							throw std::runtime_error("failed to synch GPU");
 						}

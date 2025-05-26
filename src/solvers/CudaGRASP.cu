@@ -84,7 +84,7 @@ namespace gs {
 				) {
 					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
 
-					if (blocksCount > 200) throw std::invalid_argument("blocksCount limit of 200 exeeded");
+					if (blocksCount > 200) throw std::invalid_argument("cudaGRASP blocksCount limit of 200 exeeded");
 					uint32_t threadsPerBlock = 256;
 					size_t totalThreads = threadsPerBlock * blocksCount;
 

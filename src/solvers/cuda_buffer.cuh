@@ -38,8 +38,8 @@ namespace gs {
 
 			inline pointer data() { return ptr; }
 
-			inline void get(pointer dst, size_t size = 1, size_t offset = 0) {
-				if (cudaMemcpy(dst, ptr + offset, sizeof(value_type), cudaMemcpyDeviceToHost) != cudaSuccess) {
+			inline void get(pointer dst, size_t count = 1, size_t offset = 0) {
+				if (cudaMemcpy(dst, ptr + offset, count * sizeof(value_type), cudaMemcpyDeviceToHost) != cudaSuccess) {
 					throw std::runtime_error("failed to copy data from GPU do CPU");
 				}
 			}

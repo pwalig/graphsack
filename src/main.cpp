@@ -89,11 +89,11 @@ int main(int argc, char** argv) {
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
-	const uint32_t itemsCount = 20;
+	const uint32_t itemsCount = 14;
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
-	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(1, 10), std::ref(gen));
+	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(5, 10), std::ref(gen));
 	auto randomLimitGen = std::bind(std::uniform_int_distribution<unsigned int>(30, 50), std::ref(gen));
 	random::into(randomValues.begin(), randomValues.begin() + weightsDim, randomLimitGen);
 	random::into(randomValues.begin() + weightsDim, randomValues.end(), randomValueGen);
@@ -131,8 +131,8 @@ int main(int argc, char** argv) {
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	//SolverRunner<cuda::solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run<size_t, size_t>(randomItemlocalNlist, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
 	SolverRunner<cuda::solver::GRASP32>::run<size_t>(cudaInstance32, format, std::cout, 64);
-	SolverRunner<cuda::solver::BruteForce32>::run<size_t, size_t>(cudaInstance32, format, std::cout, cuda_capability.maxThreadsPerBlock, 32);
-	SolverRunner<cuda::solver::BruteForce64>::run<size_t, size_t>(cudaInstance64, format, std::cout, cuda_capability.maxThreadsPerBlock, 32);
+	SolverRunner<cuda::solver::BruteForce32>::run<size_t, size_t>(cudaInstance32, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
+	SolverRunner<cuda::solver::BruteForce64>::run<size_t, size_t>(cudaInstance64, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
 	randomItemlocalNlist.structure_to_find() = structure::path;
 	//SolverRunner<solver::PathBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	randomItemlocalNlist.structure_to_find() = structure::none;
