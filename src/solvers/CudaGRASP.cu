@@ -63,7 +63,6 @@ namespace gs {
 						if (fitting) {
 							res::add(result_memory[id], to_add);
 							if (!is_cycle_possible_recursive<result_type, uint32_t, index_type>(
-								inst::adjacency<result_type>(), inst::weights<uint32_t>(), inst::limits<uint32_t>(),
 								result_memory[id], N, M
 							)) res::remove(result_memory[id], to_add);
 							else {

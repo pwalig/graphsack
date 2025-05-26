@@ -64,7 +64,7 @@ namespace gs {
 							i++;
 						}
 
-						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(inst::adjacency<result_type>(), stack_memory + (2 * N * id), n, N)) {
+						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(stack_memory + (2 * N * id), n, N)) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}

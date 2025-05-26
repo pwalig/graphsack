@@ -70,6 +70,14 @@ namespace gs {
 				else return false;
 			}
 
+			template <typename adjacency_base_type, typename index_type>
+			inline __device__  bool has_connection_to(
+				index_type from, index_type to
+			) {
+				if (inst::adjacency<adjacency_base_type>()[from] & (adjacency_base_type(1) << to)) return true;
+				else return false;
+			}
+
 			template <typename InstanceT>
 			inline void copy_to_symbol(const InstanceT& instance) {
 				using value_type = typename InstanceT::value_type;
