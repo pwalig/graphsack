@@ -19,15 +19,14 @@
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
 
-const std::string gs::cuda::solver::GRASP32::name = "CudaGRASP32";
-const std::string gs::cuda::solver::GRASP64::name = "CudaGRASP64";
 
 namespace gs {
 	namespace cuda {
 		namespace solver {
-			namespace grasp {
-				GS_CUDA_INST_CONSTANTS
+			const std::string GRASP32::name = "CudaGRASP32";
+			const std::string GRASP64::name = "CudaGRASP64";
 
+			namespace grasp {
 				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
 					index_type N, uint32_t M, curandStateMtgp32* random_state, 
@@ -56,7 +55,7 @@ namespace gs {
 						index_type to_add = sorted[sorted_index];
 						bool fitting = true;
 						for (uint32_t wid = 0; wid < M; ++wid) {
-							if (weight_memory[M * id + wid] + weights[M * to_add + wid] > limits[wid]) {
+							if (weight_memory[M * id + wid] + inst::weights<uint32_t>()[M * to_add + wid] > inst::limits<uint32_t>()[wid]) {
 								fitting = false;
 								break;
 							}
@@ -64,11 +63,13 @@ namespace gs {
 						if (fitting) {
 							res::add(result_memory[id], to_add);
 							if (!is_cycle_possible_recursive<result_type, uint32_t, index_type>(
-								adjacency<result_type>(), weights, limits, result_memory[id], N, M
+								inst::adjacency<result_type>(), inst::weights<uint32_t>(), inst::limits<uint32_t>(),
+								result_memory[id], N, M
 							)) res::remove(result_memory[id], to_add);
 							else {
-								for (uint32_t wid = 0; wid < M; ++wid) weight_memory[M * id + wid] += weights[M * to_add + wid];
-								value_memory[id] += values[to_add];
+								for (uint32_t wid = 0; wid < M; ++wid)
+									weight_memory[M * id + wid] += inst::weights<uint32_t>()[M * to_add + wid];
+								value_memory[id] += inst::values<uint32_t>()[to_add];
 							}
 						}
 					}
@@ -87,7 +88,7 @@ namespace gs {
 					uint32_t threadsPerBlock = 256;
 					size_t totalThreads = threadsPerBlock * blocksCount;
 
-					GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
+					inst::copy_to_symbol(instance);
 
 					buffer<uint32_t> weight_value(totalThreads * (instance.dim() + 1));
 					buffer<index_type> index_memory(totalThreads * instance.size() + instance.size());
@@ -99,7 +100,9 @@ namespace gs {
 					curand::MakeMTGP32Constants(kernel_params);
 					curand::MakeMTGP32KernelState(random_states, kernel_params, blocksCount, time(NULL));
 
-					sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
+					except::DeviceSynchronize();
+					//sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
+					sort::reverse_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
 					//sort::by_value<index_type, uint32_t><<<1, 64>>>(index_memory.data(), values, instance.size());
 					except::DeviceSynchronize();
 					//index_memory.debug_print(0, instance.size(), 1);
@@ -128,18 +131,20 @@ namespace gs {
 
 					return result;
 				}
+
+				res::solution32 runner32(
+					const inst::instance32<uint32_t, uint32_t>& instance, uint32_t blocksCount
+				) {
+					return runner<uint32_t>(instance, blocksCount);
+				}
+
+				res::solution64 runner64(
+					const inst::instance64<uint32_t, uint32_t>& instance, uint32_t blocksCount
+				) {
+					return runner<uint64_t>(instance, blocksCount);
+				}
 			}
 		}
 	}
 }
 
-gs::cuda::res::solution32 gs::cuda::solver::grasp::runner32(
-	const inst::instance32<uint32_t, uint32_t>& instance, uint32_t blocksCount
-) {
-	return runner<uint32_t>(instance, blocksCount);
-}
-gs::cuda::res::solution64 gs::cuda::solver::grasp::runner64(
-	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t blocksCount
-) {
-	return runner<uint64_t>(instance, blocksCount);
-}

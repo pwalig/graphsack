@@ -22,8 +22,6 @@ namespace gs {
 			const std::string BruteForce64::name = "CudaBruteForce64";
 
 			namespace brute_force {
-				//GS_CUDA_INST_CONSTANTS
-				//GS_CUDA_INST_ADJACENCY
 
 				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
@@ -53,13 +51,10 @@ namespace gs {
 						while (i < N && fitting) {
 							if (res::has(n, i)) {
 								value += inst::values<uint32_t>()[i];
-								//value += values[i];
 								for (uint32_t  wid = 0; wid < M; ++wid) {
 									weight_memory[M * id + wid] += inst::weights<uint32_t>()[M * i + wid];
-									//weight_memory[M * id + wid] += weights[M * i + wid];
 									
 									if (weight_memory[M * id + wid] > inst::limits<uint32_t>()[wid]) {
-									//if (weight_memory[M * id + wid] > limits[wid]) {
 										fitting = false;
 										value = 0;
 										break;
@@ -86,8 +81,6 @@ namespace gs {
 					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
 
 					inst::copy_to_symbol(instance);
-					except::DeviceSynchronize();
-					//GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
 
 					result_type solutionSpace = (size_t(1) << instance.size());
 					result_type totalThreads = solutionSpace / share;
@@ -106,6 +99,7 @@ namespace gs {
 					printf("threads per block: %d\n", threadsPerBlock);
 					printf("blocks count: %d\n", blocksCount);
 #endif
+					except::DeviceSynchronize();
 					cycle_kernel<result_type><<<blocksCount, threadsPerBlock>>>(
 						instance.size(), instance.dim(), totalThreads, share,
 						device_memory.data(), // value_memory

@@ -62,12 +62,6 @@ namespace gs {
 			template <>
 			inline __host__ __device__ const uint64_t* adjacency() { return adjacency64; }
 
-			//extern template __host__ __device__ const uint32_t* limits<uint32_t>();
-			//extern template __host__ __device__ const uint32_t* values<uint32_t>();
-			//extern template __host__ __device__ const uint32_t* weights<uint32_t>();
-			//extern template __host__ __device__ const uint32_t* adjacency<uint32_t>();
-			//extern template __host__ __device__ const uint64_t* adjacency<uint64_t>();
-
 			template <typename adjacency_base_type, typename index_type>
 			inline __device__  bool has_connection_to(
 				const adjacency_base_type* adjacency, index_type from, index_type to

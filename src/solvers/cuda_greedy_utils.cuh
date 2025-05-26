@@ -14,6 +14,11 @@ namespace gs {
 					index_type id = threadIdx.x;
 					if (id < N) memory[id] = id;
 				}
+				template <typename index_type>
+				inline __global__ void reverse_order(index_type* memory, index_type N) {
+					index_type id = threadIdx.x;
+					if (id < N) memory[id] = N - id - 1;
+				}
 
 				// does not work for some reason
 				template <typename index_type, typename value_type>
