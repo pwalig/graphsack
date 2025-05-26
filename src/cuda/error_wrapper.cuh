@@ -30,6 +30,13 @@ namespace gs {
 			inline void Memcpy(void* dst, const void* src, size_t count, cudaMemcpyKind kind) {
 				GS_CUDA_EXCEPT_CALL(cudaMemcpy(dst, src, count, kind))
 			}
+
+			inline void MemcpyToSymbol(
+				const void* symbol, const void* src, size_t count,
+				size_t offset = 0Ui64, cudaMemcpyKind kind = cudaMemcpyHostToDevice
+			) {
+				GS_CUDA_EXCEPT_CALL(cudaMemcpyToSymbol(symbol, src, count, offset, kind))
+			}
 		}
 		namespace assert {
 			template <typename T>

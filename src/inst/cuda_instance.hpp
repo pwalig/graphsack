@@ -17,6 +17,7 @@ namespace gs {
 				using weight_type = WeightT;
 				using index_type = uint8_t;
 				using size_type = size_t;
+				using adjacency_base_type = StorageBase;
 
 			private:
 				std::vector<weight_type> _limits;

@@ -9,12 +9,6 @@
 
 namespace gs {
 	namespace cuda {
-		template <typename adjacency_base_type, typename index_type>
-		inline __device__  bool has_connection_to(const adjacency_base_type* adjacency, index_type from, index_type to) {
-			if (adjacency[from] & (adjacency_base_type(1) << to)) return true;
-			else return false;
-		}
-
 		template <typename result_type, typename weight_type, typename index_type>
 		inline __device__ bool is_cycle_possible_DFS(
 			const result_type* adjacency, const weight_type* weights,
@@ -24,7 +18,7 @@ namespace gs {
 			index_type current, index_type start, index_type N, uint32_t M
 		) {
 			for (index_type next = 0; next < N; ++next) {
-				if (!has_connection_to(adjacency, current, next)) continue;
+				if (!inst::has_connection_to(adjacency, current, next)) continue;
 				if (res::has(visited, next)) continue; // next item has to be new (not visited yet)
 
 				bool fit = true;
@@ -37,7 +31,7 @@ namespace gs {
 				if (!fit) continue;
 
 				res::add(visited, next);
-				if (has_connection_to(adjacency, next, start)) { // is it a cycle (closed path)
+				if (inst::has_connection_to(adjacency, next, start)) { // is it a cycle (closed path)
 					bool _found = true; // found some cycle lets check if it has all selected vertices
 					for (index_type i = 0; i < N; ++i) {
 						if (res::has(selected, i) && !res::has(visited, i)) {
@@ -72,7 +66,7 @@ namespace gs {
 				if (!fit) continue;
 
 				res::add(visited, i);
-				if (has_connection_to(adjacency, i, i)) { // is it a cycle (closed path)
+				if (inst::has_connection_to(adjacency, i, i)) { // is it a cycle (closed path)
 					bool _found = true; // found some cycle lets check if it has all selected vertices
 					for (index_type j = 0; j < N; ++j) {
 						if (res::has(selected, j) && j != i) {
@@ -100,10 +94,10 @@ namespace gs {
 			if (depth > GS_CUDA_MAX_RECURSION) return false;
 #endif
 			for (index_type next = 0; next < N; ++next) {
-				if (!has_connection_to(adjacency, current, next)) continue;
+				if (!inst::has_connection_to(adjacency, current, next)) continue;
 				if (res::has(selected, next) && !res::has(visited, next)) { // next item has to be selected and new
 					res::add(visited, next);
-					if (depth == length && has_connection_to(adjacency, next, start)) return true;
+					if (depth == length && inst::has_connection_to(adjacency, next, start)) return true;
 					if (depth > length) return false;
 					if (is_cycle_DFS<adjacency_base_type, index_type>(
 						adjacency, N, selected, visited, next, start, length, depth + 1
@@ -131,7 +125,7 @@ namespace gs {
 			adjacency_base_type visited = 0;
 			for (index_type i = 0; i < N; ++i) {
 				if (res::has(selected, i)){
-					if (length == 1) return has_connection_to<adjacency_base_type, index_type>(adjacency, i, i);
+					if (length == 1) return inst::has_connection_to<adjacency_base_type, index_type>(adjacency, i, i);
 					res::add(visited, i);
 					if (is_cycle_DFS<adjacency_base_type, index_type>(
 						adjacency, N, selected, visited, i, i, length, 2
@@ -160,7 +154,7 @@ namespace gs {
 				if (!res::has(visited, prev)) {
 					res::add(visited, prev);
 					++visitedCount;
-					if (visitedCount == length && has_connection_to(adjacency, prev, start))
+					if (visitedCount == length && inst::has_connection_to(adjacency, prev, start))
 						return true;
 					if (visitedCount > length) {
 						stack_memory[stack_pointer++] = prev;
@@ -175,7 +169,7 @@ namespace gs {
 				index_type next = stack_memory[--stack_pointer] + 1;
 				--stack_pointer;
 				for (; next < N; ++next) {
-					if (!has_connection_to(adjacency, prev, next)) continue;
+					if (!inst::has_connection_to(adjacency, prev, next)) continue;
 					if (res::has(selected, next) && !res::has(visited, next)) {
 						stack_memory[stack_pointer++] = prev;
 						stack_memory[stack_pointer++] = next;
@@ -217,6 +211,14 @@ namespace gs {
 				}
 			}
 			return false;
+		}
+
+		template <typename adjacency_base_type, typename index_type>
+		inline __device__ bool is_cycle_iterative(
+			index_type* stack_memory,
+			adjacency_base_type selected, index_type N
+		) {
+			is_cycle_iterative<adjacency_base_type, index_type>(inst::adjacency<adjacency_base_type>(), stack_memory, selected, N);
 		}
 	}
 }

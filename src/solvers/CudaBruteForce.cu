@@ -14,14 +14,16 @@
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
 
-const std::string gs::cuda::solver::BruteForce32::name = "CudaBruteForce32";
-const std::string gs::cuda::solver::BruteForce64::name = "CudaBruteForce64";
 
 namespace gs {
 	namespace cuda {
 		namespace solver {
+			const std::string BruteForce32::name = "CudaBruteForce32";
+			const std::string BruteForce64::name = "CudaBruteForce64";
+
 			namespace brute_force {
-				GS_CUDA_INST_CONSTANTS
+				//GS_CUDA_INST_CONSTANTS
+				//GS_CUDA_INST_ADJACENCY
 
 				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
@@ -50,11 +52,14 @@ namespace gs {
 						index_type i = 0;
 						while (i < N && fitting) {
 							if (res::has(n, i)) {
-								value += values[i];
+								value += inst::values<uint32_t>()[i];
+								//value += values[i];
 								for (uint32_t  wid = 0; wid < M; ++wid) {
-									weight_memory[M * id + wid] += weights[M * i + wid];
+									weight_memory[M * id + wid] += inst::weights<uint32_t>()[M * i + wid];
+									//weight_memory[M * id + wid] += weights[M * i + wid];
 									
-									if (weight_memory[M * id + wid] > limits[wid]) {
+									if (weight_memory[M * id + wid] > inst::limits<uint32_t>()[wid]) {
+									//if (weight_memory[M * id + wid] > limits[wid]) {
 										fitting = false;
 										value = 0;
 										break;
@@ -64,7 +69,7 @@ namespace gs {
 							i++;
 						}
 
-						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(adjacency<result_type>(), stack_memory + (2 * N * id), n, N)) {
+						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(inst::adjacency<result_type>(), stack_memory + (2 * N * id), n, N)) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}
@@ -80,8 +85,9 @@ namespace gs {
 				) {
 					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
 
-					cudaError_t cudaStatus;
-					GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
+					inst::copy_to_symbol(instance);
+					except::DeviceSynchronize();
+					//GS_CUDA_INST_COPY_TO_SYMBOL_INLINE(instance)
 
 					result_type solutionSpace = (size_t(1) << instance.size());
 					result_type totalThreads = solutionSpace / share;
@@ -135,22 +141,20 @@ namespace gs {
 
 					return result;
 				}
+
+				res::solution32 runner32(
+					const inst::instance32<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
+				) {
+					return runner<uint32_t>(instance, threadsPerBlock, share);
+				}
+
+				res::solution64 runner64(
+					const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
+				) {
+					return runner<uint64_t>(instance, threadsPerBlock, share);
+				}
 			}
 		}
 	}
 }
 
-gs::cuda::res::solution32 gs::cuda::solver::brute_force::runner32(
-	const inst::instance32<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
-) {
-	assert(instance.size() <= 32);
-	cudaMemcpyToSymbol(adjacency32, instance.graph_data(), instance.size() * sizeof(uint32_t));
-	return runner<uint32_t>(instance, threadsPerBlock, share);
-}
-gs::cuda::res::solution64 gs::cuda::solver::brute_force::runner64(
-	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
-) {
-	assert(instance.size() <= 64);
-	cudaMemcpyToSymbol(adjacency64, instance.graph_data(), instance.size() * sizeof(uint64_t));
-	return runner<uint64_t>(instance, threadsPerBlock, share);
-}

@@ -203,6 +203,7 @@
   <ItemGroup>
     <CudaCompile Include="src\cuda_init.cu" />
     <CudaCompile Include="src\cuda_test.cu" />
+    <CudaCompile Include="src\inst\cuda_instance.cu" />
     <CudaCompile Include="src\solvers\CudaBruteForce.cu" />
     <CudaCompile Include="src\solvers\CudaGRASP.cu" />
   </ItemGroup>

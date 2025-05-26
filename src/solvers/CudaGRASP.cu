@@ -136,14 +136,10 @@ namespace gs {
 gs::cuda::res::solution32 gs::cuda::solver::grasp::runner32(
 	const inst::instance32<uint32_t, uint32_t>& instance, uint32_t blocksCount
 ) {
-	assert(instance.size() <= 32);
-	cudaMemcpyToSymbol(adjacency32, instance.graph_data(), instance.size() * sizeof(uint32_t));
 	return runner<uint32_t>(instance, blocksCount);
 }
 gs::cuda::res::solution64 gs::cuda::solver::grasp::runner64(
 	const inst::instance64<uint32_t, uint32_t>& instance, uint32_t blocksCount
 ) {
-	assert(instance.size() <= 64);
-	cudaMemcpyToSymbol(adjacency64, instance.graph_data(), instance.size() * sizeof(uint64_t));
 	return runner<uint64_t>(instance, blocksCount);
 }
