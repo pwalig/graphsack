@@ -18,6 +18,9 @@ namespace gs {
 				);
 			}
 
+			// maximum percentage of global memory to use
+			extern double global_mem_percent;
+
 			class BruteForce32 {
 			public:
 				using solution_t = res::solution32;

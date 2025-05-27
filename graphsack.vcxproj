@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\cuda\curand_wrapper.cuh" />
+    <ClInclude Include="src\cuda\device_properties.cuh" />
     <ClInclude Include="src\cuda\error_wrapper.cuh" />
     <ClInclude Include="src\cuda_init.h" />
     <ClInclude Include="src\cuda_structure_check.cuh" />

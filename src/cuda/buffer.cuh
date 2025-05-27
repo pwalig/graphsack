@@ -9,6 +9,7 @@
 
 #include "error_wrapper.cuh"
 
+//#define GS_CUDA_BUFFER_DIAGNOSTIC
 namespace gs {
 	namespace cuda {
 		template <typename T>
@@ -26,7 +27,7 @@ namespace gs {
 					throw std::bad_alloc();
 				}
 #ifdef GS_CUDA_BUFFER_DIAGNOSTIC
-				printf("allocated %d bytes of GPU memory\n", siz * sizeof(value_type));
+				printf("allocated %llu bytes of GPU memory\n", siz * sizeof(value_type));
 #endif
 			}
 
@@ -36,7 +37,7 @@ namespace gs {
 			inline ~buffer() {
 				except::Free(ptr);
 #ifdef GS_CUDA_BUFFER_DIAGNOSTIC
-				printf("freed GPU memory\n");
+				printf("freed %llu bytes of GPU memory\n", siz * sizeof(value_type));
 #endif
 			}
 

@@ -13,6 +13,7 @@
 #include "../inst/cuda_instance.cuh"
 #include "../res/cuda_solution.cuh"
 #include "../cuda_structure_check.cuh"
+#include "../cuda/device_properties.cuh"
 
 
 namespace gs {
@@ -22,6 +23,8 @@ namespace gs {
 			const std::string BruteForce64::name = "CudaBruteForce64";
 
 			namespace brute_force {
+
+				double global_mem_percent = 0.8;
 
 				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
@@ -75,30 +78,44 @@ namespace gs {
 					GS_CUDA_REDUCTIONS_PICK(result_type, id, value_memory, result_memory)
 				}
 
+//#define GS_CUDA_BRUTE_FORCE_DIAGNOSTIC
 				template <typename result_type>
 				res::solution<result_type> runner(
-					const inst::instance<result_type, uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
+					const inst::instance<result_type, uint32_t, uint32_t>& instance,
+					uint32_t threadsPerBlock = 0, uint32_t share = 1
 				) {
 					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
 
 					inst::copy_to_symbol(instance);
 
-					result_type solutionSpace = (size_t(1) << instance.size());
-					result_type totalThreads = solutionSpace / share;
+					size_t solutionSpace = (size_t(1) << instance.size());
+					size_t totalMemory = device_properties.totalGlobalMem * global_mem_percent;
+					size_t memoryPerThread = ((instance.dim() + 1) * sizeof(uint32_t)) + (2 * instance.size() * sizeof(index_type)) + sizeof(result_type);
+					size_t maxThreads = totalMemory / memoryPerThread;
 
+					if (share == 0) share = 1;
+					size_t totalThreads = solutionSpace / share;
+					while (totalThreads > maxThreads) {
+						totalThreads /= 2;
+						share *= 2;
+					}
+
+					if (threadsPerBlock == 0) threadsPerBlock = device_properties.maxThreadsPerBlock;
 					threadsPerBlock = std::min<result_type>(threadsPerBlock, totalThreads);
 
 					buffer<uint32_t> device_memory(totalThreads * (instance.dim() + 1));
 					buffer<index_type> stack_memory(totalThreads * 2 * instance.size());
 					buffer<result_type> result_memory(totalThreads);
 
-					uint32_t blocksCount = std::max<uint32_t>(1, static_cast<uint32_t>(totalThreads / threadsPerBlock));
+					size_t blocksCount = std::max<size_t>(size_t(1), totalThreads / threadsPerBlock);
 #ifdef GS_CUDA_BRUTE_FORCE_DIAGNOSTIC
-					printf("solution space: %d\n", solutionSpace);
-					printf("share: %d\n", share);
-					printf("total threads: %d\n", totalThreads);
-					printf("threads per block: %d\n", threadsPerBlock);
-					printf("blocks count: %d\n", blocksCount);
+					std::cout << "solution space: " << solutionSpace << '\n';
+					std::cout << "max global memory: " << totalMemory << '\n';
+					std::cout << "used memory: " << memoryPerThread * totalThreads << '\n';
+					std::cout << "total threads: " << totalThreads << '\n';
+					std::cout << "share: " << share << '\n';
+					std::cout << "threads per block: " << threadsPerBlock << '\n';
+					std::cout << "blocks count: " << blocksCount << '\n';
 #endif
 					cycle_kernel<result_type><<<blocksCount, threadsPerBlock>>>(
 						totalThreads, share,

@@ -27,7 +27,7 @@
 using namespace gs;
 
 int main(int argc, char** argv) {
-	cuda::device_properties cuda_capability = cuda::init();
+	cuda::device_properties_t cuda_capability = cuda::init();
 	std::cout << "threads per block: " << cuda_capability.maxThreadsPerBlock << '\n';
 	weight_value_vector<> inst(
 		{ 11, 12, 13 },
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
-	const uint32_t itemsCount = 14;
+	const uint32_t itemsCount = 31;
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
@@ -127,10 +127,10 @@ int main(int argc, char** argv) {
 	//SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	//SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
 	//SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
-	SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run<std::knuth_b, float, size_t>(randomItemlocalNlist, format, std::cout, gen, 0.5f, 256 * 64);
-	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+	//SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run<std::knuth_b, float, size_t>(randomItemlocalNlist, format, std::cout, gen, 0.5f, 256);
+	//SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	//SolverRunner<cuda::solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run<size_t, size_t>(randomItemlocalNlist, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
-	SolverRunner<cuda::solver::GRASP32>::run<size_t>(cudaInstance32, format, std::cout, 64);
+	//SolverRunner<cuda::solver::GRASP32>::run<size_t>(cudaInstance32, format, std::cout, 64);
 	SolverRunner<cuda::solver::BruteForce32>::run<size_t, size_t>(cudaInstance32, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
 	SolverRunner<cuda::solver::BruteForce64>::run<size_t, size_t>(cudaInstance64, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
 	randomItemlocalNlist.structure_to_find() = structure::path;

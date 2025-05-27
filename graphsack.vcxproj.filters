@@ -136,6 +136,7 @@
     <ClInclude Include="src\cuda\buffer.cuh" />
     <ClInclude Include="src\cuda\error_wrapper.cuh" />
     <ClInclude Include="src\cuda\curand_wrapper.cuh" />
+    <ClInclude Include="src\cuda\device_properties.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
