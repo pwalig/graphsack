@@ -90,12 +90,14 @@ namespace gs {
 					inst::copy_to_symbol(instance);
 
 					buffer<uint32_t> weight_value(totalThreads * (instance.dim() + 1));
+
 					size_t closestPowerOf2 = 1;
 					while (closestPowerOf2 < instance.size()) closestPowerOf2 *= 2;
 					using MetricT = metric::Value<uint32_t>;
 					buffer<typename MetricT::value_type> metric_memory(closestPowerOf2);
 					metric::calculate<MetricT, index_type><<<1, closestPowerOf2>>>(metric_memory.data());
 					buffer<index_type> index_memory(totalThreads * instance.size() + closestPowerOf2);
+
 					buffer<result_type> result_memory(totalThreads);
 
 					buffer<curandStateMtgp32> random_states(blocksCount);
@@ -104,20 +106,17 @@ namespace gs {
 					curand::MakeMTGP32Constants(kernel_params);
 					curand::MakeMTGP32KernelState(random_states, kernel_params, blocksCount, time(NULL));
 
-					except::DeviceSynchronize();
 					sort::by_metric_desc<index_type, typename MetricT::value_type><<<1, closestPowerOf2>>>(
 						index_memory.data(), metric_memory.data(), instance.size()
 					);
-					except::DeviceSynchronize();
 					index_memory.debug_print(0, instance.size(), 1);
 
 					cycle_kernel<result_type, index_type><<<blocksCount, threadsPerBlock>>>(
 						random_states.data(),
 						weight_value.data(), weight_value.data() + totalThreads,
-						result_memory.data(), index_memory.data() + instance.size(),
+						result_memory.data(), index_memory.data() + closestPowerOf2,
 						index_memory.data(), instance.size() / 2
 					);
-					except::DeviceSynchronize();
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
@@ -127,7 +126,6 @@ namespace gs {
 							threadsPerBlock,
 							totalThreads
 						);
-						except::DeviceSynchronize();
 					}
 
 					res::solution<result_type> result(instance.size());

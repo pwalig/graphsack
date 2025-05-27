@@ -12,10 +12,20 @@
 namespace gs {
 	namespace cuda {
 		namespace except {
+			inline int GetDeviceCount() {
+				int deviceCount;
+				GS_CUDA_EXCEPT_CALL(cudaGetDeviceCount(&deviceCount))
+				return deviceCount;
+			}
+
+			inline void SetDevice(int i) {
+				GS_CUDA_EXCEPT_CALL(cudaSetDevice(i))
+			}
+
 			template <typename T>
 			inline T* Malloc(size_t size) {
 				T* devPtr;
-				GS_CUDA_EXCEPT_CALL(cudaMalloc(&devPtr, size))
+				GS_CUDA_EXCEPT_CALL(cudaMalloc<T>(&devPtr, size))
 				return devPtr;
 			}
 
@@ -36,6 +46,14 @@ namespace gs {
 				size_t offset = 0Ui64, cudaMemcpyKind kind = cudaMemcpyHostToDevice
 			) {
 				GS_CUDA_EXCEPT_CALL(cudaMemcpyToSymbol(symbol, src, count, offset, kind))
+			}
+
+			inline void MemcpyToSymbolAsync(
+				const void* symbol, const void* src, size_t count,
+				size_t offset = 0Ui64, cudaMemcpyKind kind = cudaMemcpyHostToDevice,
+				cudaStream_t stream = cudaStream_t(0)
+			) {
+				GS_CUDA_EXCEPT_CALL(cudaMemcpyToSymbolAsync(symbol, src, count, offset, kind, stream))
 			}
 		}
 		namespace assert {

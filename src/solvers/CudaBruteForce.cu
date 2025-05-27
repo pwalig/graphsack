@@ -65,6 +65,7 @@ namespace gs {
 						}
 
 						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(stack_memory + (2 * inst::size * id), n)) {
+						//if (value > value_memory[id] && is_cycle_recursive<result_type, index_type>(n)) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}
@@ -99,7 +100,6 @@ namespace gs {
 					printf("threads per block: %d\n", threadsPerBlock);
 					printf("blocks count: %d\n", blocksCount);
 #endif
-					except::DeviceSynchronize();
 					cycle_kernel<result_type><<<blocksCount, threadsPerBlock>>>(
 						totalThreads, share,
 						device_memory.data(), // value_memory
@@ -107,7 +107,6 @@ namespace gs {
 						result_memory.data(),
 						stack_memory.data()
 					);
-					except::DeviceSynchronize();
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
@@ -127,7 +126,6 @@ namespace gs {
 								totalThreads
 							);
 						}
-						except::DeviceSynchronize();
 					}
 
 					res::solution<result_type> result(instance.size());

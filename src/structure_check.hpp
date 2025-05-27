@@ -36,7 +36,7 @@ namespace gs {
 			if (instance.has_connection_to(next, start)) { // is it a cycle (closed path)
 				bool _found = true; // found some cycle lets check if it has all selected vertices
 				for (indexT i = 0; i < selected.size(); ++i) {
-					if (selected[i] && !visited[i]) {
+					if (selected.has(i) && !visited[i]) {
 						_found = false;
 						break;
 					}

@@ -4,10 +4,11 @@
 #include <stdexcept>
 #include <iostream>
 
-gs::cuda::device_properties gs::cuda::init() {
-    int nDevices;
+#include "cuda/error_wrapper.cuh"
 
-	cudaGetDeviceCount(&nDevices);
+gs::cuda::device_properties gs::cuda::init() {
+    int nDevices = except::GetDeviceCount();
+
 	for (int i = 0; i < nDevices; i++) {
 		cudaDeviceProp prop;
 		cudaGetDeviceProperties(&prop, i);
@@ -19,7 +20,7 @@ gs::cuda::device_properties gs::cuda::init() {
 			prop.canMapHostMemory
 		};
 		std::cout << "selected: " << prop.name << '\n';
-		cudaSetDevice(i);
+		except::SetDevice(i);
 		return current;
 	}
 
