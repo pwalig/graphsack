@@ -9,6 +9,24 @@
 namespace gs {
 	namespace cuda {
 		namespace solver {
+			namespace metric {
+				template <typename T>
+				class Value {
+				public:
+					using value_type = T;
+					inline __device__ static value_type get(size_t itemId, size_t N) {
+						if (itemId < N) return inst::values<value_type>()[itemId];
+						else return value_type(0);
+					}
+				};
+
+				template <typename MetricT, typename index_type>
+				inline __global__ void calculate(typename MetricT::value_type* memory, index_type N) {
+					index_type id = threadIdx.x;
+					memory[id] = MetricT::get(id, N);
+				}
+
+			}
 			namespace sort {
 
 				template <typename index_type>
@@ -23,11 +41,12 @@ namespace gs {
 				}
 
 				// has te be launched with smallest power of 2 thats larger or equal to N
-				template <typename index_type, typename value_type>
-				inline __global__ void by_value(index_type* index_memory, index_type N) {
+				template <typename index_type, typename metric_type>
+				inline __global__ void by_metric_desc(
+					index_type* index_memory, metric_type* metric_memory, index_type N
+				) {
 					index_type i = blockIdx.x * blockDim.x + threadIdx.x;
-					if (i < N) index_memory[i] = i;
-					else index_memory[i] = 0;
+					index_memory[i] = i;
 
 					for (index_type k = 2; k <= blockDim.x; k *= 2) {// k is doubled every iteration
 						for (index_type j = k / 2; j > 0; j /= 2) { // j is halved at every iteration, with truncation of fractional parts
@@ -36,10 +55,8 @@ namespace gs {
 							if (l > i) {
 								index_type val = i & k;
 								if (
-									//((val == 0) && (inst::values<uint32_t>()[index_memory[i]] < inst::values<uint32_t>()[index_memory[l]])) ||
-									//((val != 0) && (inst::values<uint32_t>()[index_memory[i]] > inst::values<uint32_t>()[index_memory[l]]))
-									((val == 0) && (index_memory[i] < index_memory[l])) ||
-									((val != 0) && (index_memory[i] > index_memory[l]))
+									((val == 0) && (metric_memory[index_memory[i]] < metric_memory[index_memory[l]])) ||
+									((val != 0) && (metric_memory[index_memory[i]] > metric_memory[index_memory[l]]))
 								) {
 									index_type tmp = index_memory[i];
 									index_memory[i] = index_memory[l];

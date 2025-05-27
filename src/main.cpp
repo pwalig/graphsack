@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
-	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(0, 10), std::ref(gen));
+	auto randomValueGen = std::bind(std::uniform_int_distribution<unsigned int>(1, 10), std::ref(gen));
 	auto randomLimitGen = std::bind(std::uniform_int_distribution<unsigned int>(30, 50), std::ref(gen));
 	random::into(randomValues.begin(), randomValues.begin() + weightsDim, randomLimitGen);
 	random::into(randomValues.begin() + weightsDim, randomValues.end(), randomValueGen);

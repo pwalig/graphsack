@@ -92,6 +92,9 @@ namespace gs {
 					buffer<uint32_t> weight_value(totalThreads * (instance.dim() + 1));
 					size_t closestPowerOf2 = 1;
 					while (closestPowerOf2 < instance.size()) closestPowerOf2 *= 2;
+					using MetricT = metric::Value<uint32_t>;
+					buffer<typename MetricT::value_type> metric_memory(closestPowerOf2);
+					metric::calculate<MetricT, index_type><<<1, closestPowerOf2>>>(metric_memory.data(), instance.size());
 					buffer<index_type> index_memory(totalThreads * instance.size() + closestPowerOf2);
 					buffer<result_type> result_memory(totalThreads);
 
@@ -104,7 +107,10 @@ namespace gs {
 					except::DeviceSynchronize();
 					//sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
 					//sort::reverse_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
-					sort::by_value<index_type, uint32_t><<<1, closestPowerOf2>>>(index_memory.data(), instance.size());
+					//sort::by_value<index_type, uint32_t><<<1, closestPowerOf2>>>(index_memory.data(), instance.size());
+					sort::by_metric_desc<index_type, typename MetricT::value_type><<<1, closestPowerOf2>>>(
+						index_memory.data(), metric_memory.data(), instance.size()
+					);
 					except::DeviceSynchronize();
 					index_memory.debug_print(0, instance.size(), 1);
 					//index_memory.debug_print(0, instance.size(), 1);
