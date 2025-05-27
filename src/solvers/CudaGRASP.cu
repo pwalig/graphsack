@@ -90,7 +90,9 @@ namespace gs {
 					inst::copy_to_symbol(instance);
 
 					buffer<uint32_t> weight_value(totalThreads * (instance.dim() + 1));
-					buffer<index_type> index_memory(totalThreads * instance.size() + instance.size());
+					size_t closestPowerOf2 = 1;
+					while (closestPowerOf2 < instance.size()) closestPowerOf2 *= 2;
+					buffer<index_type> index_memory(totalThreads * instance.size() + closestPowerOf2);
 					buffer<result_type> result_memory(totalThreads);
 
 					buffer<curandStateMtgp32> random_states(blocksCount);
@@ -101,9 +103,10 @@ namespace gs {
 
 					except::DeviceSynchronize();
 					//sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
-					sort::reverse_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
-					//sort::by_value<index_type, uint32_t><<<1, 64>>>(index_memory.data(), values, instance.size());
+					//sort::reverse_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
+					sort::by_value<index_type, uint32_t><<<1, closestPowerOf2>>>(index_memory.data(), instance.size());
 					except::DeviceSynchronize();
+					index_memory.debug_print(0, instance.size(), 1);
 					//index_memory.debug_print(0, instance.size(), 1);
 
 					cycle_kernel<result_type, index_type><<<blocksCount, threadsPerBlock>>>(
