@@ -25,7 +25,7 @@ namespace gs {
 
 				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
-					uint32_t N, uint32_t M, result_type totalThreads, uint32_t share,
+					result_type totalThreads, uint32_t share,
 					uint32_t* value_memory, uint32_t* weight_memory, result_type* result_memory, index_type* stack_memory
 				) {
 					const result_type id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -39,8 +39,8 @@ namespace gs {
 						// setup
 						result_type n = id * share + resId;
 						uint32_t value = 0;
-						for (uint32_t wid = 0; wid < M; ++wid) {
-							weight_memory[M * id + wid] = 0;
+						for (uint32_t wid = 0; wid < inst::dim; ++wid) {
+							weight_memory[inst::dim * id + wid] = 0;
 						}
 
 						// check if valid structure
@@ -48,13 +48,13 @@ namespace gs {
 
 						// check if valid weight and sum value
 						index_type i = 0;
-						while (i < N && fitting) {
+						while (i < inst::size && fitting) {
 							if (res::has(n, i)) {
 								value += inst::values<uint32_t>()[i];
-								for (uint32_t  wid = 0; wid < M; ++wid) {
-									weight_memory[M * id + wid] += inst::weights<uint32_t>()[M * i + wid];
+								for (uint32_t  wid = 0; wid < inst::dim; ++wid) {
+									weight_memory[inst::dim * id + wid] += inst::weights<uint32_t>()[inst::dim * i + wid];
 									
-									if (weight_memory[M * id + wid] > inst::limits<uint32_t>()[wid]) {
+									if (weight_memory[inst::dim * id + wid] > inst::limits<uint32_t>()[wid]) {
 										fitting = false;
 										value = 0;
 										break;
@@ -64,7 +64,7 @@ namespace gs {
 							i++;
 						}
 
-						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(stack_memory + (2 * N * id), n, N)) {
+						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(stack_memory + (2 * inst::size * id), n)) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}
@@ -101,7 +101,7 @@ namespace gs {
 #endif
 					except::DeviceSynchronize();
 					cycle_kernel<result_type><<<blocksCount, threadsPerBlock>>>(
-						instance.size(), instance.dim(), totalThreads, share,
+						totalThreads, share,
 						device_memory.data(), // value_memory
 						device_memory.data() + totalThreads, // weight_memory
 						result_memory.data(),

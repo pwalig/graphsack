@@ -41,6 +41,8 @@ namespace gs {
 			extern __constant__ uint32_t weights_u32[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
 			extern __constant__ uint32_t adjacency32[32];
 			extern __constant__ uint64_t adjacency64[64];
+			extern __constant__ size_t size;
+			extern __constant__ size_t dim;
 
 			template <typename ValueT>
 			__host__ __device__ const ValueT* values();
@@ -83,6 +85,10 @@ namespace gs {
 				using value_type = typename InstanceT::value_type;
 				using weight_type = typename InstanceT::weight_type;
 				using adjacency_base_type = typename InstanceT::adjacency_base_type;
+				size_t hostSize = instance.size();
+				size_t hostDim = instance.dim();
+				except::MemcpyToSymbol(&size, &hostSize, sizeof(size_t));
+				except::MemcpyToSymbol(&dim, &hostDim, sizeof(size_t));
 				except::MemcpyToSymbol(inst::limits<weight_type>(), instance.limits().data(), instance.dim() * sizeof(weight_type));
 				except::MemcpyToSymbol(inst::values<value_type>(), instance.values().data(), instance.size() * sizeof(value_type));
 				except::MemcpyToSymbol(inst::weights<weight_type>(), instance.weights().data(), instance.size() * instance.dim() * sizeof(weight_type));

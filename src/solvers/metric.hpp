@@ -45,12 +45,10 @@ namespace gs {
 		}
 
 		template <typename T, typename instanceT>
-		inline void calculate_into(const instanceT& instance, function<T, instanceT> metricFunction) {
-			std::vector<T> metrix(instance.size());
+		inline void calculate_into(const instanceT& instance, function<T, instanceT> metricFunction, std::vector<T>& metrix) {
 			for (typename instanceT::size_type i = 0; i < instance.size(); ++i) {
 				metrix[i] = metricFunction(instance, i);
 			}
-			return metrix;
 		}
 
 		template <typename T, typename instanceT>

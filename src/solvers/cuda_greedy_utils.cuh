@@ -14,16 +14,16 @@ namespace gs {
 				class Value {
 				public:
 					using value_type = T;
-					inline __device__ static value_type get(size_t itemId, size_t N) {
-						if (itemId < N) return inst::values<value_type>()[itemId];
+					inline __device__ static value_type get(size_t itemId) {
+						if (itemId < inst::size) return inst::values<value_type>()[itemId];
 						else return value_type(0);
 					}
 				};
 
 				template <typename MetricT, typename index_type>
-				inline __global__ void calculate(typename MetricT::value_type* memory, index_type N) {
+				inline __global__ void calculate(typename MetricT::value_type* memory) {
 					index_type id = threadIdx.x;
-					memory[id] = MetricT::get(id, N);
+					memory[id] = MetricT::get(id);
 				}
 
 			}

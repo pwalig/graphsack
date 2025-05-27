@@ -14,17 +14,17 @@ namespace gs {
 			result_type selected,
 			result_type visited,
 			const weight_type _remaining_space[GS_CUDA_INST_MAXM],
-			index_type current, index_type start, index_type N, uint32_t M
+			index_type current, index_type start
 		) {
-			for (index_type next = 0; next < N; ++next) {
+			for (index_type next = 0; next < inst::size; ++next) {
 				if (!inst::has_connection_to<result_type, index_type>(current, next)) continue;
 				if (res::has(visited, next)) continue; // next item has to be new (not visited yet)
 
 				bool fit = true;
 				weight_type new_remaining_space[GS_CUDA_INST_MAXM];
-				for (uint32_t j = 0; j < M; ++j) {
-					if (_remaining_space[j] >= inst::weights<weight_type>()[next * M + j])
-						new_remaining_space[j] = _remaining_space[j] - inst::weights<weight_type>()[next * M + j];
+				for (uint32_t j = 0; j < inst::dim; ++j) {
+					if (_remaining_space[j] >= inst::weights<weight_type>()[next * inst::dim + j])
+						new_remaining_space[j] = _remaining_space[j] - inst::weights<weight_type>()[next * inst::dim + j];
 					else { fit = false; break; }
 				}
 				if (!fit) continue;
@@ -32,7 +32,7 @@ namespace gs {
 				res::add(visited, next);
 				if (inst::has_connection_to<result_type, index_type>(next, start)) { // is it a cycle (closed path)
 					bool _found = true; // found some cycle lets check if it has all selected vertices
-					for (index_type i = 0; i < N; ++i) {
+					for (index_type i = 0; i < inst::size; ++i) {
 						if (res::has(selected, i) && !res::has(visited, i)) {
 							_found = false;
 							break;
@@ -41,7 +41,7 @@ namespace gs {
 					if (_found) return true; // it has - cycle found
 				}
 				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
-					selected, visited, new_remaining_space, next, start, N, M)
+					selected, visited, new_remaining_space, next, start)
 				) return true; // cycle found later
 				res::remove(visited, next);
 			}
@@ -50,16 +50,16 @@ namespace gs {
 
 		template <typename result_type, typename weight_type, typename index_type>
 		inline __device__ bool is_cycle_possible_recursive(
-			result_type selected, index_type N, uint32_t M
+			result_type selected
 		) {
 			result_type visited = 0;
-			for (index_type i = 0; i < N; ++i) {
+			for (index_type i = 0; i < inst::size; ++i) {
 
 				bool fit = true;
 				weight_type _remaining_space[GS_CUDA_INST_MAXM];
-				for (uint32_t j = 0; j < M; ++j) {
-					if (inst::limits<weight_type>()[j] >= inst::weights<weight_type>()[i * M + j])
-						_remaining_space[j] = inst::limits<weight_type>()[j] - inst::weights<weight_type>()[i * M + j];
+				for (uint32_t j = 0; j < inst::dim; ++j) {
+					if (inst::limits<weight_type>()[j] >= inst::weights<weight_type>()[i * inst::dim + j])
+						_remaining_space[j] = inst::limits<weight_type>()[j] - inst::weights<weight_type>()[i * inst::dim + j];
 					else { fit = false; break; }
 				}
 				if (!fit) continue;
@@ -67,7 +67,7 @@ namespace gs {
 				res::add(visited, i);
 				if (inst::has_connection_to<result_type, index_type>(i, i)) { // is it a cycle (closed path)
 					bool _found = true; // found some cycle lets check if it has all selected vertices
-					for (index_type j = 0; j < N; ++j) {
+					for (index_type j = 0; j < inst::size; ++j) {
 						if (res::has(selected, j) && j != i) {
 							_found = false;
 							break;
@@ -76,7 +76,7 @@ namespace gs {
 					if (_found) return true; // it has - cycle found
 				}
 				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
-					selected, visited, _remaining_space, i, i, N, M)
+					selected, visited, _remaining_space, i, i)
 				) return true; // cycle found somewhere
 				res::remove(visited, i);
 			}
@@ -85,20 +85,20 @@ namespace gs {
 
 		template <typename adjacency_base_type, typename index_type>
 		inline __device__ bool is_cycle_DFS(
-			index_type N, adjacency_base_type selected, adjacency_base_type visited,
+			adjacency_base_type selected, adjacency_base_type visited,
 			index_type current, index_type start, index_type length, index_type depth
 		) {
 #ifdef GS_CUDA_MAX_RECURSION
 			if (depth > GS_CUDA_MAX_RECURSION) return false;
 #endif
-			for (index_type next = 0; next < N; ++next) {
+			for (index_type next = 0; next < inst::size; ++next) {
 				if (!inst::has_connection_to<adjacency_base_type, index_type>(current, next)) continue;
 				if (res::has(selected, next) && !res::has(visited, next)) { // next item has to be selected and new
 					res::add(visited, next);
 					if (depth == length && inst::has_connection_to<adjacency_base_type, index_type>(next, start)) return true;
 					if (depth > length) return false;
 					if (is_cycle_DFS<adjacency_base_type, index_type>(
-						N, selected, visited, next, start, length, depth + 1
+						selected, visited, next, start, length, depth + 1
 					)) return true;
 					res::remove(visited, next);
 				}
@@ -108,24 +108,24 @@ namespace gs {
 
 		template <typename adjacency_base_type, typename index_type>
 		inline __device__ bool is_cycle_recursive(
-			adjacency_base_type selected, index_type N
+			adjacency_base_type selected
 		) {
 
 			// calculate whats the length of the cycle
 			index_type length = 0;
-			for (index_type i = 0; i < N; ++i)
+			for (index_type i = 0; i < inst::size; ++i)
 				if (res::has(selected, i)) length++;
 				
 			if (length == 0) return true;
 
 			// check from each starting point
 			adjacency_base_type visited = 0;
-			for (index_type i = 0; i < N; ++i) {
+			for (index_type i = 0; i < inst::size; ++i) {
 				if (res::has(selected, i)){
 					if (length == 1) return inst::has_connection_to<adjacency_base_type, index_type>(i, i);
 					res::add(visited, i);
 					if (is_cycle_DFS<adjacency_base_type, index_type>(
-						N, selected, visited, i, i, length, 2
+						selected, visited, i, i, length, 2
 					)) return true;
 					res::remove(visited, i);
 				}
@@ -136,7 +136,7 @@ namespace gs {
 		template <typename adjacency_base_type, typename index_type>
 		inline __device__ bool is_cycle_iterative_helper(
 			index_type* stack_memory,
-			adjacency_base_type selected, index_type N,
+			adjacency_base_type selected,
 			index_type start, index_type length
 		) {
 			adjacency_base_type visited = 0;
@@ -154,7 +154,7 @@ namespace gs {
 						return true;
 					if (visitedCount > length) {
 						stack_memory[stack_pointer++] = prev;
-						stack_memory[stack_pointer++] = N;
+						stack_memory[stack_pointer++] = inst::size;
 					}
 					else {
 						stack_memory[stack_pointer++] = prev;
@@ -164,7 +164,7 @@ namespace gs {
 
 				index_type next = stack_memory[--stack_pointer] + 1;
 				--stack_pointer;
-				for (; next < N; ++next) {
+				for (; next < inst::size; ++next) {
 					if (!inst::has_connection_to<adjacency_base_type, index_type>(prev, next)) continue;
 					if (res::has(selected, next) && !res::has(visited, next)) {
 						stack_memory[stack_pointer++] = prev;
@@ -175,7 +175,7 @@ namespace gs {
 				}
 
 				// visited all nexts
-				if (next == N) {
+				if (next == inst::size) {
 					res::remove(visited, prev);
 					--visitedCount;
 					if (stack_pointer == 0) break;
@@ -188,20 +188,20 @@ namespace gs {
 		template <typename adjacency_base_type, typename index_type>
 		inline __device__ bool is_cycle_iterative(
 			index_type* stack_memory,
-			adjacency_base_type selected, index_type N
+			adjacency_base_type selected
 		) {
 			// calculate whats the length of the cycle
 			index_type length = 0;
-			for (index_type i = 0; i < N; ++i)
+			for (index_type i = 0; i < inst::size; ++i)
 				if (res::has(selected, i)) length++;
 				
 			if (length == 0) return true;
 
 			// check from each starting point
-			for (index_type start = 0; start < N; ++start) {
+			for (index_type start = 0; start < inst::size; ++start) {
 				if (res::has(selected, start)) {
 					if (is_cycle_iterative_helper<adjacency_base_type, index_type>(
-						stack_memory, selected, N, start, length
+						stack_memory, selected, start, length
 					)) return true;
 				}
 			}

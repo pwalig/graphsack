@@ -29,7 +29,7 @@ namespace gs {
 			namespace grasp {
 				template <typename result_type, typename index_type>
 				__global__ void cycle_kernel(
-					index_type N, uint32_t M, curandStateMtgp32* random_state, 
+					curandStateMtgp32* random_state, 
 					uint32_t* value_memory, uint32_t* weight_memory, result_type* result_memory, index_type* stack_memory,
 					index_type* sorted, index_type choose_from
 				) {
@@ -38,10 +38,10 @@ namespace gs {
 					// setup
 					value_memory[id] = 0;
 					result_memory[id] = 0;
-					for (uint32_t wid = 0; wid < M; ++wid) weight_memory[M * id + wid] = 0;
+					for (uint32_t wid = 0; wid < inst::dim; ++wid) weight_memory[inst::dim * id + wid] = 0;
 
 					// construct solution
-					for (index_type left = N; left > 0; --left) {
+					for (index_type left = inst::size; left > 0; --left) {
 						index_type left_index = ::curand(&random_state[blockIdx.x]) % (left < choose_from ? left : choose_from);
 
 						index_type sorted_index = 0;
@@ -54,8 +54,8 @@ namespace gs {
 
 						index_type to_add = sorted[sorted_index];
 						bool fitting = true;
-						for (uint32_t wid = 0; wid < M; ++wid) {
-							if (weight_memory[M * id + wid] + inst::weights<uint32_t>()[M * to_add + wid] > inst::limits<uint32_t>()[wid]) {
+						for (uint32_t wid = 0; wid < inst::dim; ++wid) {
+							if (weight_memory[inst::dim * id + wid] + inst::weights<uint32_t>()[inst::dim * to_add + wid] > inst::limits<uint32_t>()[wid]) {
 								fitting = false;
 								break;
 							}
@@ -63,11 +63,11 @@ namespace gs {
 						if (fitting) {
 							res::add(result_memory[id], to_add);
 							if (!is_cycle_possible_recursive<result_type, uint32_t, index_type>(
-								result_memory[id], N, M
+								result_memory[id]
 							)) res::remove(result_memory[id], to_add);
 							else {
-								for (uint32_t wid = 0; wid < M; ++wid)
-									weight_memory[M * id + wid] += inst::weights<uint32_t>()[M * to_add + wid];
+								for (uint32_t wid = 0; wid < inst::dim; ++wid)
+									weight_memory[inst::dim * id + wid] += inst::weights<uint32_t>()[inst::dim * to_add + wid];
 								value_memory[id] += inst::values<uint32_t>()[to_add];
 							}
 						}
@@ -94,7 +94,7 @@ namespace gs {
 					while (closestPowerOf2 < instance.size()) closestPowerOf2 *= 2;
 					using MetricT = metric::Value<uint32_t>;
 					buffer<typename MetricT::value_type> metric_memory(closestPowerOf2);
-					metric::calculate<MetricT, index_type><<<1, closestPowerOf2>>>(metric_memory.data(), instance.size());
+					metric::calculate<MetricT, index_type><<<1, closestPowerOf2>>>(metric_memory.data());
 					buffer<index_type> index_memory(totalThreads * instance.size() + closestPowerOf2);
 					buffer<result_type> result_memory(totalThreads);
 
@@ -105,18 +105,14 @@ namespace gs {
 					curand::MakeMTGP32KernelState(random_states, kernel_params, blocksCount, time(NULL));
 
 					except::DeviceSynchronize();
-					//sort::in_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
-					//sort::reverse_order<index_type><<<1, 64>>>(index_memory.data(), instance.size());
-					//sort::by_value<index_type, uint32_t><<<1, closestPowerOf2>>>(index_memory.data(), instance.size());
 					sort::by_metric_desc<index_type, typename MetricT::value_type><<<1, closestPowerOf2>>>(
 						index_memory.data(), metric_memory.data(), instance.size()
 					);
 					except::DeviceSynchronize();
 					index_memory.debug_print(0, instance.size(), 1);
-					//index_memory.debug_print(0, instance.size(), 1);
 
 					cycle_kernel<result_type, index_type><<<blocksCount, threadsPerBlock>>>(
-						instance.size(), instance.dim(), random_states.data(),
+						random_states.data(),
 						weight_value.data(), weight_value.data() + totalThreads,
 						result_memory.data(), index_memory.data() + instance.size(),
 						index_memory.data(), instance.size() / 2
