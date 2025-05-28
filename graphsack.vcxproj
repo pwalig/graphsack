@@ -79,6 +79,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -99,6 +100,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,6 +121,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,6 +142,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -182,6 +186,7 @@
     <ClInclude Include="src\solvers\GHS.hpp" />
     <ClInclude Include="src\solvers\GRASP.hpp" />
     <ClInclude Include="src\solvers\MultiRun.hpp" />
+    <ClInclude Include="src\solvers\ompBruteForce.hpp" />
     <ClInclude Include="src\solvers\PathBruteForce.hpp" />
     <ClInclude Include="src\structure.hpp" />
     <ClInclude Include="src\slice.hpp" />

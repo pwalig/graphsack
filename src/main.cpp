@@ -7,6 +7,7 @@
 #include "solvers/GHS.hpp"
 #include "solvers/Dynamic.hpp"
 #include "solvers/BruteForce.hpp"
+#include "solvers/ompBruteForce.hpp"
 #include "solvers/PathBruteForce.hpp"
 #include "structure_check.hpp"
 #include "graphs/nexts_list.hpp"
@@ -89,7 +90,7 @@ int main(int argc, char** argv) {
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
-	const uint32_t itemsCount = 31;
+	const uint32_t itemsCount = 21;
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
@@ -128,8 +129,8 @@ int main(int argc, char** argv) {
 	//SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
 	//SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
 	//SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run<std::knuth_b, float, size_t>(randomItemlocalNlist, format, std::cout, gen, 0.5f, 256);
-	//SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
-	//SolverRunner<cuda::solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run<size_t, size_t>(randomItemlocalNlist, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
+	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+	SolverRunner<solver::ompBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	//SolverRunner<cuda::solver::GRASP32>::run<size_t>(cudaInstance32, format, std::cout, 64);
 	SolverRunner<cuda::solver::BruteForce32>::run<size_t, size_t>(cudaInstance32, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
 	SolverRunner<cuda::solver::BruteForce64>::run<size_t, size_t>(cudaInstance64, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
