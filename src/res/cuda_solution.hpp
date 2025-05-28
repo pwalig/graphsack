@@ -9,7 +9,7 @@ namespace gs {
 			class solution {
 			public:
 				StorageBase _data;
-				size_t _n;
+				StorageBase _n;
 
 				inline solution() : _n(0), _data(0) {}
 				inline solution(size_t N) : _n(N), _data(0) {}
@@ -19,7 +19,7 @@ namespace gs {
 				inline size_t size() const { return _n; }
 				inline size_t selected_count() const {
 					size_t sum = 0;
-					for (int j = 0; j < _n; j++)
+					for (StorageBase j = 0; j < _n; j++)
 						if (has(j)) ++sum;
 					return sum;
 				}

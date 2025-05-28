@@ -11,11 +11,11 @@
 namespace gs {
 	namespace solver {
 		template <typename InstanceT, typename SolutionT, typename RandomEngine, typename metricT = gs::metric::ValueWeightRatio<float>, typename indexT = typename InstanceT::index_type>
-		class GRASP {
+		class ompGRASP {
 		public:
 			using instance_t = InstanceT;
 			using solution_t = SolutionT;
-			inline static const std::string name = "GRASP<" + metricT::name + ">";
+			inline static const std::string name = "ompGRASP<" + metricT::name + ">";
 
 			inline static solution_t solve(
 				const instance_t& instance,
@@ -54,19 +54,34 @@ namespace gs {
 				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
 				auto sorted = metric::sorted_indexes<metricT, instance_t, indexT>(instance);
-				solution_t best(instance.size());
+				solution_t best_solution(instance.size());
 				typename instance_t::value_type best_value = 0;
 
-				for (size_t i = 0; i < runs; ++i) {
-					solution_t solution = solve(instance, randomEngine, sorted, choose_from, structure_check);
-					typename instance_t::value_type  value = Validator<instance_t, solution_t>::getResultValue(instance, solution);
-					if (value > best_value) {
-						best_value = value;
-						best = solution;
+				#pragma omp parallel
+				{
+					solution_t local_best_solution(instance.size());
+					typename instance_t::value_type local_best_value = 0;
+
+					#pragma omp for
+					for (long long i = 0; i < runs; ++i) {
+						solution_t solution = solve(instance, randomEngine, sorted, choose_from, structure_check);
+						typename instance_t::value_type  value = Validator<instance_t, solution_t>::getResultValue(instance, solution);
+						if (value > local_best_value) {
+							local_best_value = value;
+							local_best_solution = solution;
+						}
+					}
+
+					#pragma omp critical
+					{
+						if (local_best_value > best_value) {
+							best_value = local_best_value;
+							best_solution = local_best_solution;
+						}
 					}
 				}
 
-				return best;
+				return best_solution;
 			}
 
 			inline static solution_t solve(
