@@ -15,6 +15,7 @@ namespace gs {
 			inline void add(size_t i) { _data[i] = true; }
 			inline void remove(size_t i) { _data[i] = false; }
 			inline bool has(size_t i) const { return _data[i]; }
+			inline void clear() { std::fill(_data.begin(), _data.end(), false); }
 			inline size_t size() const { return _data.size(); }
 			inline size_t selected_count() const { return std::count_if(_data.begin(), _data.end(), [](bool set) { return set; }); }
 

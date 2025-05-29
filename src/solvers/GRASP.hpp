@@ -17,7 +17,7 @@ namespace gs {
 			using solution_t = SolutionT;
 			inline static const std::string name = "GRASP<" + metricT::name + ">";
 
-			inline static void solve(
+			inline static typename instance_t::value_type solve_one(
 				const instance_t& instance,
 				solution_t& res,
 				RandomEngine& randomEngine,
@@ -27,8 +27,10 @@ namespace gs {
 				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
 				assert(choose_from > 0);
+				assert(res.size() == instance.size());
 
-				solution_t res(instance.size());
+				res.clear();
+				typename instance_t::value_type value = 0;
 				for (typename instance_t::size_type i = 0; i < instance.dim(); ++i)
 					weight_memory[i] = instance.limit(i);
 
@@ -38,36 +40,25 @@ namespace gs {
 					indexT pick = distrib(randomEngine);
 					indexT itemId = sorted[pick];
 
-					bool fitting = true;
-					for (typename instance_t::size_type i = 0; i < instance.dim(); ++i) {
-						if (instance.weight(itemId, i) < weight_memory[i]) weight_memory[i] -= instance.weight(itemId, i);
-						else {
-							for (typename instance_t::size_type j = i; j >= 0; --j) weight_memory[j] += instance.weight(itemId, j);
-							fitting = false;
-							break;
-						}
+					// fit check
+					typename instance_t::size_type i = 0;
+					for (; i < instance.dim(); ++i) {
+						if (instance.weight(itemId, i) > weight_memory[i]) break;
 					}
-					if (fitting) {
+					if (i == instance.dim()) {
 						res.add(itemId);
-						if (!structure_check(instance, res)) res.remove(itemId);
+						if (!structure_check(instance, res)) res.remove(itemId); // structure check
+						else {
+							for (i = 0; i < instance.dim(); ++i) weight_memory[i] -= instance.weight(itemId, i);
+							value += instance.value(itemId);
+						}
 					}
 
 					sorted.erase(sorted.begin() + pick);
 				}
-				return res;
+				return value;
 			}
-
-			inline static solution_t solve(
-				const instance_t& instance,
-				RandomEngine& randomEngine,
-				std::vector<indexT> sorted,
-				size_t choose_from,
-				bool (*structure_check) (const instance_t&, const solution_t&)
-			) {
-				solution_t res(instance.size());
-				solve(instance, res, randomEngine, sorted, )
-			}
-
+			
 			inline static solution_t solve(
 				const instance_t& instance,
 				RandomEngine& randomEngine,
@@ -75,20 +66,29 @@ namespace gs {
 				size_t runs,
 				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
+				// sort elements
 				auto sorted = metric::sorted_indexes<metricT, instance_t, indexT>(instance);
-				solution_t best(instance.size());
+
+				// best results
+				solution_t best_solution(instance.size());
 				typename instance_t::value_type best_value = 0;
 
+				// working memory
+				std::vector<typename instance_t::weight_type> remaining(instance.dim());
+				solution_t solution(instance.size());
+
+				// main loop
 				for (size_t i = 0; i < runs; ++i) {
-					solution_t solution = solve(instance, randomEngine, sorted, choose_from, structure_check);
-					typename instance_t::value_type  value = Validator<instance_t, solution_t>::getResultValue(instance, solution);
+					typename instance_t::value_type value = solve_one(
+						instance, solution, randomEngine, sorted, remaining.data(), choose_from, structure_check
+					);
 					if (value > best_value) {
 						best_value = value;
-						best = solution;
+						best_solution = solution;
 					}
 				}
 
-				return best;
+				return best_solution;
 			}
 
 			inline static solution_t solve(

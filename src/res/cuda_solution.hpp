@@ -16,6 +16,7 @@ namespace gs {
 				inline void add(size_t i) { _data |= (StorageBase(1) << i); }
 				inline void remove(size_t i) { _data &= ~(StorageBase(1) << i); }
 				inline bool has(size_t i) const { return (_data & (StorageBase(1) << i)); }
+				inline void clear() { _data = StorageBase(0); }
 				inline size_t size() const { return _n; }
 				inline size_t selected_count() const {
 					size_t sum = 0;
