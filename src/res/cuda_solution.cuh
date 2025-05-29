@@ -22,6 +22,12 @@ namespace gs {
 			{
 				solution &= ~(res_type(1) << itemId);
 			}
+
+			template <typename res_type>
+			inline __device__ void clear(res_type& solution)
+			{
+				solution = res_type(0);
+			}
 		}
 	}
 }

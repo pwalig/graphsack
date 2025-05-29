@@ -3,50 +3,39 @@
 #include "../structure.hpp"
 #include "../res/cuda_solution.hpp"
 #include "../inst/cuda_instance.hpp"
+#include "size_string.hpp"
 
 namespace gs {
 	namespace cuda {
 		namespace solver {
 			namespace grasp {
-				// data should be: limits | values | weights
-				res::solution32 runner32(
-					const inst::instance32<uint32_t, uint32_t>& instance,
-					uint32_t blocksCount
+				template <typename instance_t, typename result_type>
+				res::solution<result_type> runner(
+					const instance_t& instance, uint32_t blocksCount, typename instance_t::index_type choose_from
 				);
-				res::solution64 runner64(
-					const inst::instance64<uint32_t, uint32_t>& instance,
-					uint32_t blocksCount
-				);
+
+				extern template res::solution32 runner(const inst::instance32<uint32_t, uint32_t>&, uint32_t, typename inst::instance32<uint32_t, uint32_t>::index_type );
+				extern template res::solution64 runner(const inst::instance64<uint32_t, uint32_t>&, uint32_t, typename inst::instance32<uint32_t, uint32_t>::index_type );
 			}
 
-			class GRASP32 {
+			template <typename InstanceT>
+			class GRASP {
 			public:
-				using solution_t = res::solution32;
-				using instance_t = inst::instance32<uint32_t, uint32_t>;
+				using instance_t = InstanceT;
+				using storage_t = typename instance_t::adjacency_base_type;
+				using solution_t = res::solution<storage_t>;
 				const static std::string name;
 
-				GRASP32() = delete;
+				GRASP() = delete;
 
-				inline static solution_t solve(const instance_t& instance, uint32_t blocksCount = 1) 
+				inline static solution_t solve(const instance_t& instance, uint32_t blocksCount = 1, typename inst::instance32<uint32_t, uint32_t>::index_type choose_from = 0) 
 				{
-					return grasp::runner32(instance, blocksCount);
+					if (choose_from == 0) choose_from = 1;
+					return grasp::runner<instance_t, storage_t>(instance, blocksCount, choose_from);
 				}
 			};
-
-
-			class GRASP64 {
-			public:
-				using solution_t = res::solution64;
-				using instance_t = inst::instance64<uint32_t, uint32_t>;
-				const static std::string name;
-
-				GRASP64() = delete;
-
-				inline static solution_t solve(const instance_t& instance, uint32_t blocksCount = 1) 
-				{
-					return grasp::runner64(instance, blocksCount);
-				}
-			};
+			template <typename InstanceT>
+			const std::string GRASP<InstanceT>::name = std::string("cudaGRASP") + size_string<typename GRASP<InstanceT>::storage_t>();
 		}
 	}
 }

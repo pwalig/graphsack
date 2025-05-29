@@ -19,9 +19,6 @@
 namespace gs {
 	namespace cuda {
 		namespace solver {
-			const std::string BruteForce32::name = "CudaBruteForce32";
-			const std::string BruteForce64::name = "CudaBruteForce64";
-
 			namespace brute_force {
 
 				double global_mem_percent = 0.8;
@@ -83,7 +80,7 @@ namespace gs {
 				template <typename instance_t, typename result_type>
 				res::solution<result_type> runner(
 					const inst::instance<result_type, uint32_t, uint32_t>& instance,
-					uint32_t threadsPerBlock = 0, uint32_t share = 1
+					uint32_t threadsPerBlock, uint32_t share
 				) {
 					using value_type = typename instance_t::value_type;
 					using weight_type = typename instance_t::weight_type;
@@ -104,7 +101,8 @@ namespace gs {
 						share *= 2;
 					}
 
-					if (threadsPerBlock == 0) threadsPerBlock = device_properties.maxThreadsPerBlock;
+					if (threadsPerBlock == 0 || threadsPerBlock > device_properties.maxThreadsPerBlock)
+						threadsPerBlock = device_properties.maxThreadsPerBlock;
 					threadsPerBlock = std::min<result_type>(threadsPerBlock, totalThreads);
 
 					buffer<value_type> value_memory(totalThreads);
@@ -153,18 +151,9 @@ namespace gs {
 
 					return result;
 				}
+				template res::solution32 runner<inst::instance32<uint32_t, uint32_t>, uint32_t>(const inst::instance32<uint32_t, uint32_t>&, uint32_t, uint32_t);
+				template res::solution64 runner<inst::instance64<uint32_t, uint32_t>, uint64_t>(const inst::instance64<uint32_t, uint32_t>&, uint32_t, uint32_t);
 
-				res::solution32 runner32(
-					const inst::instance32<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
-				) {
-					return runner<inst::instance32<uint32_t, uint32_t>, uint32_t>(instance, threadsPerBlock, share);
-				}
-
-				res::solution64 runner64(
-					const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
-				) {
-					return runner<inst::instance64<uint32_t, uint32_t>, uint64_t>(instance, threadsPerBlock, share);
-				}
 			}
 		}
 	}

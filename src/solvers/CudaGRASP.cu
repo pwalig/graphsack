@@ -23,9 +23,6 @@
 namespace gs {
 	namespace cuda {
 		namespace solver {
-			const std::string GRASP32::name = "CudaGRASP32";
-			const std::string GRASP64::name = "CudaGRASP64";
-
 			namespace grasp {
 				template <typename result_type, typename value_type, typename weight_type, typename index_type>
 				__global__ void cycle_kernel(
@@ -78,7 +75,7 @@ namespace gs {
 
 				template <typename instance_t, typename result_type>
 				res::solution<result_type> runner(
-					const instance_t& instance, uint32_t blocksCount
+					const instance_t& instance, uint32_t blocksCount, typename instance_t::index_type choose_from
 				) {
 					using value_type = typename instance_t::value_type;
 					using weight_type = typename instance_t::weight_type;
@@ -135,17 +132,8 @@ namespace gs {
 					return result;
 				}
 
-				res::solution32 runner32(
-					const inst::instance32<uint32_t, uint32_t>& instance, uint32_t blocksCount
-				) {
-					return runner<inst::instance32<uint32_t, uint32_t>, uint32_t>(instance, blocksCount);
-				}
-
-				res::solution64 runner64(
-					const inst::instance64<uint32_t, uint32_t>& instance, uint32_t blocksCount
-				) {
-					return runner<inst::instance64<uint32_t, uint32_t>, uint64_t>(instance, blocksCount);
-				}
+				template res::solution32 runner(const inst::instance32<uint32_t, uint32_t>&, uint32_t, typename inst::instance32<uint32_t, uint32_t>::index_type );
+				template res::solution64 runner(const inst::instance64<uint32_t, uint32_t>&, uint32_t, typename inst::instance32<uint32_t, uint32_t>::index_type );
 			}
 		}
 	}

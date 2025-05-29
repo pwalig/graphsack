@@ -189,6 +189,7 @@
     <ClInclude Include="src\solvers\ompBruteForce.hpp" />
     <ClInclude Include="src\solvers\ompGRASP.hpp" />
     <ClInclude Include="src\solvers\PathBruteForce.hpp" />
+    <ClInclude Include="src\solvers\size_string.hpp" />
     <ClInclude Include="src\structure.hpp" />
     <ClInclude Include="src\slice.hpp" />
     <ClInclude Include="src\SolverRunner.hpp" />

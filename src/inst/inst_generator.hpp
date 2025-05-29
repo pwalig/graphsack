@@ -53,7 +53,7 @@ namespace gs::inst {
 			auto wd = [&gen, MinWeight, MaxWeight]() { return gs::random::function<Rand>::from_uniform_distribution(gen, MinWeight, MaxWeight); };
 			
 			std::vector<weight_type> randomWeights(N * M + M);
-			std::vector<weight_type> randomValues(N);
+			std::vector<value_type> randomValues(N);
 
 			random::into(randomWeights.begin(), randomWeights.begin() + M, ld);
 			random::into(randomValues.begin(), randomValues.end(), vd);

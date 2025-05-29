@@ -143,6 +143,7 @@
     <ClInclude Include="src\solvers\ompGRASP.hpp">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\solvers\size_string.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_test.cu" />
