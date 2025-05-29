@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 
+#include "BruteForce.hpp"
 #include "../structure_check.hpp"
 #include "../weight_vector_operations.hpp"
 
@@ -14,46 +15,40 @@ namespace gs {
 			using solution_t = SolutionT;
 			inline static const std::string name = "ompBruteForce";
 
-			inline static solution_t solutionFromNumber(
-				const instance_t& instance,
-				size_t n
-			) {
-				solution_t res(instance.size());
-				typename instance_t::size_type i = instance.size();
-				while (n > 0) {
-					--i;
-					if (n % 2 == 1) res.add(i);
-					n /= 2;
-				}
-				return res;
-			}
-
 			inline static solution_t solve(
 				const instance_t& instance,
 				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
 				using value_type = typename instance_t::value_type;
+				using weight_type = typename instance_t::weight_type;
+				using index_type = typename instance_t::index_type;
 
-				size_t n = (size_t)std::pow(2, instance.size());
-				solution_t best_solution(instance.size());
+				long long best_solution = 0;
 				value_type best_value = 0;
+
+				size_t n = size_t(1) << instance.size();
 
 				#pragma omp parallel
 				{
-					solution_t local_best_solution(instance.size());
+					long long local_best_solution = 0;
 					value_type local_best_value = 0;
 
 					#pragma omp for
-					for (long long i = 0; i < n; ++i) {
-						auto solution = solutionFromNumber(instance, i);
-						typename instance_t::value_type value = 0;
-						std::vector<typename instance_t::value_type> weights(instance.dim(), 0);
-						for (size_t i = 0; i < instance.size(); ++i) {
-							if (solution.has(i)) {
-								value += instance.value(i);
-								add_to_weights(weights, instance.weights(i));
+					for (long long solution = 0; solution < n; ++solution) {
+						value_type value = 0;
+						std::vector<weight_type> weights(instance.dim(), 0);
+
+						index_type itemId = instance.size();
+						long long number = solution;
+						while (number > 0) {
+							--itemId;
+							if (number % 2 == 1) {
+								value += instance.value(itemId);
+								add_to_weights(weights, instance.weights(itemId));
 							}
+							number /= 2;
 						}
+
 						if (value > local_best_value && fits(weights, instance.limits()) && structure_check(instance, solution)) {
 							local_best_solution = solution;
 							local_best_value = value;
@@ -69,7 +64,7 @@ namespace gs {
 					}
 				}
 
-				return best_solution;
+				return BruteForce<InstanceT, SolutionT>::solutionFromNumber(instance, best_value);
 			}
 
 			inline static solution_t solve(const instance_t& instance, bool iterative_structure_check = false) {
