@@ -36,33 +36,28 @@ namespace gs {
 				using weight_type = typename instance_t::weight_type;
 				using index_type = typename instance_t::index_type;
 
-				size_t best_solution = 0;
+				solution_t best_solution(instance.size());
 				value_type best_value = 0;
 
 				size_t n = size_t(1) << instance.size();
 
-				for (size_t solution = 0; solution < n; ++solution) {
+				for (size_t i = 0; i < n; ++i) {
+					solution_t solution = solutionFromNumber(instance, i);
 					value_type value = 0;
 					std::vector<weight_type> weights(instance.dim(), 0);
-					
-					index_type itemId = instance.size();
-					size_t number = solution;
-					while (number > 0) {
-						--itemId;
-						if (number % 2 == 1) {
-							value += instance.value(itemId);
-							add_to_weights(weights, instance.weights(itemId));
+					for (index_type i = 0; i < instance.size(); ++i) {
+						if (solution.has(i)) {
+							value += instance.value(i);
+							add_to_weights(weights, instance.weights(i));
 						}
-						number /= 2;
 					}
-
 					if (value > best_value && fits(weights, instance.limits()) && structure_check(instance, solution)) {
 						best_solution = solution;
 						best_value = value;
 					}
 				}
 
-				return solutionFromNumber(instance, best_solution);
+				return best_solution;
 			}
 
 			inline static solution_t solve(const instance_t& instance, bool iterative_structure_check = false) {

@@ -23,32 +23,26 @@ namespace gs {
 				using weight_type = typename instance_t::weight_type;
 				using index_type = typename instance_t::index_type;
 
-				long long best_solution = 0;
-				value_type best_value = 0;
-
 				size_t n = size_t(1) << instance.size();
+				solution_t best_solution(instance.size());
+				value_type best_value = 0;
 
 				#pragma omp parallel
 				{
-					long long local_best_solution = 0;
+					solution_t local_best_solution(instance.size());
 					value_type local_best_value = 0;
 
 					#pragma omp for
-					for (long long solution = 0; solution < n; ++solution) {
+					for (long long i = 0; i < n; ++i) {
+						solution_t solution = BruteForce<InstanceT, SolutionT>::template solutionFromNumber(instance, i);
 						value_type value = 0;
 						std::vector<weight_type> weights(instance.dim(), 0);
-
-						index_type itemId = instance.size();
-						long long number = solution;
-						while (number > 0) {
-							--itemId;
-							if (number % 2 == 1) {
-								value += instance.value(itemId);
-								add_to_weights(weights, instance.weights(itemId));
+						for (index_type i = 0; i < instance.size(); ++i) {
+							if (solution.has(i)) {
+								value += instance.value(i);
+								add_to_weights(weights, instance.weights(i));
 							}
-							number /= 2;
 						}
-
 						if (value > local_best_value && fits(weights, instance.limits()) && structure_check(instance, solution)) {
 							local_best_solution = solution;
 							local_best_value = value;
@@ -64,7 +58,8 @@ namespace gs {
 					}
 				}
 
-				return BruteForce<InstanceT, SolutionT>::solutionFromNumber(instance, best_value);
+
+				return best_solution;
 			}
 
 			inline static solution_t solve(const instance_t& instance, bool iterative_structure_check = false) {
