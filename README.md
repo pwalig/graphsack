@@ -16,7 +16,7 @@ Run the following.
 
 ```
 git clone https://github.com/pwalig/graphsack.git
-cd DNA-sequencer
+cd graphsack
 mkdir build
 cd build
 cmake ..
