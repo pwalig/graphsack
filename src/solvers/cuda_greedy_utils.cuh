@@ -46,8 +46,14 @@ namespace gs {
 					index_type* index_memory, metric_type* metric_memory, index_type N
 				) {
 					index_type i = blockIdx.x * blockDim.x + threadIdx.x;
-					index_memory[i] = i;
 
+					// save to shared memory
+					__shared__ index_type index[64];
+					__shared__ metric_type metric[64];
+					index[i] = i;
+					metric[i] = metric_memory[i];
+
+					// bitonic sort
 					for (index_type k = 2; k <= blockDim.x; k *= 2) {// k is doubled every iteration
 						for (index_type j = k / 2; j > 0; j /= 2) { // j is halved at every iteration, with truncation of fractional parts
 							__syncthreads();
@@ -55,16 +61,19 @@ namespace gs {
 							if (l > i) {
 								index_type val = i & k;
 								if (
-									((val == 0) && (metric_memory[index_memory[i]] < metric_memory[index_memory[l]])) ||
-									((val != 0) && (metric_memory[index_memory[i]] > metric_memory[index_memory[l]]))
+									((val == 0) && (metric[index[i]] < metric[index[l]])) ||
+									((val != 0) && (metric[index[i]] > metric[index[l]]))
 								) {
-									index_type tmp = index_memory[i];
-									index_memory[i] = index_memory[l];
-									index_memory[l] = tmp;
+									index_type tmp = index[i];
+									index[i] = index[l];
+									index[l] = tmp;
 								}
 							}
 						}
 					}
+
+					// bring result back to global memory
+					index_memory[i] = index[i];
 
 				}
 

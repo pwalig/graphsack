@@ -46,7 +46,6 @@ namespace gs {
 							weight_memory[inst::dim * id + wid] = 0;
 						}
 
-						// check if valid structure
 						bool fitting = true;
 
 						// check if valid weight and sum value
@@ -67,6 +66,7 @@ namespace gs {
 							i++;
 						}
 
+						// check if valid structure
 						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(stack_memory + (2 * inst::size * id), n)) {
 						//if (value > value_memory[id] && is_cycle_recursive<result_type, index_type>(n)) {
 							value_memory[id] = value;
