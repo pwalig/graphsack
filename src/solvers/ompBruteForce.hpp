@@ -69,7 +69,6 @@ namespace gs {
 					}
 				}
 
-
 				return best_solution;
 			}
 

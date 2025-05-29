@@ -4,15 +4,6 @@
 #include <cassert>
 
 namespace gs {
-	template<typename instance_t>
-	inline bool has_connection_to(
-		const instance_t& instance,
-		const typename instance_t::index_type& from,
-		const typename instance_t::index_type& to
-	) {
-		return std::find(instance.nexts(from).begin(), instance.nexts(from).end(), to) != instance.nexts(from).end();
-	}
-
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
 	inline bool is_cycle_possible_DFS(
 		const instance_t& instance,
@@ -24,59 +15,73 @@ namespace gs {
 		for (indexT next : instance.nexts(current)) {
 			if (visited[next]) continue; // next item has to be new (not visited yet)
 
+			// fit check
 			std::vector<typename instance_t::weight_type> new_remaining_space(_remaining_space);
 			indexT j = 0;
-			for (; j < new_remaining_space.size(); ++j) {
+			for (; j < instance.dim(); ++j) {
 				if (new_remaining_space[j] >= instance.weight(next, j))
 					new_remaining_space[j] -= instance.weight(next, j);
 				else break;
 			}
-			if (j != new_remaining_space.size()) continue;
+			if (j != instance.dim()) continue;
 
 			visited[next] = true;
-			if (instance.has_connection_to(next, start)) { // is it a cycle (closed path)
-				// found some cycle lets check if it has all selected vertices
+
+			if (instance.has_connection_to(next, start)) {
+				// completness check
 				indexT i = 0;
-				for (; i < selected.size(); ++i) {
+				for (; i < instance.size(); ++i) {
 					if (selected.has(i) && !visited[i]) break;
 				}
-				if (i == selected.size()) return true; // it has - cycle found
+				if (i == instance.size()) return true; // cycle found
 			}
+
+			// DFS call
 			if (is_cycle_possible_DFS<instance_t, solution_t, indexT>(
-				instance, selected, visited, new_remaining_space, next, start)
-			) return true; // cycle found later
+				instance, selected, visited, new_remaining_space, next, start
+			)) return true; // cycle found later
+
 			visited[next] = false;
 		}
 		return false; // cycle not found
 	}
 
 	template <typename instance_t, typename solution_t, typename indexT = typename instance_t::index_type>
-	inline bool is_cycle_possible(const instance_t& instance, const solution_t& selected) {
+	inline bool is_cycle_possible(
+		const instance_t& instance,
+		const solution_t& selected
+	) {
 		assert(selected.size() == instance.size());
 		std::vector<bool> visited(selected.size(), false);
-		for (int i = 0; i < selected.size(); ++i) {
+		std::vector<typename instance_t::weight_type> _remaining_space(instance.dim());
 
-			std::vector<typename instance_t::weight_type> _remaining_space(instance.dim());
+		for (indexT i = 0; i < instance.size(); ++i) {
+
+			// fit check
 			typename instance_t::size_type wid = 0;
-			for (; wid < _remaining_space.size(); ++wid) {
+			for (; wid < instance.dim(); ++wid) {
 				if (instance.limit(wid) >= instance.weight(i, wid))
 					_remaining_space[wid] = instance.limit(wid) - instance.weight(i, wid);
 				else break;
 			}
-			if (wid != _remaining_space.size()) continue;
+			if (wid != instance.dim()) continue;
 
 			visited[i] = true;
+
 			if (instance.has_connection_to(i, i)) { // is it a cycle (closed path)
-				// found some cycle lets check if it has all selected vertices
+				// completness check
 				indexT j = 0;
-				for (; j < selected.size(); ++j) {
+				for (; j < instance.size(); ++j) {
 					if (selected.has(j) && j != i) break;
 				}
-				if (j == selected.size()) return true; // it has - cycle found
+				if (j == instance.size()) return true; // cycle found
 			}
+
+			// DFS call
 			if (is_cycle_possible_DFS<instance_t, solution_t, indexT>(
-				instance, selected, visited, _remaining_space, i, i)
-			) return true; // cycle found somewhere
+				instance, selected, visited, _remaining_space, i, i
+			)) return true; // cycle found somewhere
+
 			visited[i] = false;
 		}
 		return false;
@@ -93,27 +98,30 @@ namespace gs {
 		for (indexT next : instance.nexts(current)) {
 			if (visited[next]) continue; // next item has to be new (not visited yet)
 
-			bool fit = true;
+			// fit check
 			std::vector<typename instance_t::weight_type> new_remaining_space(_remaining_space);
-			for (indexT j = 0; j < new_remaining_space.size(); ++j) {
-				if (new_remaining_space[j] >= instance.weight(next, j)) new_remaining_space[j] -= instance.weight(next, j);
-				else { fit = false; break; }
+			indexT j = 0;
+			for (; j < instance.dim(); ++j) {
+				if (new_remaining_space[j] >= instance.weight(next, j))
+					new_remaining_space[j] -= instance.weight(next, j);
+				else break;
 			}
-			if (!fit) { continue; }
+			if (j != instance.dim()) continue;
 
 			visited[next] = true;
-			// found some path lets check if it has all selected vertices
-			bool _found = true;
-			for (indexT i = 0; i < selected.size(); ++i) {
-				if (selected.has(i) && !visited[i]) {
-					_found = false;
-					break;
-				}
+
+			// completness check
+			indexT i = 0;
+			for (; i < instance.size(); ++i) {
+				if (selected.has(i) && !visited[i]) break;
 			}
-			if (_found) { return true; } // it has - path found
+			if (i == instance.size()) return true; // cycle found
+
+			// DFS call
 			if (is_path_possible_DFS<instance_t, solution_t, indexT>(
-				instance, selected, visited, new_remaining_space, next)
-			) return true; // path found later
+				instance, selected, visited, new_remaining_space, next
+			)) return true; // path found later
+
 			visited[next] = false;
 		}
 		return false; // cycle not found
@@ -123,31 +131,33 @@ namespace gs {
 	inline bool is_path_possible(const instance_t& instance, const solution_t& selected) {
 		assert(selected.size() == instance.size());
 		std::vector<bool> visited(selected.size(), false);
+		std::vector<typename instance_t::weight_type> _remaining_space(instance.dim());
 
 		for (indexT i = 0; i < instance.size(); ++i) {
 
-			bool fit = true;
-			std::vector<typename instance_t::weight_type> _remaining_space(instance.dim());
-			memcpy(_remaining_space.data(), instance.limits().data(), instance.dim() * sizeof(typename instance_t::weight_type));
-			for (indexT j = 0; j < _remaining_space.size(); ++j) {
-				if (_remaining_space[j] >= instance.weight(i, j)) _remaining_space[j] -= instance.weight(i, j);
-				else { fit = false; break; }
+			// fit check
+			typename instance_t::size_type wid = 0;
+			for (; wid < instance.dim(); ++wid) {
+				if (instance.limit(wid) >= instance.weight(i, wid))
+					_remaining_space[wid] = instance.limit(wid) - instance.weight(i, wid);
+				else break;
 			}
-			if (!fit) continue;
+			if (wid != instance.dim()) continue;
 
 			visited[i] = true;
-			// found some path lets check if it has all selected vertices
-			bool _found = true;
-			for (indexT j = 0; j < selected.size(); ++j) {
-				if (selected.has(j) && j != i) {
-					_found = false;
-					break;
-				}
+
+			// completness check
+			indexT j = 0;
+			for (; j < instance.size(); ++j) {
+				if (selected.has(j) && j != i) break;
 			}
-			if (_found) { return true; } // it has - path found
+			if (j == instance.size()) return true; // cycle found
+
+			// DFS call
 			if (is_path_possible_DFS<instance_t, solution_t, indexT>(
 				instance, selected, visited, _remaining_space, i)
 			) return true; // cycle found somewhere
+
 			visited[i] = false;
 		}
 		return false;

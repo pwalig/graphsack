@@ -34,7 +34,7 @@ namespace gs {
 				std::vector<value_type> dp((n + 1) * (instance.limit() + 1), 0); // initialise dynamic programming 2D NxP array with zeros
 				for (size_type i = 1; i <= n; ++i){
 					for (size_type j = 1; j <= instance.limit(); ++j) {
-						if (instance.weight(i-1, 0) <= j)
+						if (instance.weight(i-1) <= j)
 							dp[i * rl + j] = std::max(instance.value(i-1) + dp[(i-1) * rl + j - instance.weight(i-1)], dp[(i-1) * rl + j]);
 						else
 							dp[i * rl + j] = dp[(i-1) * rl + j];

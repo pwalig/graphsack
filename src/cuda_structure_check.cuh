@@ -20,6 +20,7 @@ namespace gs {
 				if (!inst::has_connection_to<result_type, index_type>(current, next)) continue;
 				if (res::has(visited, next)) continue; // next item has to be new (not visited yet)
 
+				// fit check
 				weight_type new_remaining_space[GS_CUDA_INST_MAXM];
 				uint32_t j = 0;
 				for (; j < inst::dim; ++j) {
@@ -30,17 +31,21 @@ namespace gs {
 				if (j != inst::dim) continue;
 
 				res::add(visited, next);
-				if (inst::has_connection_to<result_type, index_type>(next, start)) { // is it a cycle (closed path)
-					// found some cycle lets check if it has all selected vertices
+
+				if (inst::has_connection_to<result_type, index_type>(next, start)) {
+					// completness check
 					index_type i = 0;
 					for (; i < inst::size; ++i) {
 						if (res::has(selected, i) && !res::has(visited, i)) break;
 					}
-					if (i == inst::size) return true; // it has - cycle found
+					if (i == inst::size) return true; // cycle found
 				}
+
+				// DFS call
 				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
 					selected, visited, new_remaining_space, next, start)
 				) return true; // cycle found later
+
 				res::remove(visited, next);
 			}
 			return false; // cycle not found
@@ -52,8 +57,10 @@ namespace gs {
 		) {
 			result_type visited = 0;
 			weight_type _remaining_space[GS_CUDA_INST_MAXM];
+
 			for (index_type i = 0; i < inst::size; ++i) {
 
+				// fit check
 				uint32_t wid = 0;
 				for (; wid < inst::dim; ++wid) {
 					if (inst::limits<weight_type>()[wid] >= inst::weights<weight_type>()[i * inst::dim + wid])
@@ -63,17 +70,21 @@ namespace gs {
 				if (wid != inst::dim) continue;
 
 				res::add(visited, i);
-				if (inst::has_connection_to<result_type, index_type>(i, i)) { // is it a cycle (closed path)
-					// found some cycle lets check if it has all selected vertices
+
+				if (inst::has_connection_to<result_type, index_type>(i, i)) {
+					// completness check
 					index_type j = 0;
 					for (; j < inst::size; ++j) {
 						if (res::has(selected, j) && j != i) break;
 					}
-					if (j == inst::size) return true; // it has - cycle found
+					if (j == inst::size) return true; // cycle found
 				}
+
+				// DFS call
 				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
 					selected, visited, _remaining_space, i, i)
 				) return true; // cycle found somewhere
+
 				res::remove(visited, i);
 			}
 			return false;
