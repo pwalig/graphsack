@@ -13,32 +13,30 @@ namespace gs {
 		inline __device__ bool is_cycle_possible_DFS(
 			result_type selected,
 			result_type visited,
-			const weight_type _remaining_space[GS_CUDA_INST_MAXM],
+			const weight_type* _remaining_space,
 			index_type current, index_type start
 		) {
 			for (index_type next = 0; next < inst::size; ++next) {
 				if (!inst::has_connection_to<result_type, index_type>(current, next)) continue;
 				if (res::has(visited, next)) continue; // next item has to be new (not visited yet)
 
-				bool fit = true;
 				weight_type new_remaining_space[GS_CUDA_INST_MAXM];
-				for (uint32_t j = 0; j < inst::dim; ++j) {
+				uint32_t j = 0;
+				for (; j < inst::dim; ++j) {
 					if (_remaining_space[j] >= inst::weights<weight_type>()[next * inst::dim + j])
 						new_remaining_space[j] = _remaining_space[j] - inst::weights<weight_type>()[next * inst::dim + j];
-					else { fit = false; break; }
+					else break;
 				}
-				if (!fit) continue;
+				if (j != inst::dim) continue;
 
 				res::add(visited, next);
 				if (inst::has_connection_to<result_type, index_type>(next, start)) { // is it a cycle (closed path)
-					bool _found = true; // found some cycle lets check if it has all selected vertices
-					for (index_type i = 0; i < inst::size; ++i) {
-						if (res::has(selected, i) && !res::has(visited, i)) {
-							_found = false;
-							break;
-						}
+					// found some cycle lets check if it has all selected vertices
+					index_type i = 0;
+					for (; i < inst::size; ++i) {
+						if (res::has(selected, i) && !res::has(visited, i)) break;
 					}
-					if (_found) return true; // it has - cycle found
+					if (i == inst::size) return true; // it has - cycle found
 				}
 				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
 					selected, visited, new_remaining_space, next, start)
@@ -53,27 +51,25 @@ namespace gs {
 			result_type selected
 		) {
 			result_type visited = 0;
+			weight_type _remaining_space[GS_CUDA_INST_MAXM];
 			for (index_type i = 0; i < inst::size; ++i) {
 
-				bool fit = true;
-				weight_type _remaining_space[GS_CUDA_INST_MAXM];
-				for (uint32_t j = 0; j < inst::dim; ++j) {
-					if (inst::limits<weight_type>()[j] >= inst::weights<weight_type>()[i * inst::dim + j])
-						_remaining_space[j] = inst::limits<weight_type>()[j] - inst::weights<weight_type>()[i * inst::dim + j];
-					else { fit = false; break; }
+				uint32_t wid = 0;
+				for (; wid < inst::dim; ++wid) {
+					if (inst::limits<weight_type>()[wid] >= inst::weights<weight_type>()[i * inst::dim + wid])
+						_remaining_space[wid] = inst::limits<weight_type>()[wid] - inst::weights<weight_type>()[i * inst::dim + wid];
+					else break;
 				}
-				if (!fit) continue;
+				if (wid != inst::dim) continue;
 
 				res::add(visited, i);
 				if (inst::has_connection_to<result_type, index_type>(i, i)) { // is it a cycle (closed path)
-					bool _found = true; // found some cycle lets check if it has all selected vertices
-					for (index_type j = 0; j < inst::size; ++j) {
-						if (res::has(selected, j) && j != i) {
-							_found = false;
-							break;
-						}
+					// found some cycle lets check if it has all selected vertices
+					index_type j = 0;
+					for (; j < inst::size; ++j) {
+						if (res::has(selected, j) && j != i) break;
 					}
-					if (_found) return true; // it has - cycle found
+					if (j == inst::size) return true; // it has - cycle found
 				}
 				if (is_cycle_possible_DFS<result_type, weight_type, index_type>(
 					selected, visited, _remaining_space, i, i)

@@ -38,7 +38,8 @@ namespace gs {
 					// setup
 					value_memory[id] = 0;
 					result_memory[id] = 0;
-					for (uint32_t wid = 0; wid < inst::dim; ++wid) weight_memory[inst::dim * id + wid] = 0;
+					for (uint32_t wid = 0; wid < inst::dim; ++wid)
+						weight_memory[inst::dim * id + wid] = inst::limits<uint32_t>()[wid];
 
 					// construct solution
 					for (index_type left = inst::size; left > 0; --left) {
@@ -53,21 +54,19 @@ namespace gs {
 						}
 
 						index_type to_add = sorted[sorted_index];
-						bool fitting = true;
-						for (uint32_t wid = 0; wid < inst::dim; ++wid) {
-							if (weight_memory[inst::dim * id + wid] + inst::weights<uint32_t>()[inst::dim * to_add + wid] > inst::limits<uint32_t>()[wid]) {
-								fitting = false;
+						uint32_t wid = 0;
+						for (; wid < inst::dim; ++wid) {
+							if (weight_memory[inst::dim * id + wid] < inst::weights<uint32_t>()[inst::dim * to_add + wid])
 								break;
-							}
 						}
-						if (fitting) {
+						if (wid == inst::dim) {
 							res::add(result_memory[id], to_add);
 							if (!is_cycle_possible_recursive<result_type, uint32_t, index_type>(
 								result_memory[id]
 							)) res::remove(result_memory[id], to_add);
 							else {
 								for (uint32_t wid = 0; wid < inst::dim; ++wid)
-									weight_memory[inst::dim * id + wid] += inst::weights<uint32_t>()[inst::dim * to_add + wid];
+									weight_memory[inst::dim * id + wid] -= inst::weights<uint32_t>()[inst::dim * to_add + wid];
 								value_memory[id] += inst::values<uint32_t>()[to_add];
 							}
 						}
