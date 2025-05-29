@@ -3,6 +3,7 @@
 #include <random>
 #include <cassert>
 
+#include "GRASP.hpp"
 #include "../Validator.hpp"
 #include "../structure_check.hpp"
 #include "../weight_vector_operations.hpp"
@@ -20,52 +21,33 @@ namespace gs {
 			inline static solution_t solve(
 				const instance_t& instance,
 				RandomEngine& randomEngine,
-				std::vector<indexT> sorted,
-				size_t choose_from,
-				bool (*structure_check) (const instance_t&, const solution_t&)
-			) {
-				assert(choose_from > 0);
-
-				solution_t res(instance.size());
-				std::vector<typename instance_t::weight_type> remaining(instance.limits().begin(), instance.limits().end());
-
-				// solve
-				while (sorted.size() > 0) {
-					std::uniform_int_distribution<indexT> distrib(0, (indexT)std::min(choose_from, sorted.size() - 1));
-					indexT pick = distrib(randomEngine);
-					indexT itemId = sorted[pick];
-
-					if (fits(instance.weights(itemId), remaining)) {
-						res.add(itemId);
-						if (!structure_check(instance, res)) res.remove(itemId);
-						else sub_from_weights(remaining, instance.weights(itemId));
-					}
-
-					sorted.erase(sorted.begin() + pick);
-				}
-				return res;
-			}
-
-			inline static solution_t solve(
-				const instance_t& instance,
-				RandomEngine& randomEngine,
 				size_t choose_from,
 				size_t runs,
 				bool (*structure_check) (const instance_t&, const solution_t&)
 			) {
+				// sort elements
 				auto sorted = metric::sorted_indexes<metricT, instance_t, indexT>(instance);
+
+				// best results
 				solution_t best_solution(instance.size());
 				typename instance_t::value_type best_value = 0;
 
 				#pragma omp parallel
 				{
+					// local best results
 					solution_t local_best_solution(instance.size());
 					typename instance_t::value_type local_best_value = 0;
 
+					// working memory
+					std::vector<typename instance_t::weight_type> remaining(instance.dim());
+					solution_t solution(instance.size());
+
+					// main loop
 					#pragma omp for
 					for (long long i = 0; i < runs; ++i) {
-						solution_t solution = solve(instance, randomEngine, sorted, choose_from, structure_check);
-						typename instance_t::value_type  value = Validator<instance_t, solution_t>::getResultValue(instance, solution);
+						typename instance_t::value_type value = GRASP<InstanceT, SolutionT, RandomEngine, metricT, indexT>::solve_one(
+							instance, solution, randomEngine, sorted, remaining.data(), choose_from, structure_check
+						);
 						if (value > local_best_value) {
 							local_best_value = value;
 							local_best_solution = solution;
