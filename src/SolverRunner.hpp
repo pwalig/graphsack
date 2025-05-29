@@ -85,7 +85,7 @@ namespace gs {
 		template <typename... Args>
 		inline static typename stats<instance_t>::single run(
 			const instance_t& instance,
-			std::string format,
+			const std::string& format,
 			std::ostream& stream = std::cout,
 			Args... args
 		) {
@@ -137,12 +137,14 @@ namespace gs {
 			return avgResultStats;
 		}
 
+		template <typename... Args>
 		inline static typename stats<instance_t>::avg run(
 			const std::vector<instance_t>& instances,
-			std::string format,
-			std::ostream& stream = std::cout
+			const std::string& format,
+			std::ostream& stream = std::cout,
+			Args... args
 		) {
-			return run(instances, { {format, stream} });
+			return run<Args...>(instances, { {format, stream} }, {}, args...);
 		}
 	};
 }

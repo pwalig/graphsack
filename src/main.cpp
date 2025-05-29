@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
-	const uint32_t itemsCount = 18;
+	const uint32_t itemsCount = 22;
 	const uint32_t weightsDim = 3;
 	
 	std::vector<unsigned int> randomValues(weightsDim + itemsCount + (weightsDim * itemsCount));
@@ -126,18 +126,23 @@ int main(int argc, char** argv) {
 	std::cout << randomItemlocalNlist << "\n";
 	std::cout << cudaInstance32 << "\n";
 	std::cout << cudaInstance64 << "\n";
+
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::Greedy<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::GHS<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, metric::NextsCountValueWeightRatio<>>>::run<size_t, bool>(randomItemlocalNlist, format, std::cout, 5, true);
-	SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run<std::knuth_b, float, size_t>(randomItemlocalNlist, format, std::cout, gen, 0.5f, 256);
-	SolverRunner<solver::ompGRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run<std::knuth_b, float, size_t>(randomItemlocalNlist, format, std::cout, gen, 0.5f, 256);
-	SolverRunner<cuda::solver::GRASP32>::run<size_t>(cudaInstance32, format, std::cout, 1);
+
 	SolverRunner<solver::BruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<solver::ompBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
 	SolverRunner<cuda::solver::BruteForce32>::run<size_t, size_t>(cudaInstance32, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
 	SolverRunner<cuda::solver::BruteForce64>::run<size_t, size_t>(cudaInstance64, format, std::cout, cuda_capability.maxThreadsPerBlock, 1);
+
+	//SolverRunner<solver::GRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run<std::knuth_b, float, size_t>(randomItemlocalNlist, format, std::cout, gen, 0.5f, 256);
+	//SolverRunner<solver::ompGRASP<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector, std::knuth_b>>::run<std::knuth_b, float, size_t>(randomItemlocalNlist, format, std::cout, gen, 0.5f, 256);
+	SolverRunner<cuda::solver::GRASP32>::run<size_t>(cudaInstance32, format, std::cout, 1);
+
 	randomItemlocalNlist.structure_to_find() = structure::path;
-	//SolverRunner<solver::PathBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+	SolverRunner<solver::PathBruteForce<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);
+
 	randomItemlocalNlist.structure_to_find() = structure::none;
 	randomItemlocalNlist.weight_treatment() = weight_treatment::first_only;
 	SolverRunner<solver::Dynamic<inst::itemlocal_nlist<uint32_t, uint32_t, uint32_t>, res::bit_vector>>::run(randomItemlocalNlist, format, std::cout);

@@ -26,10 +26,11 @@ namespace gs {
 
 				double global_mem_percent = 0.8;
 
-				template <typename result_type, typename index_type>
+				template <typename result_type, typename value_type, typename weight_type, typename index_type>
 				__global__ void cycle_kernel(
 					result_type totalThreads, uint32_t share,
-					uint32_t* value_memory, uint32_t* weight_memory, result_type* result_memory, index_type* stack_memory
+					value_type* value_memory, weight_type* weight_memory,
+					result_type* result_memory, index_type* stack_memory
 				) {
 					const result_type id = blockIdx.x * blockDim.x + threadIdx.x;
 					if (id > totalThreads) return;
@@ -41,7 +42,7 @@ namespace gs {
 
 						// setup
 						result_type n = id * share + resId;
-						uint32_t value = 0;
+						value_type value = 0;
 						for (uint32_t wid = 0; wid < inst::dim; ++wid) {
 							weight_memory[inst::dim * id + wid] = 0;
 						}
@@ -52,11 +53,11 @@ namespace gs {
 						index_type i = 0;
 						while (i < inst::size && fitting) {
 							if (res::has(n, i)) {
-								value += inst::values<uint32_t>()[i];
+								value += inst::values<value_type>()[i];
 								for (uint32_t  wid = 0; wid < inst::dim; ++wid) {
-									weight_memory[inst::dim * id + wid] += inst::weights<uint32_t>()[inst::dim * i + wid];
+									weight_memory[inst::dim * id + wid] += inst::weights<weight_type>()[inst::dim * i + wid];
 									
-									if (weight_memory[inst::dim * id + wid] > inst::limits<uint32_t>()[wid]) {
+									if (weight_memory[inst::dim * id + wid] > inst::limits<weight_type>()[wid]) {
 										fitting = false;
 										value = 0;
 										break;
@@ -79,18 +80,21 @@ namespace gs {
 				}
 
 //#define GS_CUDA_BRUTE_FORCE_DIAGNOSTIC
-				template <typename result_type>
+				template <typename instance_t, typename result_type>
 				res::solution<result_type> runner(
 					const inst::instance<result_type, uint32_t, uint32_t>& instance,
 					uint32_t threadsPerBlock = 0, uint32_t share = 1
 				) {
-					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
+					using value_type = typename instance_t::value_type;
+					using weight_type = typename instance_t::weight_type;
+					using index_type = typename instance_t::index_type;
 
 					inst::copy_to_symbol(instance);
 
 					size_t solutionSpace = (size_t(1) << instance.size());
 					size_t totalMemory = device_properties.totalGlobalMem * global_mem_percent;
-					size_t memoryPerThread = ((instance.dim() + 1) * sizeof(uint32_t)) + (2 * instance.size() * sizeof(index_type)) + sizeof(result_type);
+					size_t memoryPerThread = sizeof(value_type) + (instance.dim() * sizeof(weight_type))
+						+ (2 * instance.size() * sizeof(index_type)) + sizeof(result_type);
 					size_t maxThreads = totalMemory / memoryPerThread;
 
 					if (share == 0) share = 1;
@@ -103,7 +107,8 @@ namespace gs {
 					if (threadsPerBlock == 0) threadsPerBlock = device_properties.maxThreadsPerBlock;
 					threadsPerBlock = std::min<result_type>(threadsPerBlock, totalThreads);
 
-					buffer<uint32_t> device_memory(totalThreads * (instance.dim() + 1));
+					buffer<value_type> value_memory(totalThreads);
+					buffer<weight_type> weight_memory(totalThreads * instance.dim());
 					buffer<index_type> stack_memory(totalThreads * 2 * instance.size());
 					buffer<result_type> result_memory(totalThreads);
 
@@ -119,17 +124,15 @@ namespace gs {
 #endif
 					cycle_kernel<result_type><<<blocksCount, threadsPerBlock>>>(
 						totalThreads, share,
-						device_memory.data(), // value_memory
-						device_memory.data() + totalThreads, // weight_memory
-						result_memory.data(),
-						stack_memory.data()
+						value_memory.data(), weight_memory.data(),
+						result_memory.data(), stack_memory.data()
 					);
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
 						if (blocksCount > 1024) {
 							reductions::shared_pick<result_type, uint32_t><<<1, 1024>>>(
-								device_memory.data(),
+								value_memory.data(),
 								result_memory.data(),
 								threadsPerBlock,
 								totalThreads
@@ -137,7 +140,7 @@ namespace gs {
 						}
 						else {
 							reductions::pick<result_type, uint32_t><<<1, blocksCount>>>(
-								device_memory.data(),
+								value_memory.data(),
 								result_memory.data(),
 								threadsPerBlock,
 								totalThreads
@@ -154,13 +157,13 @@ namespace gs {
 				res::solution32 runner32(
 					const inst::instance32<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
 				) {
-					return runner<uint32_t>(instance, threadsPerBlock, share);
+					return runner<inst::instance32<uint32_t, uint32_t>, uint32_t>(instance, threadsPerBlock, share);
 				}
 
 				res::solution64 runner64(
 					const inst::instance64<uint32_t, uint32_t>& instance, uint32_t threadsPerBlock, uint32_t share
 				) {
-					return runner<uint64_t>(instance, threadsPerBlock, share);
+					return runner<inst::instance64<uint32_t, uint32_t>, uint64_t>(instance, threadsPerBlock, share);
 				}
 			}
 		}

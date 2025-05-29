@@ -27,10 +27,10 @@ namespace gs {
 			const std::string GRASP64::name = "CudaGRASP64";
 
 			namespace grasp {
-				template <typename result_type, typename index_type>
+				template <typename result_type, typename value_type, typename weight_type, typename index_type>
 				__global__ void cycle_kernel(
 					curandStateMtgp32* random_state, 
-					uint32_t* value_memory, uint32_t* weight_memory, result_type* result_memory, index_type* stack_memory,
+					value_type* value_memory, weight_type* weight_memory, result_type* result_memory,
 					index_type* sorted, index_type choose_from
 				) {
 					const size_t id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -39,7 +39,7 @@ namespace gs {
 					value_memory[id] = 0;
 					result_memory[id] = 0;
 					for (uint32_t wid = 0; wid < inst::dim; ++wid)
-						weight_memory[inst::dim * id + wid] = inst::limits<uint32_t>()[wid];
+						weight_memory[inst::dim * id + wid] = inst::limits<weight_type>()[wid];
 
 					// construct solution
 					for (index_type left = inst::size; left > 0; --left) {
@@ -56,18 +56,18 @@ namespace gs {
 						index_type to_add = sorted[sorted_index];
 						uint32_t wid = 0;
 						for (; wid < inst::dim; ++wid) {
-							if (weight_memory[inst::dim * id + wid] < inst::weights<uint32_t>()[inst::dim * to_add + wid])
+							if (weight_memory[inst::dim * id + wid] < inst::weights<weight_type>()[inst::dim * to_add + wid])
 								break;
 						}
 						if (wid == inst::dim) {
 							res::add(result_memory[id], to_add);
-							if (!is_cycle_possible_recursive<result_type, uint32_t, index_type>(
+							if (!is_cycle_possible_recursive<result_type, weight_type, index_type>(
 								result_memory[id]
 							)) res::remove(result_memory[id], to_add);
 							else {
 								for (uint32_t wid = 0; wid < inst::dim; ++wid)
-									weight_memory[inst::dim * id + wid] -= inst::weights<uint32_t>()[inst::dim * to_add + wid];
-								value_memory[id] += inst::values<uint32_t>()[to_add];
+									weight_memory[inst::dim * id + wid] -= inst::weights<weight_type>()[inst::dim * to_add + wid];
+								value_memory[id] += inst::values<value_type>()[to_add];
 							}
 						}
 					}
@@ -76,11 +76,13 @@ namespace gs {
 					GS_CUDA_REDUCTIONS_PICK(result_type, id, value_memory, result_memory)
 				}
 
-				template <typename result_type>
+				template <typename instance_t, typename result_type>
 				res::solution<result_type> runner(
-					const inst::instance<result_type, uint32_t, uint32_t>& instance, uint32_t blocksCount
+					const instance_t& instance, uint32_t blocksCount
 				) {
-					using index_type = typename inst::instance<result_type, uint32_t, uint32_t>::index_type;
+					using value_type = typename instance_t::value_type;
+					using weight_type = typename instance_t::weight_type;
+					using index_type = typename instance_t::index_type;
 
 					if (blocksCount > 200) throw std::invalid_argument("cudaGRASP blocksCount limit of 200 exeeded");
 					uint32_t threadsPerBlock = 256;
@@ -88,7 +90,8 @@ namespace gs {
 
 					inst::copy_to_symbol(instance);
 
-					buffer<uint32_t> weight_value(totalThreads * (instance.dim() + 1));
+					buffer<value_type> value_memory(totalThreads);
+					buffer<weight_type> weight_memory(totalThreads * instance.dim());
 
 					size_t closestPowerOf2 = 1;
 					while (closestPowerOf2 < instance.size()) closestPowerOf2 *= 2;
@@ -108,19 +111,18 @@ namespace gs {
 					sort::by_metric_desc<index_type, typename MetricT::value_type><<<1, closestPowerOf2>>>(
 						index_memory.data(), metric_memory.data(), instance.size()
 					);
-					index_memory.debug_print(0, instance.size(), 1);
+					//index_memory.debug_print(0, instance.size(), 1);
 
-					cycle_kernel<result_type, index_type><<<blocksCount, threadsPerBlock>>>(
+					cycle_kernel<result_type, value_type, weight_type, index_type><<<blocksCount, threadsPerBlock>>>(
 						random_states.data(),
-						weight_value.data(), weight_value.data() + totalThreads,
-						result_memory.data(), index_memory.data() + closestPowerOf2,
+						value_memory.data(), weight_memory.data(), result_memory.data(),
 						index_memory.data(), instance.size() / 2
 					);
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
-						reductions::pick<result_type, uint32_t><<<1, blocksCount>>> (
-							weight_value.data(),
+						reductions::pick<result_type, value_type><<<1, blocksCount>>> (
+							value_memory.data(),
 							result_memory.data(),
 							threadsPerBlock,
 							totalThreads
@@ -136,13 +138,13 @@ namespace gs {
 				res::solution32 runner32(
 					const inst::instance32<uint32_t, uint32_t>& instance, uint32_t blocksCount
 				) {
-					return runner<uint32_t>(instance, blocksCount);
+					return runner<inst::instance32<uint32_t, uint32_t>, uint32_t>(instance, blocksCount);
 				}
 
 				res::solution64 runner64(
 					const inst::instance64<uint32_t, uint32_t>& instance, uint32_t blocksCount
 				) {
-					return runner<uint64_t>(instance, blocksCount);
+					return runner<inst::instance64<uint32_t, uint32_t>, uint64_t>(instance, blocksCount);
 				}
 			}
 		}

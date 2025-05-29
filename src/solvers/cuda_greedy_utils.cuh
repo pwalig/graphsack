@@ -54,7 +54,7 @@ namespace gs {
 					metric[i] = metric_memory[i];
 
 					// bitonic sort
-					for (index_type k = 2; k <= blockDim.x; k *= 2) {// k is doubled every iteration
+					for (index_type k = 2; k <= blockDim.x; k *= 2) { // k is doubled every iteration
 						for (index_type j = k / 2; j > 0; j /= 2) { // j is halved at every iteration, with truncation of fractional parts
 							__syncthreads();
 							index_type l = i ^ j;
