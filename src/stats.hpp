@@ -140,6 +140,7 @@ namespace gs {
 
 			inline accumulate& operator+=(const single& stat) {
 				insert(stat);
+				return (*this);
 			}
 			inline accumulate& operator+(const single& stat) {
 				accumulate tmp = (*this);
@@ -158,7 +159,7 @@ namespace gs {
 			}
 
 			inline std::vector<double> avg_weights() const {
-				std::vector<double> sum(weights.size(), 0.0);
+				std::vector<double> sum(weights.back().size(), 0.0);
 				for (size_t i = 0; i < weights.back().size(); ++i) {
 					for (size_t j = 0; j < weights.size(); ++j) {
 						sum[i] += weights[j][i];
@@ -170,7 +171,7 @@ namespace gs {
 
 			inline double avg_valid(uint8_t validation_number) const {
 				uint8_t mask = 1 << validation_number;
-				double sum = std::count_if(validations.begin(), validations.end(), [](uint8_t val) {return val & mask; });
+				double sum = std::count_if(validations.begin(), validations.end(), [mask](uint8_t val) {return val & mask; });
 				return sum / validations.size();
 			}
 

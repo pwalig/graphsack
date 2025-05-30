@@ -118,6 +118,63 @@ Error:
     return cudaStatus;
 }
 
+void gs::cuda::info::print_json()
+{
+    cudaDeviceProp  prop;
+	int count;
+	printf("{\n");
+	cudaGetDeviceCount(&count);
+	// printf("\"DeviceCount\":\"%d\",\n",count);
+	printf("\t\"Devices\":[");
+	for (int i=0;i<count;i++) {
+		printf("\n\t{\n");
+		cudaGetDeviceProperties(&prop,i);
+		printf("\t\t\"name\":\"%s\",\n",prop.name);
+		printf("\t\t\"major\":\"%d\",\n",prop.major);
+		printf("\t\t\"minor\":\"%d\",\n",prop.minor);
+		printf("\t\t\"computeMode\":\"%d\",\n",prop.computeMode);
+		printf("\t\t\"integrated\":\"%d\",\n",prop.integrated);
+		printf("\t\t\"tccDriver\":\"%d\",\n",prop.tccDriver);
+		printf("\t\t\"ECCEnabled\":\"%d\",\n",prop.ECCEnabled);
+		printf("\t\t\"deviceOverlap\":\"%d\",\n",prop.deviceOverlap); // Przeplatanie urz¹dzeñ
+		printf("\t\t\"concurrentKernels\":\"%d\",\n",prop.concurrentKernels);
+		printf("\t\t\"kernelExecTimeoutEnabled\":\"%d\",\n",prop.kernelExecTimeoutEnabled);
+		printf("\t\t\"canMapHostMemory\":\"%d\",\n",prop.canMapHostMemory);
+		printf("\t\t\"multiProcessorCount\":\"%d\",\n",prop.multiProcessorCount);
+		printf("\t\t\"warpSize\":\"%d\",\n",prop.warpSize);
+		printf("\t\t\"clockRate\":\"%d\",\n",prop.clockRate);
+		printf("\t\t\"maxThreadsPerBlock\":\"%d\",\n",prop.maxThreadsPerBlock);
+		printf("\t\t\"maxThreadsDim\":[%d,%d,%d],\n", prop.maxThreadsDim[0], prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
+		printf("\t\t\"maxGridSize\":[%d,%d,%d],\n", prop.maxGridSize[0], prop.maxGridSize[1], prop.maxGridSize[2]);
+		printf("\t\t\"maxTexture1D\":\"%d\",\n",prop.maxTexture1D);
+		printf("\t\t\"maxTexture2D\":[%d,%d],\n", prop.maxTexture2D[0], prop.maxTexture2D[1]);
+		printf("\t\t\"maxTexture3D\":[%d,%d,%d],\n", prop.maxTexture3D[0], prop.maxTexture3D[1], prop.maxTexture3D[2]);
+		printf("\t\t\"pciBusID\":\"%d\",\n",prop.pciBusID);
+		printf("\t\t\"pciDeviceID\":\"%d\",\n",prop.pciDeviceID);
+		printf("\t\t\"regsPerBlock\":\"%d\",\n",prop.regsPerBlock);
+		// size_t
+		printf("\t\t\"memPitch\":\"%llu\",\n",prop.memPitch);
+		printf("\t\t\"surfaceAlignment\":\"%llu\",\n",prop.surfaceAlignment);
+		printf("\t\t\"textureAlignment\":\"%llu\",\n",prop.textureAlignment);
+		printf("\t\t\"totalConstMem\":\"%llu\",\n",prop.totalConstMem);
+		printf("\t\t\"totalGlobalMem\":\"%llu\",\n",prop.totalGlobalMem);	
+		printf("\t\t\"sharedMemPerBlock\":\"%llu\",\n",prop.sharedMemPerBlock);
+		// size_t
+		printf("\t\t\"memPitch\":\"%zu\",\n",prop.memPitch);
+		printf("\t\t\"surfaceAlignment\":\"%zu\",\n",prop.surfaceAlignment);
+		printf("\t\t\"textureAlignment\":\"%zu\",\n",prop.textureAlignment);
+		printf("\t\t\"totalConstMem\":\"%zu\",\n",prop.totalConstMem);
+		printf("\t\t\"totalGlobalMem\":\"%zu\",\n",prop.totalGlobalMem);
+		printf("\t\t\"sharedMemPerBlock\":\"%zu\",\n",prop.sharedMemPerBlock);
+		printf("\t\t\"canMapHostMemory\":\"%d\",\n",prop.canMapHostMemory);
+		printf("\t\t\"l2CacheSize\":\"%d\"\n",prop.l2CacheSize);
+		printf("\t\t\"persistingL2CacheMaxSize\":\"%d\"\n",prop.persistingL2CacheMaxSize);
+		printf("\t\t\"regsPerBlock\":\"%d\"\n",prop.regsPerBlock);
+		if (i<count-1) printf("\t},\n"); else printf("\t}\n");
+	}
+	printf("\t]\n}\n");
+}
+
 void gs::cuda::info::print()
 {
 	printf("Cuda Version: %d\n", CUDART_VERSION);

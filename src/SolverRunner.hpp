@@ -105,8 +105,8 @@ namespace gs {
 			// solve all instances
 			for (const instance_t& instance : instances) {
 				resultSumStats += run<Args...>(instance, outputs, args...);
-				instanceSumStats.weights.push_back(instance.n);
-				instanceSumStats.value.push_back(instance.wordSet.size());
+				instanceSumStats.weights.push_back(std::vector<typename instance_t::weight_type>(instance.limits().begin(), instance.limits().end()));
+				instanceSumStats.values.push_back(instance.size());
 			}
 
 			// average results
@@ -124,9 +124,9 @@ namespace gs {
 					else if (keyval == "time") avgOutput.second << avgResultStats.time;
 					else if (keyval == "instance value") avgOutput.second << avgInstanceStats.value;
 					else if (keyval == "result value") avgOutput.second << avgResultStats.value;
-					else if (keyval == "instance weights") for (auto elem : avgInstanceStats.weights) avgOutput.second << elem << " ";
+					else if (keyval == "limits") for (auto elem : avgInstanceStats.weights) avgOutput.second << elem << " ";
 					else if (keyval == "result weights") for (auto elem : avgResultStats.weights) avgOutput.second << elem << " ";
-					else if (keyval == "structure") avgOutput.second << avgResultStats.structure;
+					else if (keyval == "structure valid") avgOutput.second << avgResultStats.structure;
 					else if (keyval == "fitting") avgOutput.second << avgResultStats.fitting;
 					avgOutput.first = avgOutput.first.substr(pos2 + 1);
 					pos = avgOutput.first.find_first_of('{');

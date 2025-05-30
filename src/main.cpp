@@ -22,72 +22,122 @@
 #include "inst/cuda_instance.hpp"
 #include "cuda_init.h"
 
-#ifndef NDEBUG
 #include "cuda_test.h"
-#endif
 
 using namespace gs;
 
-template <typename value_type, typename weight_type>
-void test(
-	size_t itemsCount, size_t weightsDim,
-	weight_type MinLimit, weight_type MaxLimit,
-	value_type MinValue, value_type MaxValue,
-	weight_type MinWeight, weight_type MaxWeight,
-	double density, bool unidirectional = false, bool selfArches = true
-) {
+namespace gs::test {
 	using Rand = std::mt19937;
-	std::random_device randomDevice;
-	Rand gen(randomDevice());
 
-	using cpu_instance = inst::itemlocal_nlist<value_type, weight_type>;
-	using gpu_instance = cuda::inst::instance64<value_type, weight_type>;
+	template <typename value_type, typename weight_type>
+	struct params {
+		size_t itemsCount;
+		size_t weightsDim;
+		weight_type MinLimit;
+		weight_type MaxLimit;
+		value_type MinValue;
+		value_type MaxValue;
+		weight_type MinWeight;
+		weight_type MaxWeight;
+		double density;
+		bool unidirectional = false;
+		bool selfArches = true;
+		structure structureToFind = structure::cycle;
+		weight_treatment weightTreatment = weight_treatment::full;
+	};
 
-	using cpu_result = res::bit_vector;
-	using gpu_result = cuda::res::solution64;
-	
-	auto ld = [&gen, MinLimit, MaxLimit]() { return gs::random::function<Rand>::from_uniform_distribution(gen, MinLimit, MaxLimit); };
-	auto vd = [&gen, MinValue, MaxValue]() { return gs::random::function<Rand>::from_uniform_distribution(gen, MinValue, MaxValue); };
-	auto wd = [&gen, MinWeight, MaxWeight]() { return gs::random::function<Rand>::from_uniform_distribution(gen, MinWeight, MaxWeight); };
-	
-	std::vector<weight_type> randomWeights(itemsCount * weightsDim + weightsDim);
-	std::vector<value_type> randomValues(itemsCount);
+	template <typename value_type, typename weight_type>
+	void test(
+		const params<value_type, weight_type>& p,
+		Rand& gen,
+		uint32_t runs = 1
+	) {
 
-	random::into(randomWeights.begin(), randomWeights.begin() + weightsDim, ld);
-	random::into(randomValues.begin(), randomValues.end(), vd);
-	random::into(randomWeights.begin() + weightsDim, randomWeights.end(), wd);
+		using cpu_instance = inst::itemlocal_nlist<value_type, weight_type>;
+		using gpu_instance = cuda::inst::instance64<value_type, weight_type>;
 
-	 cpu_instance cpui(
-		randomWeights.begin(), randomWeights.begin() + weightsDim,
-		randomValues.begin(), randomValues.end(),
-		randomWeights.begin() + weightsDim, randomWeights.end(),
-		gs::graphs::adjacency_matrix::from_gnp(itemsCount, density, gen, unidirectional, selfArches),
-		structure::cycle, weight_treatment::full
-	);
-	gpu_instance gpui(
-		randomWeights.begin(), randomWeights.begin() + weightsDim,
-		randomValues.begin(), randomValues.end(),
-		randomWeights.begin() + weightsDim, randomWeights.end(),
-		gs::graphs::adjacency_matrix::from_gnp(itemsCount, density, gen, unidirectional, selfArches),
-		structure::cycle, weight_treatment::full
-	);
+		using cpu_result = res::bit_vector;
+		using gpu_result = cuda::res::solution64;
 
-	std::string format = "{solver name}\nresult: {result}\ntime: {time}s\nvalue: {result value}\nweights: {result weights}/ {limits}\nstructure: {structure valid}\nfitting: {fitting}\n\n";
+		using graph_t = graphs::adjacency_matrix;
+		
+		auto ld = [&gen, MinLimit = p.MinLimit, MaxLimit = p.MaxLimit]()
+			{ return gs::random::function<Rand>::from_uniform_distribution(gen, MinLimit, MaxLimit); };
+		auto vd = [&gen, MinValue = p.MinValue, MaxValue = p.MaxValue]()
+			{ return gs::random::function<Rand>::from_uniform_distribution(gen, MinValue, MaxValue); };
+		auto wd = [&gen, MinWeight = p.MinWeight, MaxWeight = p.MaxWeight]()
+			{ return gs::random::function<Rand>::from_uniform_distribution(gen, MinWeight, MaxWeight); };
+		
+		std::vector<weight_type> randomWeights(p.itemsCount * p.weightsDim + p.weightsDim);
+		std::vector<value_type> randomValues(p.itemsCount);
 
-	SolverRunner<solver::Greedy<cpu_instance, cpu_result>>::run(cpui, format, std::cout);
-	SolverRunner<solver::Greedy<cpu_instance, cpu_result, metric::NextsCountValueWeightRatio<>>>::run(cpui, format, std::cout);
-	SolverRunner<solver::GHS<cpu_instance, cpu_result, metric::NextsCountValueWeightRatio<>>>::run(cpui, format, std::cout, size_t(5), true);
+		std::vector<cpu_instance> cpui;
+		std::vector<gpu_instance> gpui;
+		cpui.reserve(runs);
+		gpui.reserve(runs);
+		for (uint32_t i = 0; i < runs; ++i) {
 
-	SolverRunner<solver::BruteForce<cpu_instance, cpu_result>>::run(cpui, format, std::cout);
-	SolverRunner<solver::ompBruteForce<cpu_instance, cpu_result>>::run(cpui, format, std::cout);
-	SolverRunner<cuda::solver::BruteForce<gpu_instance>>::run(gpui, format, std::cout, 0, 1);
+			random::into(randomWeights.begin(), randomWeights.begin() + p.weightsDim, ld);
+			random::into(randomValues.begin(), randomValues.end(), vd);
+			random::into(randomWeights.begin() + p.weightsDim, randomWeights.end(), wd);
 
-	SolverRunner<solver::GRASP<cpu_instance, cpu_result, Rand>>::run(cpui, format, std::cout, gen, 0.5f, size_t(256));
-	SolverRunner<solver::ompGRASP<cpu_instance, cpu_result, Rand>>::run(cpui, format, std::cout, gen, 0.5f, size_t(256));
-	SolverRunner<cuda::solver::GRASP<gpu_instance>>::run(gpui, format, std::cout, 64, gpui.size() / 2);
+			graph_t graph = graph_t::from_gnp(p.itemsCount, p.density, gen, p.unidirectional, p.selfArches);
+
+			cpui.push_back(cpu_instance(
+				randomWeights.begin(), randomWeights.begin() + p.weightsDim,
+				randomValues.begin(), randomValues.end(),
+				randomWeights.begin() + p.weightsDim, randomWeights.end(),
+				graph, p.structureToFind, p.weightTreatment
+			));
+			gpui.push_back(gpu_instance(
+				randomWeights.begin(), randomWeights.begin() + p.weightsDim,
+				randomValues.begin(), randomValues.end(),
+				randomWeights.begin() + p.weightsDim, randomWeights.end(),
+				graph, p.structureToFind, p.weightTreatment
+			));
+		}
+
+		std::string format = "result: {result}\ttime: {time}s\tvalue: {result value}\tweights: {result weights} / {limits}\tstructure: {structure valid}\tfitting: {fitting}\n";
+		std::string avg_format = "{solver name}\ttime: {time}s\tvalue: {result value}\tweights: {result weights} / {limits}\tstructure: {structure valid}\tfitting: {fitting}\n";
+		std::string single_format = "{solver name}\nresult: {result}\ntime: {time}s\nvalue: {result value}\nweights: {result weights}/ {limits}\nstructure: {structure valid}\nfitting: {fitting}\n\n";
+		std::vector<std::pair<std::string, std::ostream&>> outputs;
+		std::vector<std::pair<std::string, std::ostream&>> avg_outputs;
+		if (runs == 1) {
+			outputs.push_back({ single_format, std::cout });
+		}
+		else {
+			outputs.push_back({ format, std::cout });
+			avg_outputs.push_back({ avg_format, std::cout });
+		}
+
+		//SolverRunner<solver::Greedy<cpu_instance, cpu_result>>::run(cpui, outputs, avg_outputs);
+		//SolverRunner<solver::Greedy<cpu_instance, cpu_result, metric::NextsCountValueWeightRatio<>>>::run(cpui, outputs, avg_outputs);
+		//SolverRunner<solver::GHS<cpu_instance, cpu_result, metric::NextsCountValueWeightRatio<>>>::run(cpui, outputs, avg_outputs, size_t(5), true);
+
+		SolverRunner<cuda::solver::BruteForce<gpu_instance>>::run(gpui, outputs, avg_outputs, 0, 1);
+		SolverRunner<solver::ompBruteForce<cpu_instance, cpu_result>>::run(cpui, outputs, avg_outputs);
+		SolverRunner<solver::BruteForce<cpu_instance, cpu_result>>::run(cpui, outputs, avg_outputs);
+
+		SolverRunner<cuda::solver::GRASP<gpu_instance>>::run(gpui, outputs, avg_outputs, 1, gpui.size() / 2);
+		SolverRunner<solver::ompGRASP<cpu_instance, cpu_result, Rand>>::run(cpui, outputs, avg_outputs, gen, 0.5f, size_t(256));
+		SolverRunner<solver::GRASP<cpu_instance, cpu_result, Rand>>::run(cpui, outputs, avg_outputs, gen, 0.5f, size_t(256));
+	}
+
+	template <typename value_type, typename weight_type>
+	void test(
+		const params<value_type, weight_type>& p,
+		uint32_t runs = 1
+	) {
+		std::random_device randomDevice;
+		Rand gen(randomDevice());
+		test<value_type, weight_type>(p, gen, runs);
+	}
 }
 
+
 int main(int argc, char** argv) {
+	std::random_device randomDevice;
+	cuda::info::print_json();
 	cuda::device_properties_t cuda_capability = cuda::init();
 	std::cout << "threads per block: " << cuda_capability.maxThreadsPerBlock << '\n';
 	weight_value_vector<> inst(
@@ -146,15 +196,21 @@ int main(int argc, char** argv) {
 	cuda::test();
 #endif
 
-	test<uint32_t, uint32_t>(
-		16, 3,
-		30, 50,
-		1, 10,
-		1, 10,
-		0.2, false, true
-	);
+	test::Rand testGen(randomDevice());
+	for (size_t i = 5; i < 35; i += 5) {
+		std::cout << i << '\n';
+		test::params<uint32_t, uint32_t> params = {
+			i, 3,
+			30, 50,
+			1, 10,
+			1, 10,
+			0.2, false, true
+		};
+		test::test<uint32_t, uint32_t>(
+			params, testGen, 1 
+		);
+	}
 
-	std::random_device randomDevice;
 	std::knuth_b gen(randomDevice());
 
 	std::vector<size_t> path = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
