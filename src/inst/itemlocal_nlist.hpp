@@ -341,19 +341,19 @@ namespace gs {
 			inline nexts_type nexts(size_type i) {
 				assert(i < n);
 				auto ids = item_data_slice();
-				uint8_t* ptr = &storage[ids[i]];
-				uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
+				typename Container::value_type* ptr = &storage[ids[i]];
+				typename Container::value_type* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
 				size_type nextsCount = (nextPtr - ptr - sizeofValue - (m * sizeofWeight)) / sizeofIndex;
-				return nexts_type((index_type*)(storage.data() + item_data_slice()[i] + sizeofValue + (m * sizeofWeight)), nextsCount);
+				return nexts_type((index_type*)(storage.data() + ids[i] + sizeofValue + (m * sizeofWeight)), nextsCount);
 			}
 			
 			inline const_nexts_type nexts(size_type i) const {
 				assert(i < n);
 				auto ids = item_data_slice();
-				const uint8_t* ptr = &storage[ids[i]];
-				const uint8_t* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
+				const typename Container::value_type* ptr = &storage[ids[i]];
+				const typename Container::value_type* nextPtr = (i == n - 1 ? (&storage.back()) + 1 : &storage[ids[i + 1]]);
 				size_type nextsCount = (nextPtr - ptr - sizeofValue - (m * sizeofWeight)) / sizeofIndex;
-				return const_nexts_type((index_type*)(storage.data() + item_data_slice()[i] + sizeofValue + (m * sizeofWeight)), nextsCount);
+				return const_nexts_type((index_type*)(storage.data() + ids[i] + sizeofValue + (m * sizeofWeight)), nextsCount);
 			}
 
 			inline item_type item(size_type i) {
@@ -415,14 +415,14 @@ namespace gs {
 				stream >> itnl.m;
 
 				// get storage parameters
-				using sizt = std::vector<uint8_t>::size_type;
+				using sizt = typename Container::size_type;
 				sizt size = (sizeofWeight * (itnl.n + 1) * itnl.m) + ((sizeofValue + sizeofSize) * itnl.n);
 				sizt stride = (sizeofWeight * itnl.m) + sizeofValue;
 				sizt limitsOff = sizeofSize * itnl.n;
 				sizt itemsOff = limitsOff + sizeofWeight * itnl.m;
 
 				// read limitsOff, weights and values
-				std::vector<uint8_t> weight_value(size);
+				std::vector<typename Container::value_type> weight_value(size);
 				for (sizt i = limitsOff; i < itemsOff; i += sizeofWeight) {
 					stream >> (*((weight_type*)(&weight_value[i])));
 				}
