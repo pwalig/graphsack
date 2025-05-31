@@ -128,8 +128,8 @@ namespace gs {
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
-						if (blocksCount > 1024) {
-							reductions::shared_pick<result_type, uint32_t><<<1, 1024>>>(
+						if (blocksCount > device_properties.maxThreadsPerBlock) {
+							reductions::shared_pick<result_type, uint32_t><<<1, device_properties.maxThreadsPerBlock>>>(
 								value_memory.data(),
 								result_memory.data(),
 								threadsPerBlock,
