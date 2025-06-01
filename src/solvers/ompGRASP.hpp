@@ -38,6 +38,14 @@ namespace gs {
 					solution_t local_best_solution(instance.size());
 					typename instance_t::value_type local_best_value = 0;
 
+					// local random engine
+					RandomEngine local_random_engine;
+					#pragma omp critical
+					{
+						local_random_engine.seed(std::uniform_int_distribution<uint32_t>(0, 100000)(randomEngine));
+					}
+
+
 					// working memory
 					std::vector<typename instance_t::weight_type> remaining(instance.dim());
 					solution_t solution(instance.size());
@@ -46,7 +54,7 @@ namespace gs {
 					#pragma omp for
 					for (long long i = 0; i < runs; ++i) {
 						typename instance_t::value_type value = GRASP<InstanceT, SolutionT, RandomEngine, metricT, indexT>::solve_one(
-							instance, solution, randomEngine, sorted, remaining.data(), choose_from, structure_check
+							instance, solution, local_random_engine, sorted, remaining.data(), choose_from, structure_check
 						);
 						if (value > local_best_value) {
 							local_best_value = value;
