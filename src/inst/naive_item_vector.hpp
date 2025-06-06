@@ -3,6 +3,7 @@
 
 #include "../graphs/adjacency_matrix.hpp"
 #include "inst_macros.hpp"
+#include "../graphs/representation.hpp"
 
 namespace gs::inst {
 	template <typename ValueT, typename WeightT>
@@ -12,6 +13,7 @@ namespace gs::inst {
 		using weight_type = WeightT;
 		using index_type = size_t;
 		using size_type = size_t;
+		inline const static graphs::representation representation = graphs::representation::nexts_list;
 
 		using limits_type = std::vector<weight_type>;
 		using const_limits_type = const std::vector<weight_type>;

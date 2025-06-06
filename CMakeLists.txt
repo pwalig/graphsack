@@ -6,6 +6,7 @@ add_executable(graphsack)
 
 find_package(OpenMP REQUIRED CXX)
 target_link_libraries(graphsack PUBLIC OpenMP::OpenMP_CXX)
+target_include_directories(graphsack PUBLIC ext/rapidjson/include)
 
 add_subdirectory(src)
 target_sources(graphsack PRIVATE src/graphs/adjacency_matrix.cpp)

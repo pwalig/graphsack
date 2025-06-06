@@ -1,5 +1,7 @@
 #include "adjacency_matrix.hpp"
 
+const gs::graphs::representation gs::graphs::adjacency_matrix::representation = graphs::representation::adjacency;
+
 gs::graphs::adjacency_matrix::adjacency_matrix(std::initializer_list<std::initializer_list<bool>> init)
 	: storage(init.size()* init.begin()->size()) {
 	size_type i = 0;

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <numeric>
 
+#include "../graphs/representation.hpp"
 #include "../slice.hpp"
 #include "../iterator.hpp"
 #include "../structure.hpp"
@@ -23,6 +24,7 @@ namespace gs {
 			using weight_type = weightT;
 			using index_type = indexT;
 			using size_type = typename Container::size_type;
+			inline const static graphs::representation representation = graphs::representation::nexts_list;
 
 			static_assert(sizeof(value_type) % sizeof(typename Container::value_type) == 0);
 			static_assert(sizeof(weight_type) % sizeof(typename Container::value_type) == 0);

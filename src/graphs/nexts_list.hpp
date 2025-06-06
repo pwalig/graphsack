@@ -3,6 +3,7 @@
 #include <initializer_list>
 #include <iostream>
 #include "../slice.hpp"
+#include "representation.hpp"
 
 namespace gs {
 	namespace graphs {
@@ -13,6 +14,8 @@ namespace gs {
 			using size_type = typename Container::size_type;
 			using proxy_t = slice<value_type, size_type>;
 			using const_proxy_t = const slice<const value_type, size_type>;
+			inline const static graphs::representation representation = graphs::representation::nexts_list;
+
 		private:
 			Container _data;
 			size_type _n;

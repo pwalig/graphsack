@@ -1,6 +1,7 @@
 #pragma once
 #include <utility>
 #include <cassert>
+#include "representation.hpp"
 
 namespace gs {
 	namespace graphs {
@@ -24,6 +25,7 @@ namespace gs {
 			using size_type = typename Container::size_type;
 			using iterator = typename Container::iterator;
 			using const_iterator = typename Container::iterator;
+			inline const static graphs::representation representation = graphs::representation::arch_list;
 
 		private:
 			Container storage;

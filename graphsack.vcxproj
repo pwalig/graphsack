@@ -165,6 +165,7 @@
     <ClInclude Include="src\cuda\error_wrapper.cuh" />
     <ClInclude Include="src\cuda_init.h" />
     <ClInclude Include="src\cuda_structure_check.cuh" />
+    <ClInclude Include="src\graphs\representation.hpp" />
     <ClInclude Include="src\inst\cuda_instance.hpp" />
     <ClInclude Include="src\inst\cuda_instance.cuh" />
     <ClInclude Include="src\inst\inst_generator.hpp" />

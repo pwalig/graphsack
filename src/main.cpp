@@ -2,6 +2,8 @@
 
 #include "inst/weight_value_vector.hpp"
 #include "inst/naive_item_vector.hpp"
+#include "inst/weight_value_vector.hpp"
+#include "inst/composite_instance.hpp"
 #include "res/bit_vector.hpp"
 #include "solvers/Greedy.hpp"
 #include "solvers/GRASP.hpp"
@@ -56,6 +58,7 @@ namespace gs::test {
 	) {
 
 		using cpu_instance = inst::itemlocal_nlist<value_type, weight_type, uint32_t, std::vector<uint32_t>>;
+		//using cpu_instance = inst::composite<weight_value_vector<uint32_t>, graphs::adjacency_matrix>;
 		//using cpu_instance = inst::naive_item_vector<value_type, weight_type>;
 		using gpu_instance = cuda::inst::instance64<value_type, weight_type>;
 

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <utility>
 #include <fstream>
+#include <iterator>
 
 #include "../iterator.hpp"
 #include "inst_macros.hpp"
@@ -24,9 +25,9 @@ namespace gs {
 		template <typename T = weight_type>
 		class Weights {
 		public:
-			using weight_type = T;
-			using reference = weight_type&;
-			using pointer = weight_type*;
+			using value_type = T;
+			using reference = value_type&;
+			using pointer = value_type*;
 			using const_reference = const reference;
 			using const_pointer = const pointer;
 		private:
@@ -47,8 +48,8 @@ namespace gs {
 			}
 			inline size_t size() const { return siz; }
 			inline pointer data() const { return ptr; }
-			inline weight_type total() const {
-				typename std::remove_const<weight_type>::type sum = 0;
+			inline value_type total() const {
+				typename std::remove_const<value_type>::type sum = 0;
 				for (size_t i = 0; i < siz; ++i) sum += ptr[i];
 				return sum;
 			}
@@ -92,7 +93,7 @@ namespace gs {
 
 
 		using weights_type = Weights<weight_type>;
-		using const_weights_t = const Weights<const weight_type>;
+		using const_weights_type = const Weights<const weight_type>;
 		using item_type = Item<value_type>;
 		using const_item_type = const Item<const value_type>;
 
@@ -124,6 +125,25 @@ namespace gs {
 		}
 
 		inline weight_value_vector(size_t M, size_t N, const std::vector<value_type>& data) : _data(data), _m(M), _n(N) {}
+
+		template <typename LIter, typename VIter, typename WIter>
+		inline weight_value_vector(
+			LIter LimitsBegin, LIter LimitsEnd,
+			VIter ValuesBegin, VIter ValuesEnd,
+			WIter WeightsBegin, WIter WeightsEnd,
+			gs::weight_treatment WeightTreatment = gs::weight_treatment::full
+		) : _data(std::distance(LimitsBegin, LimitsEnd) + std::distance(ValuesBegin, ValuesEnd) + std::distance(WeightsBegin, WeightsEnd)),
+			weightTreatment(WeightTreatment) {
+			auto dim = std::distance(LimitsBegin, LimitsEnd);
+			auto it = std::copy(LimitsBegin, LimitsEnd, _data.begin());
+			while (ValuesBegin != ValuesEnd) {
+				*it = *ValuesBegin;
+				it = std::copy(WeightsBegin, WeightsBegin + dim, it);
+				++ValuesBegin;
+				WeightsBegin += dim;
+			}
+		}
+
 		inline weight_value_vector(const std::string filename) : weight_value_vector() {
 			std::ifstream fin(filename);
 			if (!fin.is_open()) throw std::runtime_error("could not open file: " + filename);
@@ -136,7 +156,7 @@ namespace gs {
 		proxy_all_iterator_defs(_data.data() + _m, its(), _n)
 
 		inline weights_type limits() { return weights_type(_data.data(), _m); }
-		inline const_weights_t limits() const { return const_weights_t(_data.data(), _m); }
+		inline const_weights_type limits() const { return const_weights_type(_data.data(), _m); }
 
 		inline value_type limit(size_t i) { assert(i < _m);  return _data[i]; }
 		inline const value_type& limit(size_t i) const { assert(i < _m);  return _data[i]; }
@@ -164,6 +184,9 @@ namespace gs {
 		
 		inline value_type& weight(size_t i, size_t w) { return _data[_m + (i * its()) + w]; }
 		inline const value_type& weight(size_t i, size_t w) const { return _data[_m + (i * its()) + w]; }
+
+		inline weights_type& weights(size_t i) { return weights_type(_data.data() + (i * its() + _m), _m); }
+		inline const_weights_type& weights(size_t i) const { return const_weights_type(_data.data() + (i * its() + _m), _m); }
 
 		GS_INST_WEIGHT_TREATMENT_ACCESS
 		GS_INST_WEIGHT_TREATMENT_FIRST_ONLY_ACCESS

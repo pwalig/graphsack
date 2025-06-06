@@ -6,6 +6,7 @@
 #include <random>
 #include <type_traits>
 
+#include "representation.hpp"
 #include "../slice.hpp"
 #include "../inst/gs_random.hpp"
 
@@ -19,6 +20,7 @@ namespace gs {
 			using const_reference = typename std::vector<bool>::const_reference;
 			using const_pointer = typename std::vector<bool>::const_pointer;
 			using size_type = typename std::vector<bool>::size_type;
+			const static graphs::representation representation;
 
 		private:
 			std::vector<bool> storage;
@@ -91,6 +93,10 @@ namespace gs {
 
 			inline const_reference at(size_type x, size_type y) const {
 				return storage[x * size() + y];
+			}
+
+			inline bool has_connection_to(size_type from, size_type to) const {
+				return at(from, to);
 			}
 
 			inline row at(size_type x) {
