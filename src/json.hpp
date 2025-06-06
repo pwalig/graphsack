@@ -9,8 +9,42 @@
 
 namespace gs {
 	namespace json {
+
+		struct structure_names {
+			static inline const std::string none = "none";
+			static inline const std::string path = "path";
+			static inline const std::string cycle = "cycle";
+			static inline const std::string tree = "tree";
+			static inline const std::string connected = "connected";
+			static inline const std::vector<std::string> vector = {
+				none, path, cycle, tree, connected
+			};
+			inline static const std::unordered_map<std::string, structure> name_to_code = {
+				{none, structure::none},
+				{path, structure::path},
+				{cycle, structure::cycle},
+				{tree, structure::tree},
+				{connected, structure::connected}
+			};
+		};
+		struct weight_treatment_names {
+			static inline const std::string ignore = "ignore";
+			static inline const std::string first_only = "first_only";
+			static inline const std::string as_ones = "as_ones";
+			static inline const std::string full = "full";
+			static inline const std::vector<std::string> vector = {
+				ignore, first_only, as_ones, full
+			};
+			inline static const std::unordered_map<std::string, weight_treatment> name_to_code = {
+				{ignore, weight_treatment::ignore},
+				{first_only, weight_treatment::first_only},
+				{as_ones, weight_treatment::as_ones},
+				{full, weight_treatment::full},
+			};
+		};
+
 		enum class key : uint8_t {
-			limits, values, weights, weight_value_items, graph6
+			limits, values, weights, structure, weight_treatment, weight_value_items, graph6
 		};
 
 		template <typename instance_t, template<class> class WriterT = rapidjson::Writer>
@@ -73,6 +107,24 @@ namespace gs {
 				writer.EndArray();
 			}
 
+			static void add_structure(
+				const instance_t& instance,
+				RapidJsonWriterT& writer
+			) {
+				writer.Key("structure");
+				const std::string& name = structure_names::vector.at(static_cast<uint64_t>(instance.structure_to_find()));
+				writer.String(name.c_str(), name.length());
+			}
+
+			static void add_weight_treatment(
+				const instance_t& instance,
+				RapidJsonWriterT& writer
+			) {
+				writer.Key("weight_treatment");
+				const std::string& name = weight_treatment_names::vector.at(static_cast<uint64_t>(instance.weight_treatment()));
+				writer.String(name.c_str(), name.length());
+			}
+
 			static void add_weight_value_items(
 				const instance_t& instance,
 				RapidJsonWriterT& writer
@@ -107,7 +159,7 @@ namespace gs {
 
 
 			inline static const std::vector<fill_function> fill_functions = {
-				add_limits, add_values, add_weights, add_weight_value_items
+				add_limits, add_values, add_weights, add_structure, add_weight_treatment, add_weight_value_items
 			};
 
 		public:
@@ -187,10 +239,15 @@ namespace gs {
 				}
 
 				if (document.HasMember("graph6")) {
-					st = gs::structure::cycle;
 					const rapidjson::Value& graph6Node = document["graph6"];
 					graph = graphs::adjacency_matrix::from_graph6(graph6Node.GetString());
 				}
+
+				if (document.HasMember("structure"))
+					st = structure_names::name_to_code.at(document["structure"].GetString());
+
+				if (document.HasMember("weight_treatment"))
+					wt = weight_treatment_names::name_to_code.at(document["weight_treatment"].GetString());
 
 				if (graph.size() == 0) graph = graphs::adjacency_matrix(values.size(), true);
 

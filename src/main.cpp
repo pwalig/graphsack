@@ -178,7 +178,8 @@ int main(int argc, char** argv) {
 	);
 	json::pretty_writer<inst::itemlocal_nlist<uint32_t>>::write(
 		ilnl,
-		{json::key::limits, json::key::weights, json::key::values, json::key::weight_value_items},
+		{json::key::limits, json::key::weights, json::key::values,
+		json::key::weight_value_items, json::key::weight_treatment, json::key::structure},
 		"instances/itemlocal_nlist_test.json"
 	);
 	std::cout << "IMPORTED:\n" << json::reader<inst::itemlocal_nlist<uint32_t>>::read("instances/itemlocal_nlist_test.json") << '\n';
