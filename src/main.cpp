@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
 		{ {1}, {2}, {0, 1} },
 		structure::cycle
 	);
-	json::Export(ilnl, {json::key::limits, json::key::weights, json::key::values, json::key::weight_value_items}, "instances/itemlocal_nlist_test.json");
+	json::pretty_writer<inst::itemlocal_nlist<uint32_t>>::write(ilnl, {json::key::limits, json::key::weights, json::key::values, json::key::weight_value_items}, "instances/itemlocal_nlist_test.json");
 	inst::itemlocal_nlist<unsigned int> ilnl2("instances/itemlocal_nlist_test.txt");
 
 	for (auto val : ilnl.item_data_slice()) {
