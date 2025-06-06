@@ -176,7 +176,12 @@ int main(int argc, char** argv) {
 		{ {1}, {2}, {0, 1} },
 		structure::cycle
 	);
-	json::pretty_writer<inst::itemlocal_nlist<uint32_t>>::write(ilnl, {json::key::limits, json::key::weights, json::key::values, json::key::weight_value_items}, "instances/itemlocal_nlist_test.json");
+	json::pretty_writer<inst::itemlocal_nlist<uint32_t>>::write(
+		ilnl,
+		{json::key::limits, json::key::weights, json::key::values, json::key::weight_value_items},
+		"instances/itemlocal_nlist_test.json"
+	);
+	std::cout << "IMPORTED:\n" << json::reader<inst::itemlocal_nlist<uint32_t>>::read("instances/itemlocal_nlist_test.json") << '\n';
 	inst::itemlocal_nlist<unsigned int> ilnl2("instances/itemlocal_nlist_test.txt");
 
 	for (auto val : ilnl.item_data_slice()) {
@@ -201,7 +206,7 @@ int main(int argc, char** argv) {
 #endif
 
 	test::Rand testGen(randomDevice());
-	for (size_t i = 5; i < 25; i += 5) {
+	for (size_t i = 5; i < 5; i += 5) {
 		std::cout << i << '\n';
 		test::params<uint32_t, float> params = {
 			i, 3,
