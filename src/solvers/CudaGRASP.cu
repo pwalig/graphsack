@@ -73,13 +73,14 @@ namespace gs {
 					GS_CUDA_REDUCTIONS_PICK(result_type, id, value_memory, result_memory)
 				}
 
-				template <typename instance_t, typename result_type>
-				res::solution<result_type> runner(
+				template <typename instance_t>
+				res::solution<typename instance_t::adjacency_base_type> runner(
 					const instance_t& instance, uint32_t blocksCount, typename instance_t::index_type choose_from
 				) {
 					using value_type = typename instance_t::value_type;
 					using weight_type = typename instance_t::weight_type;
 					using index_type = typename instance_t::index_type;
+					using result_type = typename instance_t::adjacency_base_type;
 
 					if (blocksCount > 200) throw std::invalid_argument("cudaGRASP blocksCount limit of 200 exeeded");
 					uint32_t threadsPerBlock = 256;
@@ -106,7 +107,7 @@ namespace gs {
 					curand::MakeMTGP32KernelState(random_states, kernel_params, blocksCount, time(NULL));
 
 					sort::by_metric_desc<index_type, typename MetricT::value_type><<<1, closestPowerOf2>>>(
-						index_memory.data(), metric_memory.data(), instance.size()
+						index_memory.data(), metric_memory.data(), static_cast<index_type>(instance.size())
 					);
 					//index_memory.debug_print(0, instance.size(), 1);
 
@@ -133,7 +134,13 @@ namespace gs {
 				}
 
 				template res::solution32 runner(const inst::instance32<uint32_t, uint32_t>&, uint32_t, typename inst::instance32<uint32_t, uint32_t>::index_type );
-				template res::solution64 runner(const inst::instance64<uint32_t, uint32_t>&, uint32_t, typename inst::instance32<uint32_t, uint32_t>::index_type );
+				template res::solution32 runner(const inst::instance32<float, uint32_t>&, uint32_t, typename inst::instance32<float, uint32_t>::index_type );
+				template res::solution32 runner(const inst::instance32<uint32_t, float>&, uint32_t, typename inst::instance32<uint32_t, float>::index_type );
+				template res::solution32 runner(const inst::instance32<float, float>&, uint32_t, typename inst::instance32<float, float>::index_type );
+				template res::solution64 runner(const inst::instance64<uint32_t, uint32_t>&, uint32_t, typename inst::instance64<uint32_t, uint32_t>::index_type );
+				template res::solution64 runner(const inst::instance64<float, uint32_t>&, uint32_t, typename inst::instance64<float, uint32_t>::index_type );
+				template res::solution64 runner(const inst::instance64<uint32_t, float>&, uint32_t, typename inst::instance64<uint32_t, float>::index_type );
+				template res::solution64 runner(const inst::instance64<float, float>&, uint32_t, typename inst::instance64<float, float>::index_type );
 			}
 		}
 	}

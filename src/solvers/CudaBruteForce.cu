@@ -51,9 +51,9 @@ namespace gs {
 						while (i < inst::size && fitting) {
 							if (res::has(n, i)) {
 								value += inst::values<value_type>()[i];
-								for (uint32_t  wid = 0; wid < inst::dim; ++wid) {
+								for (uint32_t wid = 0; wid < inst::dim; ++wid) {
 									weight_memory[inst::dim * id + wid] += inst::weights<weight_type>()[inst::dim * i + wid];
-									
+
 									if (weight_memory[inst::dim * id + wid] > inst::limits<weight_type>()[wid]) {
 										fitting = false;
 										value = 0;
@@ -66,7 +66,7 @@ namespace gs {
 
 						// check if valid structure
 						if (value > value_memory[id] && is_cycle_iterative<result_type, index_type>(stack_memory + (2 * inst::size * id), n)) {
-						//if (value > value_memory[id] && is_cycle_recursive<result_type, index_type>(n)) {
+							//if (value > value_memory[id] && is_cycle_recursive<result_type, index_type>(n)) {
 							value_memory[id] = value;
 							result_memory[id] = n;
 						}
@@ -76,15 +76,16 @@ namespace gs {
 					GS_CUDA_REDUCTIONS_PICK(result_type, id, value_memory, result_memory)
 				}
 
-//#define GS_CUDA_BRUTE_FORCE_DIAGNOSTIC
-				template <typename instance_t, typename result_type>
-				res::solution<result_type> runner(
-					const inst::instance<result_type, uint32_t, uint32_t>& instance,
+				//#define GS_CUDA_BRUTE_FORCE_DIAGNOSTIC
+				template <typename instance_t>
+				res::solution<typename instance_t::adjacency_base_type> runner(
+					const instance_t& instance,
 					uint32_t threadsPerBlock, uint32_t share
 				) {
 					using value_type = typename instance_t::value_type;
 					using weight_type = typename instance_t::weight_type;
 					using index_type = typename instance_t::index_type;
+					using result_type = typename instance_t::adjacency_base_type;
 
 					inst::copy_to_symbol(instance);
 
@@ -120,29 +121,29 @@ namespace gs {
 					std::cout << "threads per block: " << threadsPerBlock << '\n';
 					std::cout << "blocks count: " << blocksCount << '\n';
 #endif
-					cycle_kernel<result_type><<<blocksCount, threadsPerBlock>>>(
+					cycle_kernel<result_type> << <blocksCount, threadsPerBlock >> > (
 						totalThreads, share,
 						value_memory.data(), weight_memory.data(),
 						result_memory.data(), stack_memory.data()
-					);
+						);
 
 					if (blocksCount > 1) {
 						blocksCount /= 2;
 						if (blocksCount > device_properties.maxThreadsPerBlock) {
-							reductions::shared_pick<result_type, uint32_t><<<1, device_properties.maxThreadsPerBlock>>>(
+							reductions::shared_pick<result_type, value_type> << <1, device_properties.maxThreadsPerBlock >> > (
 								value_memory.data(),
 								result_memory.data(),
 								threadsPerBlock,
 								totalThreads
-							);
+								);
 						}
 						else {
-							reductions::pick<result_type, uint32_t><<<1, blocksCount>>>(
+							reductions::pick<result_type, value_type> << <1, blocksCount >> > (
 								value_memory.data(),
 								result_memory.data(),
 								threadsPerBlock,
 								totalThreads
-							);
+								);
 						}
 					}
 
@@ -151,9 +152,14 @@ namespace gs {
 
 					return result;
 				}
-				template res::solution32 runner<inst::instance32<uint32_t, uint32_t>, uint32_t>(const inst::instance32<uint32_t, uint32_t>&, uint32_t, uint32_t);
-				template res::solution64 runner<inst::instance64<uint32_t, uint32_t>, uint64_t>(const inst::instance64<uint32_t, uint32_t>&, uint32_t, uint32_t);
-
+				template res::solution32 runner(const inst::instance32<uint32_t, uint32_t>&, uint32_t, uint32_t);
+				template res::solution32 runner(const inst::instance32<float, uint32_t>&, uint32_t, uint32_t);
+				template res::solution32 runner(const inst::instance32<uint32_t, float>&, uint32_t, uint32_t);
+				template res::solution32 runner(const inst::instance32<float, float>&, uint32_t, uint32_t);
+				template res::solution64 runner(const inst::instance64<uint32_t, uint32_t>&, uint32_t, uint32_t);
+				template res::solution64 runner(const inst::instance64<float, uint32_t>&, uint32_t, uint32_t);
+				template res::solution64 runner(const inst::instance64<uint32_t, float>&, uint32_t, uint32_t);
+				template res::solution64 runner(const inst::instance64<float, float>&, uint32_t, uint32_t);
 			}
 		}
 	}

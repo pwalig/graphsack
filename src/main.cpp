@@ -199,16 +199,16 @@ int main(int argc, char** argv) {
 #endif
 
 	test::Rand testGen(randomDevice());
-	for (size_t i = 5; i < 35; i += 5) {
+	for (size_t i = 5; i < 25; i += 5) {
 		std::cout << i << '\n';
-		test::params<uint32_t, uint32_t> params = {
+		test::params<uint32_t, float> params = {
 			i, 3,
 			30, 50,
 			1, 10,
 			1, 10,
 			0.2, false, true
 		};
-		test::test<uint32_t, uint32_t>(
+		test::test<uint32_t, float>(
 			params, testGen, 1 
 		);
 	}

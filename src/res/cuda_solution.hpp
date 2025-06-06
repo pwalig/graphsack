@@ -12,7 +12,7 @@ namespace gs {
 				StorageBase _n;
 
 				inline solution() : _n(0), _data(0) {}
-				inline solution(size_t N) : _n(N), _data(0) {}
+				inline solution(size_t N) : _n(static_cast<StorageBase>(N)), _data(0) {}
 				inline void add(size_t i) { _data |= (StorageBase(1) << i); }
 				inline void remove(size_t i) { _data &= ~(StorageBase(1) << i); }
 				inline bool has(size_t i) const { return (_data & (StorageBase(1) << i)); }

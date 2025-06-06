@@ -12,8 +12,11 @@ namespace gs {
 	namespace cuda {
 		namespace inst {
 			extern __constant__ uint32_t limits_u32[GS_CUDA_INST_MAXM];
+			extern __constant__ float limits_f32[GS_CUDA_INST_MAXM];
 			extern __constant__ uint32_t values_u32[GS_CUDA_INST_MAXN];
+			extern __constant__ float values_f32[GS_CUDA_INST_MAXN];
 			extern __constant__ uint32_t weights_u32[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
+			extern __constant__ float weights_f32[GS_CUDA_INST_MAXN * GS_CUDA_INST_MAXM];
 			extern __constant__ uint32_t adjacency32[32];
 			extern __constant__ uint64_t adjacency64[64];
 			extern __constant__ size_t size;
@@ -31,9 +34,15 @@ namespace gs {
 			template <>
 			inline __host__ __device__ const uint32_t* limits() { return limits_u32; }
 			template <>
+			inline __host__ __device__ const float* limits() { return limits_f32; }
+			template <>
 			inline __host__ __device__ const uint32_t* values() { return values_u32; }
 			template <>
+			inline __host__ __device__ const float* values() { return values_f32; }
+			template <>
 			inline __host__ __device__ const uint32_t* weights() { return weights_u32; }
+			template <>
+			inline __host__ __device__ const float* weights() { return weights_f32; }
 			template <>
 			inline __host__ __device__ const uint32_t* adjacency() { return adjacency32; }
 			template <>

@@ -9,14 +9,20 @@ namespace gs {
 	namespace cuda {
 		namespace solver {
 			namespace brute_force {
-				template <typename instance_t, typename result_type>
-				res::solution<result_type> runner(
-					const inst::instance<result_type, uint32_t, uint32_t>& instance,
+				template <typename instance_t>
+				res::solution<typename instance_t::adjacency_base_type> runner(
+					const instance_t& instance,
 					uint32_t threadsPerBlock, uint32_t share
 				);
 
-				extern template res::solution32 runner<inst::instance32<uint32_t, uint32_t>, uint32_t>(const inst::instance32<uint32_t, uint32_t>&, uint32_t, uint32_t);
-				extern template res::solution64 runner<inst::instance64<uint32_t, uint32_t>, uint64_t>(const inst::instance64<uint32_t, uint32_t>&, uint32_t, uint32_t);
+				extern template res::solution32 runner(const inst::instance32<uint32_t, uint32_t>&, uint32_t, uint32_t);
+				extern template res::solution32 runner(const inst::instance32<float, uint32_t>&, uint32_t, uint32_t);
+				extern template res::solution32 runner(const inst::instance32<uint32_t, float>&, uint32_t, uint32_t);
+				extern template res::solution32 runner(const inst::instance32<float, float>&, uint32_t, uint32_t);
+				extern template res::solution64 runner(const inst::instance64<uint32_t, uint32_t>&, uint32_t, uint32_t);
+				extern template res::solution64 runner(const inst::instance64<float, uint32_t>&, uint32_t, uint32_t);
+				extern template res::solution64 runner(const inst::instance64<uint32_t, float>&, uint32_t, uint32_t);
+				extern template res::solution64 runner(const inst::instance64<float, float>&, uint32_t, uint32_t);
 			}
 
 			// maximum percentage of global memory to use
@@ -36,7 +42,7 @@ namespace gs {
 
 				inline static solution_t solve(const instance_t& instance, uint32_t threadsPerBlock = 0, uint32_t share = 1) 
 				{
-					return brute_force::runner<instance_t, storage_t>(instance, threadsPerBlock, share);
+					return brute_force::runner<instance_t>(instance, threadsPerBlock, share);
 				}
 			};
 			template <typename InstanceT>

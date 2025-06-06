@@ -171,7 +171,7 @@ namespace gs {
 
 			inline double avg_valid(uint8_t validation_number) const {
 				uint8_t mask = 1 << validation_number;
-				double sum = std::count_if(validations.begin(), validations.end(), [mask](uint8_t val) {return val & mask; });
+				double sum = static_cast<double>(std::count_if(validations.begin(), validations.end(), [mask](uint8_t val) {return val & mask; }));
 				return sum / validations.size();
 			}
 
