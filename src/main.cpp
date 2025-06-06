@@ -22,6 +22,7 @@
 #include "inst/inst_generator.hpp"
 #include "inst/cuda_instance.hpp"
 #include "cuda_init.h"
+#include "json.hpp"
 
 #include "cuda_test.h"
 
@@ -175,6 +176,7 @@ int main(int argc, char** argv) {
 		{ {1}, {2}, {0, 1} },
 		structure::cycle
 	);
+	json::Export(ilnl, {json::key::limits, json::key::weights, json::key::values, json::key::weight_value_items}, "instances/itemlocal_nlist_test.json");
 	inst::itemlocal_nlist<unsigned int> ilnl2("instances/itemlocal_nlist_test.txt");
 
 	for (auto val : ilnl.item_data_slice()) {

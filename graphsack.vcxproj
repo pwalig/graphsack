@@ -78,7 +78,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./ext/rapidjson/include/;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -99,7 +99,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./ext/rapidjson/include/;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -120,7 +120,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./ext/rapidjson/include/;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -141,7 +141,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>%INCLUDE%;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./ext/rapidjson/include/;%CUDA_PATH%/include/</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -170,6 +170,7 @@
     <ClInclude Include="src\inst\inst_generator.hpp" />
     <ClInclude Include="src\inst\inst_macros.hpp" />
     <ClInclude Include="src\inst\naive_item_vector.hpp" />
+    <ClInclude Include="src\json.hpp" />
     <ClInclude Include="src\res\bit_vector.hpp" />
     <ClInclude Include="src\cuda_test.h" />
     <ClInclude Include="src\graphs\adjacency_matrix.hpp" />
